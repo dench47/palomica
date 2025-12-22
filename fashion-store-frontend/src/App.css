@@ -1,0 +1,29 @@
+/* Глобальные стили */
+.hover-shadow {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Стили для карточек */
+.card-img-top {
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .card-img-top {
+  opacity: 0.9;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+}
