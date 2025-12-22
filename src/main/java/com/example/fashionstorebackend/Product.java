@@ -2,6 +2,9 @@ package com.example.fashionstorebackend;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "products")
 public class Product {
@@ -19,12 +22,28 @@ public class Product {
 
     private String imageUrl;
 
-    // КОНСТРУКТОР БЕЗ ПАРАМЕТРОВ (ОБЯЗАТЕЛЬНЫЙ ДЛЯ HIBERNATE!)
-    public Product() {
-        // Пустой конструктор
-    }
+    // НОВЫЕ ПОЛЯ ДЛЯ ДЕТАЛЬНОЙ СТРАНИЦЫ
+    private String color;
 
-    // Конструктор со всеми полями (кроме id)
+    private String size; // Например: "S,M,L,XL" или "36,38,40,42"
+
+    private String material;
+
+    @Column(name = "care_instructions", length = 500)
+    private String careInstructions;
+
+    // Для галереи изображений
+    @ElementCollection
+    @CollectionTable(
+            name = "product_images",
+            joinColumns = @JoinColumn(name = "product_id")
+    )
+    @Column(name = "image_url")
+    private List<String> additionalImages = new ArrayList<>();
+
+    // Конструкторы
+    public Product() {}
+
     public Product(String name, String description, Double price, String imageUrl) {
         this.name = name;
         this.description = description;
@@ -32,16 +51,20 @@ public class Product {
         this.imageUrl = imageUrl;
     }
 
-    // Конструктор со всеми полями (включая id)
-    public Product(Long id, String name, String description, Double price, String imageUrl) {
-        this.id = id;
+    // Полный конструктор со всеми полями
+    public Product(String name, String description, Double price, String imageUrl,
+                   String color, String size, String material, String careInstructions) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.imageUrl = imageUrl;
+        this.color = color;
+        this.size = size;
+        this.material = material;
+        this.careInstructions = careInstructions;
     }
 
-    // Геттеры и сеттеры
+    // Геттеры и сеттеры для ВСЕХ полей
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -57,7 +80,23 @@ public class Product {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    // toString для удобства отладки
+    // Новые геттеры/сеттеры
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+
+    public String getSize() { return size; }
+    public void setSize(String size) { this.size = size; }
+
+    public String getMaterial() { return material; }
+    public void setMaterial(String material) { this.material = material; }
+
+    public String getCareInstructions() { return careInstructions; }
+    public void setCareInstructions(String careInstructions) { this.careInstructions = careInstructions; }
+
+    public List<String> getAdditionalImages() { return additionalImages; }
+    public void setAdditionalImages(List<String> additionalImages) { this.additionalImages = additionalImages; }
+
+    // toString для удобства
     @Override
     public String toString() {
         return "Product{" +

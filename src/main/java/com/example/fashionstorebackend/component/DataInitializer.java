@@ -6,6 +6,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,26 +23,113 @@ public class DataInitializer {
 
     @PostConstruct
     public void initSomeData() {
-        // Очищаем таблицу только если в ней уже есть данные
-        if (productRepository.count() > 0) {
-            System.out.println(">>> В базе данных уже есть товары, пропускаем инициализацию.");
-            return;
-        }
+        // Всегда очищаем и добавляем свежие данные
+        productRepository.deleteAll();
 
-        // Создаем список тестовых товаров
-        List<Product> products = Arrays.asList(
-                new Product("Вечернее платье", "Элегантное платье для особых случаев", 29900.0, "https://via.placeholder.com/300x400/FFC0CB/000000?text=Dress+1"),
-                new Product("Шерстяной пиджак", "Классический пиджак премиального кроя", 18900.0, "https://via.placeholder.com/300x400/ADD8E6/000000?text=Blazer+2"),
-                new Product("Шелковая блуза", "Легкая блуза из натурального шелка", 12400.0, "https://via.placeholder.com/300x400/FFFACD/000000?text=Blouse+3"),
-                new Product("Кожаная юбка", "Стильная юбка-карандаш из мягкой кожи", 25600.0, "https://via.placeholder.com/300x400/8FBC8F/000000?text=Skirt+4"),
-                new Product("Кожаные брюки", "Узкие брюки из качественной кожи", 28700.0, "https://via.placeholder.com/300x400/D3D3D3/000000?text=Pants+5"),
-                new Product("Кашемировое пальто", "Теплое пальто из кашемира", 45200.0, "https://via.placeholder.com/300x400/A0522D/FFFFFF?text=Coat+6")
+        System.out.println(">>> Очищена таблица товаров, начинаем загрузку...");
+
+        // Создаём товары с полной информацией
+        List<Product> products = new ArrayList<>();
+
+        // Товар 1: Вечернее платье
+        Product dress = new Product(
+                "Вечернее платье",
+                "Элегантное платье для особых случаев. Идеально подходит для свадеб, выпускных и торжественных мероприятий.",
+                29900.0,
+                "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&h=1000&fit=crop"
         );
+        dress.setColor("Чёрный");
+        dress.setSize("XS,S,M,L");
+        dress.setMaterial("Шёлк 100%");
+        dress.setCareInstructions("Стирка при 30°C, не отбеливать, гладить на низкой температуре");
+        dress.setAdditionalImages(Arrays.asList(
+                "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop",
+                "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop",
+                "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&h=1000&fit=crop"
+        ));
+        products.add(dress);
 
-        // Сохраняем все товары в базу данных
+        // Товар 2: Шерстяной пиджак
+        Product blazer = new Product(
+                "Шерстяной пиджак",
+                "Классический пиджак премиального кроя. Идеален для офиса и деловых встреч.",
+                18900.0,
+                "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=800&h=1000&fit=crop"
+        );
+        blazer.setColor("Серый");
+        blazer.setSize("46,48,50,52,54");
+        blazer.setMaterial("Шерсть 80%, Полиэстер 20%");
+        blazer.setCareInstructions("Химчистка, не стирать");
+        blazer.setAdditionalImages(Arrays.asList(
+                "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop",
+                "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop"
+        ));
+        products.add(blazer);
+
+        // Товар 3: Шелковая блуза
+        Product blouse = new Product(
+                "Шелковая блуза",
+                "Легкая блуза из натурального шелка. Удобная и элегантная на каждый день.",
+                12400.0,
+                "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=800&h=1000&fit=crop"
+        );
+        blouse.setColor("Белый");
+        blouse.setSize("XS,S,M,L");
+        blouse.setMaterial("Шёлк 100%");
+        blouse.setCareInstructions("Только ручная стирка, сухая чистка");
+        products.add(blouse);
+
+        // Товар 4: Кожаная юбка
+        Product skirt = new Product(
+                "Кожаная юбка",
+                "Стильная юбка-карандаш из мягкой итальянской кожи. Тренд сезона.",
+                25600.0,
+                "https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?w=800&h=1000&fit=crop"
+        );
+        skirt.setColor("Коричневый");
+        skirt.setSize("36,38,40,42");
+        skirt.setMaterial("Натуральная кожа");
+        skirt.setCareInstructions("Протирать влажной тряпкой, не стирать");
+        skirt.setAdditionalImages(Arrays.asList(
+                "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop"
+        ));
+        products.add(skirt);
+
+        // Товар 5: Кожаные брюки
+        Product pants = new Product(
+                "Кожаные брюки",
+                "Узкие брюки из качественной кожи. Создают эффектный образ.",
+                28700.0,
+                "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?w=800&h=1000&fit=crop"
+        );
+        pants.setColor("Чёрный");
+        pants.setSize("38,40,42,44");
+        pants.setMaterial("Натуральная кожа");
+        pants.setCareInstructions("Протирать влажной тряпкой, специальный уход за кожей");
+        products.add(pants);
+
+        // Товар 6: Кашемировое пальто
+        Product coat = new Product(
+                "Кашемировое пальто",
+                "Теплое пальто из кашемира. Защищает от холода и выглядит роскошно.",
+                45200.0,
+                "https://images.unsplash.com/photo-1539533018447-63f8ffe8568a?w=800&h=1000&fit=crop"
+        );
+        coat.setColor("Бежевый");
+        coat.setSize("S,M,L,XL");
+        coat.setMaterial("Кашемир 90%, Шерсть 10%");
+        coat.setCareInstructions("Химчистка, хранить в чехле");
+        coat.setAdditionalImages(Arrays.asList(
+                "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop",
+                "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop"
+        ));
+        products.add(coat);
+
+        // Сохраняем все товары
         productRepository.saveAll(products);
 
-        System.out.println(">>> Загружено " + products.size() + " тестовых товаров в базу данных.");
+        System.out.println(">>> Загружено " + products.size() + " тестовых товаров с полной информацией.");
         System.out.println(">>> API доступно по адресу: http://localhost:8085/api/products");
+        System.out.println(">>> Тестовый товар: http://localhost:8085/api/products/1");
     }
 }
