@@ -1,116 +1,106 @@
-import {useEffect, useState} from "react";
-
 const HeroSlider = () => {
-    const slides = [
-        {
-            id: 1,
-            title: "Новая коллекция",
-            subtitle: "Осень-Зима 2025",
-            description: "Эксклюзивные модели от российских дизайнеров",
-            image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=600&fit=crop",
-            buttonText: "Смотреть коллекцию",
-            buttonLink: "#collection"
-        },
-        {
-            id: 2,
-            title: "Скидка 30%",
-            subtitle: "На первую покупку",
-            description: "Только для новых клиентов",
-            image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&h=600&fit=crop",
-            buttonText: "Получить скидку",
-            buttonLink: "#sale"
-        },
-        {
-            id: 3,
-            title: "Бесплатная доставка",
-            subtitle: "По всей России",
-            description: "При заказе от 5000 ₽",
-            image: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&h=600&fit=crop",
-            buttonText: "Условия доставки",
-            buttonLink: "#shipping"
-        }
-    ];
-
-    const [currentSlide, setCurrentSlide] = useState(0);
-
-    const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
-    };
-
-    const prevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-    };
-
-    useEffect(() => {
-        const interval = setInterval(nextSlide, 5000);
-        return () => clearInterval(interval);
-    }, []);
+    const heroImage = "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80";
 
     return (
-        <div className="hero-slider position-relative overflow-hidden">
-            {slides.map((slide, index) => (
-                <div
-                    key={slide.id}
-                    className={`slide ${index === currentSlide ? 'active' : ''}`}
-                    style={{
-                        backgroundImage: `url(${slide.image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        height: '600px',
-                        display: index === currentSlide ? 'block' : 'none'
-                    }}
-                >
-                    <div className="container h-100">
-                        <div className="row h-100 align-items-center">
-                            <div className="col-lg-6">
-                                <div className="slide-content text-white p-4" style={{
-                                    backgroundColor: 'rgba(0,0,0,0.6)',
-                                    borderRadius: '10px'
-                                }}>
-                                    <h2 className="display-4 fw-bold mb-3">{slide.title}</h2>
-                                    <h3 className="h1 mb-3">{slide.subtitle}</h3>
-                                    <p className="lead mb-4">{slide.description}</p>
-                                    <a
-                                        href={slide.buttonLink}
-                                        className="btn btn-light btn-lg px-5"
-                                    >
-                                        {slide.buttonText}
-                                    </a>
-                                </div>
-                            </div>
+        <div className="hero-banner position-relative vh-100 overflow-hidden">
+            {/* Фоновое изображение */}
+            <div
+                className="w-100 h-100"
+                style={{
+                    backgroundImage: `url(${heroImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }}
+            >
+                {/* Оверлей для контраста */}
+                <div className="position-absolute w-100 h-100"
+                     style={{
+                         backgroundColor: 'rgba(0,0,0,0.25)',
+                         transition: 'background-color 0.5s ease'
+                     }}></div>
+            </div>
+
+            {/* Контент - стилизовано минималистично */}
+            <div className="container-fluid position-absolute top-50 start-0 end-0 translate-middle-y px-4 px-md-5">
+                <div className="row justify-content-center">
+                    <div className="col-12 col-lg-9 col-xl-8 text-center text-white">
+                        {/* Заголовок с эффектом появления */}
+                        <h1
+                            className="display-1 fw-light mb-4"
+                            style={{
+                                fontFamily: "'Playfair Display', serif",
+                                letterSpacing: '0.1em',
+                                lineHeight: '1.1',
+                                textTransform: 'uppercase',
+                                opacity: '0.95'
+                            }}
+                        >
+                            FASHIONSTORE
+                        </h1>
+
+                        {/* Подзаголовок с тонкой анимацией */}
+                        <div className="overflow-hidden">
+                            <p className="lead mb-5"
+                               style={{
+                                   fontSize: '1.5rem',
+                                   fontFamily: "'Cormorant Garamond', serif",
+                                   fontWeight: '300',
+                                   letterSpacing: '0.05em',
+                                   opacity: '0.9',
+                                   transform: 'translateY(0)',
+                                   transition: 'all 0.8s ease'
+                               }}
+                            >
+                                Новое измерение стиля. Эксклюзивные коллекции.
+                            </p>
+                        </div>
+
+                        {/* Кнопка с эффектом наведения */}
+                        <div className="overflow-hidden">
+                            <a
+                                href="#collections"
+                                className="btn btn-outline-light btn-lg px-5 py-3 rounded-0 border-1 fw-light d-inline-block"
+                                style={{
+                                    letterSpacing: '0.15em',
+                                    fontSize: '0.85rem',
+                                    fontFamily: "'Cormorant Garamond', serif",
+                                    textTransform: 'uppercase',
+                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    transform: 'translateY(0)',
+                                    backgroundColor: 'transparent'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.color = 'black';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = 'white';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                Открыть коллекцию
+                            </a>
                         </div>
                     </div>
                 </div>
-            ))}
+            </div>
 
-            {/* Кнопки управления */}
-            <button
-                className="btn btn-outline-light position-absolute top-50 start-0 translate-middle-y ms-3"
-                onClick={prevSlide}
-                style={{ zIndex: 10 }}
-            >
-                ‹
-            </button>
-            <button
-                className="btn btn-outline-light position-absolute top-50 end-0 translate-middle-y me-3"
-                onClick={nextSlide}
-                style={{ zIndex: 10 }}
-            >
-                ›
-            </button>
-
-            {/* Индикаторы */}
-            <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 d-flex" style={{ zIndex: 10 }}>
-                {slides.map((_, index) => (
-                    <button
-                        key={index}
-                        className={`btn btn-sm mx-1 ${index === currentSlide ? 'btn-light' : 'btn-outline-light'}`}
-                        onClick={() => setCurrentSlide(index)}
-                        style={{ width: '12px', height: '12px', padding: 0, borderRadius: '50%' }}
-                    >
-                        &nbsp;
-                    </button>
-                ))}
+            {/* Тонкая линия внизу для акцента */}
+            <div className="position-absolute bottom-0 start-0 w-100">
+                <div className="container-fluid">
+                    <div className="row justify-content-center">
+                        <div className="col-12 col-lg-9 col-xl-8">
+                            <div style={{
+                                height: '1px',
+                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                marginBottom: '2rem'
+                            }}></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

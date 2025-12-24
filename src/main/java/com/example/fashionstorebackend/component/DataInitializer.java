@@ -15,7 +15,6 @@ public class DataInitializer {
 
     private final ProductRepository productRepository;
 
-    // Конструктор с зависимостью (Spring сам её внедрит)
     @Autowired
     public DataInitializer(ProductRepository productRepository) {
         this.productRepository = productRepository;
@@ -23,12 +22,16 @@ public class DataInitializer {
 
     @PostConstruct
     public void initSomeData() {
-        // Всегда очищаем и добавляем свежие данные
-        productRepository.deleteAll();
+        // Проверяем, есть ли уже товары в БД
+        long count = productRepository.count();
 
-        System.out.println(">>> Очищена таблица товаров, начинаем загрузку...");
+        if (count > 0) {
+            System.out.println(">>> В БД уже есть " + count + " товаров. Инициализация пропущена.");
+            return;
+        }
 
-        // Создаём товары с полной информацией
+        System.out.println(">>> БД пустая, начинаем загрузку тестовых данных...");
+
         List<Product> products = new ArrayList<>();
 
         // Товар 1: Вечернее платье
@@ -128,8 +131,6 @@ public class DataInitializer {
         // Сохраняем все товары
         productRepository.saveAll(products);
 
-        System.out.println(">>> Загружено " + products.size() + " тестовых товаров с полной информацией.");
-        System.out.println(">>> API доступно по адресу: http://localhost:8085/api/products");
-        System.out.println(">>> Тестовый товар: http://localhost:8085/api/products/1");
+        System.out.println(">>> Загружено " + products.size() + " тестовых товаров.");
     }
 }

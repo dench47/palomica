@@ -1,77 +1,113 @@
 import { useCart } from '../context/CartContext';
+import { Link } from 'react-router-dom'; // Добавляем импорт для ссылок
 
 const CartPage = () => {
     const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
 
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
+    };
+
     if (items.length === 0) {
         return (
-            <div className="container py-5">
-                <div className="text-center">
-                    <h2>Корзина пуста</h2>
-                    <p className="text-muted mb-4">Добавьте товары из каталога</p>
-                    {/*<Link to="/" className="btn btn-dark">*/}
-                    {/*    Вернуться к покупкам*/}
-                    {/*</Link>*/}
+            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+                <div className="text-center w-100">
+                    <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1 }}>🛒</div>
+                    <h2 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        Корзина пуста
+                    </h2>
+                    <p className="text-muted mb-4 small">Добавьте товары из каталога</p>
+                    <Link
+                        to="/"
+                        className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
+                        style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                    >
+                        ВЕРНУТЬСЯ К ПОКУПКАМ
+                    </Link>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="container py-5">
-            <h1 className="mb-4">Корзина покупок</h1>
+        <div className="container-fluid px-0">
+            {/* Заголовок в стиле сайта */}
+            <div className="px-4 px-md-5 pt-5">
+                <h1 className="fw-light text-center mb-5" style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '2.5rem',
+                    letterSpacing: '0.05em'
+                }}>
+                    Корзина покупок
+                </h1>
+            </div>
 
-            <div className="row">
-                <div className="col-md-8">
+            <div className="row g-0">
+                {/* Список товаров */}
+                <div className="col-lg-8 px-4 px-md-5 pb-5">
                     {items.map(item => (
-                        <div key={item.product.id} className="card mb-3">
+                        <div key={item.product.id} className="mb-4 pb-4 border-bottom">
                             <div className="row g-0">
-                                <div className="col-md-3">
-                                    <img
-                                        src={item.product.imageUrl}
-                                        className="img-fluid rounded-start"
-                                        alt={item.product.name}
-                                        style={{ height: '150px', objectFit: 'cover' }}
-                                    />
+                                {/* Изображение */}
+                                <div className="col-4 col-md-3">
+                                    <div
+                                        className="w-100"
+                                        style={{
+                                            backgroundImage: `url(${item.product.imageUrl})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            paddingBottom: '100%', // Квадратное изображение
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => {/* Переход на страницу товара */}}
+                                    ></div>
                                 </div>
-                                <div className="col-md-9">
-                                    <div className="card-body">
-                                        <div className="d-flex justify-content-between">
-                                            <div>
-                                                <h5 className="card-title">{item.product.name}</h5>
-                                                <p className="card-text text-muted">{item.product.description}</p>
-                                                <p className="card-text">
-                                                    <strong>{item.product.price.toLocaleString('ru-RU')} ₽</strong>
-                                                </p>
-                                            </div>
+
+                                {/* Информация о товаре */}
+                                <div className="col-8 col-md-9 ps-4 ps-md-5">
+                                    <div className="d-flex flex-column h-100">
+                                        <div className="flex-grow-1">
+                                            <h3 className="h5 fw-light mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                                {item.product.name}
+                                            </h3>
+                                            <p className="text-muted small mb-3">
+                                                {item.product.description.length > 100
+                                                    ? `${item.product.description.substring(0, 100)}...`
+                                                    : item.product.description}
+                                            </p>
+                                            <p className="mb-0" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                                {formatPrice(item.product.price)}
+                                            </p>
+                                        </div>
+
+                                        {/* Управление количеством */}
+                                        <div className="d-flex justify-content-between align-items-center mt-3">
                                             <div className="d-flex align-items-center">
-                                                <div className="input-group me-3" style={{ width: '120px' }}>
-                                                    <button
-                                                        className="btn btn-outline-secondary"
-                                                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                                                    >
-                                                        -
-                                                    </button>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control text-center"
-                                                        value={item.quantity}
-                                                        readOnly
-                                                    />
-                                                    <button
-                                                        className="btn btn-outline-secondary"
-                                                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                                    >
-                                                        +
-                                                    </button>
-                                                </div>
                                                 <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() => removeFromCart(item.product.id)}
+                                                    className="btn btn-outline-dark border-1 rounded-0 px-3 py-1"
+                                                    onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                                    style={{ minWidth: '40px' }}
                                                 >
-                                                    Удалить
+                                                    –
+                                                </button>
+                                                <span className="mx-3" style={{ minWidth: '30px', textAlign: 'center' }}>
+                                                    {item.quantity}
+                                                </span>
+                                                <button
+                                                    className="btn btn-outline-dark border-1 rounded-0 px-3 py-1"
+                                                    onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                                    style={{ minWidth: '40px' }}
+                                                >
+                                                    +
                                                 </button>
                                             </div>
+                                            <button
+                                                className="btn btn-link text-dark p-0 text-decoration-none small"
+                                                onClick={() => removeFromCart(item.product.id)}
+                                                style={{ letterSpacing: '0.05em' }}
+                                            >
+                                                УДАЛИТЬ
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -79,34 +115,65 @@ const CartPage = () => {
                         </div>
                     ))}
 
-                    <button className="btn btn-outline-danger" onClick={clearCart}>
-                        Очистить корзину
-                    </button>
+                    {/* Кнопка очистки */}
+                    <div className="text-start mt-4">
+                        <button
+                            className="btn btn-outline-dark rounded-0 border-1 px-4 py-2 fw-light"
+                            onClick={clearCart}
+                            style={{ fontSize: '0.85rem', letterSpacing: '0.1em' }}
+                        >
+                            ОЧИСТИТЬ КОРЗИНУ
+                        </button>
+                    </div>
                 </div>
 
-                <div className="col-md-4">
-                    <div className="card">
-                        <div className="card-body">
-                            <h5 className="card-title">Итого</h5>
+                {/* Панель итогов */}
+                <div className="col-lg-4 bg-light px-4 px-md-5 py-5">
+                    <div className="sticky-top" style={{ top: '2rem' }}>
+                        <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                            Итог заказа
+                        </h3>
+
+                        <div className="mb-4">
                             <div className="d-flex justify-content-between mb-2">
-                                <span>Товары ({items.reduce((sum, item) => sum + item.quantity, 0)} шт.)</span>
-                                <span>{totalPrice.toLocaleString('ru-RU')} ₽</span>
+                                <span className="text-muted small">Товары ({items.reduce((sum, item) => sum + item.quantity, 0)} шт.)</span>
+                                <span>{formatPrice(totalPrice)}</span>
                             </div>
-                            <div className="d-flex justify-content-between mb-3">
-                                <span>Доставка</span>
-                                <span>Бесплатно</span>
+                            <div className="d-flex justify-content-between mb-2">
+                                <span className="text-muted small">Доставка</span>
+                                <span className="text-success small">Бесплатно</span>
                             </div>
-                            <hr />
-                            <div className="d-flex justify-content-between mb-4">
-                                <strong>Общая сумма</strong>
-                                <strong className="fs-5">{totalPrice.toLocaleString('ru-RU')} ₽</strong>
+                            <div className="d-flex justify-content-between mt-3 pt-3 border-top">
+                                <strong className="fw-normal">Общая сумма</strong>
+                                <strong className="fs-5">{formatPrice(totalPrice)}</strong>
                             </div>
-                            <button className="btn btn-dark w-100 btn-lg">
-                                Перейти к оформлению
-                            </button>
-                            {/*<Link to="/" className="btn btn-outline-dark w-100 mt-2">*/}
-                            {/*    Продолжить покупки*/}
-                            {/*</Link>*/}
+                        </div>
+
+                        {/* Кнопка оформления */}
+                        <Link
+                            to="/checkout" // Добавим позже страницу оформления
+                            className="btn btn-dark rounded-0 w-100 py-3 fw-light mb-3"
+                            style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                        >
+                            ОФОРМИТЬ ЗАКАЗ
+                        </Link>
+
+                        <Link
+                            to="/"
+                            className="btn btn-outline-dark rounded-0 w-100 py-3 fw-light"
+                            style={{ letterSpacing: '0.1em', fontSize: '0.85rem' }}
+                        >
+                            ПРОДОЛЖИТЬ ПОКУПКИ
+                        </Link>
+
+                        {/* Информация о доставке */}
+                        <div className="mt-4 pt-3 border-top">
+                            <p className="small text-muted mb-2">
+                                <span className="text-success">✓</span> Бесплатная доставка по России
+                            </p>
+                            <p className="small text-muted">
+                                <span className="text-success">✓</span> Возврат в течение 14 дней
+                            </p>
                         </div>
                     </div>
                 </div>

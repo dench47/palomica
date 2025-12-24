@@ -1,8 +1,10 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Product } from '../services/api';
 
-interface CartItem {
+
+
+export interface CartItem {
     product: Product;
     quantity: number;
 }
@@ -20,7 +22,16 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-    const [items, setItems] = useState<CartItem[]>([]);
+    // Загружаем корзину из localStorage при инициализации
+    const [items, setItems] = useState<CartItem[]>(() => {
+        const savedCart = localStorage.getItem('fashionstore_cart');
+        return savedCart ? JSON.parse(savedCart) : [];
+    });
+
+    // Сохраняем корзину в localStorage при каждом изменении
+    useEffect(() => {
+        localStorage.setItem('fashionstore_cart', JSON.stringify(items));
+    }, [items]);
 
     const addToCart = (product: Product) => {
         setItems(prevItems => {
