@@ -1,27 +1,20 @@
-import { useState, useEffect } from 'react'; // Добавляем useEffect
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
 
 const CheckoutPage = () => {
     const { items, totalPrice, clearCart } = useCart();
-    const [step, setStep] = useState(1);
+    const navigate = useNavigate();
+    const [step, setStep] = useState(1); // 1 - доставка, 2 - оплата
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
-    const [orderNumber, setOrderNumber] = useState<string>(''); // Добавляем состояние для номера заказа
-
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        comment: ''
-    });
-
-    // Генерируем номер заказа один раз при монтировании
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setOrderNumber('ORD' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'));
-    }, []);
+    const [orderNumber] = useState(
+        // eslint-disable-next-line react-hooks/purity
+        'ORD' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+    );
+    const [comment, setComment] = useState('');
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -33,18 +26,14 @@ const CheckoutPage = () => {
 
         // Имитация отправки на сервер
         setTimeout(() => {
-            console.log('Заказ отправлен:', { formData, items, totalPrice });
+            console.log('Заказ оформлен:', { items, totalPrice, comment });
             setIsSubmitting(false);
             setOrderComplete(true);
-            // Очищаем корзину только после успешного оформления
-            clearCart();
+            clearCart(); // Очищаем корзину после успешного заказа
         }, 1500);
     };
 
-    // Выносим проверку пустой корзины в отдельную логику
-    const shouldShowEmptyCart = items.length === 0 && !orderComplete;
-
-    if (shouldShowEmptyCart) {
+    if (items.length === 0 && !orderComplete) {
         return (
             <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
@@ -74,11 +63,11 @@ const CheckoutPage = () => {
                         Заказ оформлен!
                     </h2>
                     <p className="text-muted mb-4">
-                        Мы отправили детали заказа на email: <strong>{formData.email}</strong>
+                        Мы свяжемся с вами для подтверждения заказа
                     </p>
                     <p className="small text-muted mb-5">
                         Номер заказа: #{orderNumber}<br/>
-                        Менеджер свяжется с вами для подтверждения в течение 30 минут.
+                        Менеджер свяжется с вами в течение 30 минут.
                     </p>
                     <Link
                         to="/"
@@ -104,7 +93,7 @@ const CheckoutPage = () => {
                     Оформление заказа
                 </h1>
                 <p className="text-center text-muted small mb-5">
-                    Шаг {step} из 3
+                    {step === 1 ? 'Доставка' : 'Оплата и подтверждение'}
                 </p>
             </div>
 
@@ -112,81 +101,8 @@ const CheckoutPage = () => {
                 {/* Форма */}
                 <div className="col-lg-8 px-4 px-md-5 pb-5">
                     <form onSubmit={handleSubmit}>
-                        {/* Шаг 1: Контактные данные */}
+                        {/* Шаг 1: Доставка */}
                         {step === 1 && (
-                            <div className="mb-5">
-                                <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                                    Контактные данные
-                                </h3>
-
-                                <div className="row g-3">
-                                    <div className="col-md-6">
-                                        <label className="form-label small text-muted">Имя и фамилия *</label>
-                                        <input
-                                            type="text"
-                                            className="form-control rounded-0 border-1"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label small text-muted">Телефон *</label>
-                                        <input
-                                            type="tel"
-                                            className="form-control rounded-0 border-1"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label small text-muted">Email *</label>
-                                        <input
-                                            type="email"
-                                            className="form-control rounded-0 border-1"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label small text-muted">Адрес доставки *</label>
-                                        <textarea
-                                            className="form-control rounded-0 border-1"
-                                            rows={3}
-                                            value={formData.address}
-                                            onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label small text-muted">Комментарий к заказу</label>
-                                        <textarea
-                                            className="form-control rounded-0 border-1"
-                                            rows={2}
-                                            value={formData.comment}
-                                            onChange={(e) => setFormData({...formData, comment: e.target.value})}
-                                            placeholder="Например: позвоните за час до доставки"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mt-5">
-                                    <button
-                                        type="button"
-                                        className="btn btn-dark rounded-0 px-5 py-3 fw-light"
-                                        onClick={() => setStep(2)}
-                                        style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
-                                    >
-                                        ДАЛЕЕ: ДОСТАВКА
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Шаг 2: Доставка */}
-                        {step === 2 && (
                             <div className="mb-5">
                                 <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                                     Способ доставки
@@ -249,19 +165,32 @@ const CheckoutPage = () => {
                                     </div>
                                 </div>
 
-                                <div className="d-flex justify-content-between mt-5">
+                                <div className="mb-4">
+                                    <label className="form-label small text-muted">Комментарий к заказу</label>
+                                    <textarea
+                                        className="form-control rounded-0 border-1"
+                                        rows={3}
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        placeholder="Например: позвоните за час до доставки, нужна подарочная упаковка, код домофона и т.д."
+                                    />
+                                    <small className="text-muted">Необязательно</small>
+                                </div>
+
+                                <div className="mt-5 d-flex justify-content-between">
                                     <button
                                         type="button"
                                         className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
-                                        onClick={() => setStep(1)}
+                                        onClick={() => navigate('/cart')} // Возврат в корзину
                                         style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
                                     >
                                         ← НАЗАД
                                     </button>
+
                                     <button
                                         type="button"
                                         className="btn btn-dark rounded-0 px-5 py-3 fw-light"
-                                        onClick={() => setStep(3)}
+                                        onClick={() => setStep(2)}
                                         style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
                                     >
                                         ДАЛЕЕ: ОПЛАТА
@@ -270,14 +199,17 @@ const CheckoutPage = () => {
                             </div>
                         )}
 
-                        {/* Шаг 3: Оплата */}
-                        {step === 3 && (
+                        {/* Шаг 2: Оплата + комментарий */}
+                        {step === 2 && (
                             <div className="mb-5">
                                 <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                                     Способ оплаты
                                 </h3>
 
-                                <div className="mb-4">
+                                {/* Способ оплаты */}
+                                <div className="mb-5">
+
+
                                     <div className="form-check mb-3 border-bottom pb-3">
                                         <input
                                             className="form-check-input rounded-0"
@@ -325,6 +257,7 @@ const CheckoutPage = () => {
                                     </div>
                                 </div>
 
+                                {/* Согласие и кнопки */}
                                 <div className="mt-5 pt-3 border-top">
                                     <div className="form-check mb-4">
                                         <input
@@ -342,7 +275,7 @@ const CheckoutPage = () => {
                                         <button
                                             type="button"
                                             className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
-                                            onClick={() => setStep(2)}
+                                            onClick={() => setStep(1)}
                                             style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
                                         >
                                             ← НАЗАД
@@ -369,7 +302,7 @@ const CheckoutPage = () => {
                     </form>
                 </div>
 
-                {/* Корзина рядом */}
+                {/* Панель итогов */}
                 <div className="col-lg-4 bg-light px-4 px-md-5 py-5">
                     <div className="sticky-top" style={{ top: '2rem' }}>
                         <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -378,7 +311,7 @@ const CheckoutPage = () => {
 
                         <div className="mb-4">
                             {items.slice(0, 3).map(item => (
-                                <div key={item.product.id} className="d-flex mb-3 pb-3 border-bottom">
+                                <div key={item.variantId} className="d-flex mb-3 pb-3 border-bottom">
                                     <div
                                         className="flex-shrink-0 me-3"
                                         style={{
@@ -391,6 +324,25 @@ const CheckoutPage = () => {
                                     ></div>
                                     <div className="flex-grow-1">
                                         <p className="small mb-1">{item.product.name}</p>
+
+                                        {/* Показываем варианты */}
+                                        {item.selectedVariant && (
+                                            <div className="mb-1">
+                                                {item.selectedVariant.size && (
+                                                    <span className="badge bg-dark text-light me-1 rounded-0 px-1 py-0"
+                                                          style={{ fontSize: '0.65rem' }}>
+                                                        Размер: {item.selectedVariant.size}
+                                                    </span>
+                                                )}
+                                                {item.selectedVariant.color && (
+                                                    <span className="badge bg-dark text-light rounded-0 px-1 py-0"
+                                                          style={{ fontSize: '0.65rem' }}>
+                                                        Цвет: {item.selectedVariant.color}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="d-flex justify-content-between">
                                             <span className="small text-muted">{item.quantity} шт.</span>
                                             <span className="small">{formatPrice(item.product.price * item.quantity)}</span>
