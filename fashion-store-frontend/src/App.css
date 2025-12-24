@@ -1,0 +1,94 @@
+/* Глобальные стили */
+.hover-shadow {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Стили для карточек */
+.card-img-top {
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .card-img-top {
+  opacity: 0.9;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+
+  /* Стили для слайдера */
+  .hero-slider {
+    position: relative;
+  }
+
+  .slide {
+    transition: opacity 0.5s ease;
+  }
+
+  .category-card {
+    transition: transform 0.3s ease;
+  }
+
+  .category-card:hover {
+    transform: translateY(-10px);
+  }
+
+  .category-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .category-card:hover .category-overlay {
+    opacity: 1;
+  }
+
+  /* Анимации */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease forwards;
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .hero-slider {
+      height: 400px !important;
+    }
+
+    .slide-content h2 {
+      font-size: 2rem !important;
+    }
+
+    .slide-content h3 {
+      font-size: 1.5rem !important;
+    }
+  }
+
+  /* Тени и эффекты */
+  .shadow-soft {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+}
