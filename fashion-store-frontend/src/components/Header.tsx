@@ -1,21 +1,40 @@
-import { useCart } from '../context/CartContext';
-import logo from '../assets/logo.png'; // <- Импорт логотипа
+import {useCart} from '../context/CartContext';
+import logo from '../assets/logo.png';
+import {useState, type FormEvent, type ChangeEvent} from 'react';
+import {Link} from "react-router-dom"; // Добавили типы
 
 const Header = () => {
-    const { totalItems } = useCart();
+    const {totalItems} = useCart();
+    const [showSearch, setShowSearch] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Указываем тип FormEvent для события формы
+    const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            alert(`Поиск: ${searchQuery}`);
+            setSearchQuery('');
+            setShowSearch(false);
+        }
+    };
+
+    // Указываем тип ChangeEvent для события input
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
 
     return (
         <header className="bg-light py-3 border-bottom">
             <div className="container">
                 <div className="d-flex justify-content-between align-items-center">
-                    {/* Логотип */}
-                    <div>
+                    {/* Логотип с увеличенным размером и отступом */}
+                    <div className="ms-4">
                         <a href="/" className="text-decoration-none">
                             <img
-                                src={logo} // <- Используем импортированную переменную
+                                src={logo}
                                 alt="Название магазина"
                                 style={{
-                                    height: '50px',
+                                    height: '70px',
                                     width: 'auto'
                                 }}
                             />
@@ -24,49 +43,77 @@ const Header = () => {
 
                     {/* Навигация */}
                     <nav className="d-none d-md-flex">
-                        <a href="#new" className="text-dark text-decoration-none mx-3">НОВИНКИ</a>
-                        <a href="#dresses" className="text-dark text-decoration-none mx-3">ПЛАТЬЯ</a>
-                        <a href="#tops" className="text-dark text-decoration-none mx-3">ВЕРХ</a>
-                        <a href="#bottoms" className="text-dark text-decoration-none mx-3">НИЗ</a>
-                        <a href="#accessories" className="text-dark text-decoration-none mx-3">АКСЕССУАРЫ</a>
-                        <a href="#sale" className="text-danger text-decoration-none mx-3">SALE</a>
+                        <a href="#catalog" className="text-dark text-decoration-none mx-3">КАТАЛОГ</a>
+                        <a href="#gallery" className="text-dark text-decoration-none mx-3">ФОТОГАЛЕРЕЯ</a>
+                        <a href="#souvenirs" className="text-dark text-decoration-none mx-3">СУВЕНИРЫ</a>
                     </nav>
 
-                    {/* Иконки */}
+                    {/* Иконки с интерактивным поиском */}
                     <div className="d-flex align-items-center">
-                        <div className="input-group me-3" style={{ width: '200px' }}>
-                            <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                placeholder="Поиск..."
-                            />
-                            <button className="btn btn-outline-secondary btn-sm">
-                                🔍
-                            </button>
+                        {/* Поиск - только иконка или поле ввода */}
+                        <div className="me-3">
+                            {showSearch ? (
+                                <form onSubmit={handleSearch} className="d-flex">
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        placeholder="Поиск..."
+                                        value={searchQuery}
+                                        onChange={handleInputChange} // Используем отдельную функцию
+                                        autoFocus
+                                        style={{width: '150px'}}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="btn btn-outline-secondary btn-sm ms-1"
+                                    >
+                                        🔍
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm ms-1"
+                                        onClick={() => {
+                                            setShowSearch(false);
+                                            setSearchQuery('');
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+                                </form>
+                            ) : (
+                                <button
+                                    className="btn btn-outline-secondary btn-sm"
+                                    onClick={() => setShowSearch(true)}
+                                    style={{fontSize: '1.2rem'}}
+                                >
+                                    🔍
+                                </button>
+                            )}
                         </div>
 
-                        <a href="#account" className="text-dark me-3" style={{ fontSize: '1.2rem' }}>
+                        <a href="#account" className="text-dark me-3" style={{fontSize: '1.2rem'}}>
                             👤
                         </a>
 
-                        <a href="#" className="text-dark position-relative" onClick={(e) => {
-                            e.preventDefault();
-                            alert('Страница корзины будет добавлена позже!');
-                        }}>                            🛒
-                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                                {totalItems}
-                            </span>
-                        </a>
+                        <Link to="/cart" className="text-dark position-relative text-decoration-none">
+                            🛒
+                            {totalItems > 0 && (
+                                <span
+                                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
+                                    style={{fontSize: '0.6rem', padding: '2px 5px'}}>
+            {totalItems}
+        </span>
+                            )}
+                        </Link>
                     </div>
                 </div>
 
                 {/* Мобильное меню */}
                 <div className="d-md-none mt-3">
                     <div className="d-flex justify-content-around">
-                        <a href="#new" className="text-dark text-decoration-none small">НОВИНКИ</a>
-                        <a href="#dresses" className="text-dark text-decoration-none small">ПЛАТЬЯ</a>
-                        <a href="#tops" className="text-dark text-decoration-none small">ВЕРХ</a>
-                        <a href="#sale" className="text-danger text-decoration-none small">SALE</a>
+                        <a href="#catalog" className="text-dark text-decoration-none small">КАТАЛОГ</a>
+                        <a href="#gallery" className="text-dark text-decoration-none small">ФОТОГАЛЕРЕЯ</a>
+                        <a href="#souvenirs" className="text-dark text-decoration-none small">СУВЕНИРЫ</a>
                     </div>
                 </div>
             </div>

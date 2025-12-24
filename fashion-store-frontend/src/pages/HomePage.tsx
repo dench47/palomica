@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import HeroSlider from '../components/HeroSlider';
-import CategoriesSection from '../components/CategoriesSection';
-import FeaturesSection from '../components/FeaturesSection';
+import HeroSlider from '../components/HeroSlider'; // Это теперь статичный баннер
+import CollectionBanners from '../components/CollectionBanners'; // вместо TwoPhotosSection
 import { productService } from '../services/api';
 import type { Product } from '../services/api';
 
@@ -20,7 +19,7 @@ const HomePage = () => {
         try {
             setLoading(true);
             const data = await productService.getAllProducts();
-            setFeaturedProducts(data.slice(0, 4)); // Берем первые 4 товара
+            setFeaturedProducts(data.slice(0, 8));
         } catch (err) {
             setError('Ошибка при загрузке товаров');
             console.error(err);
@@ -31,36 +30,41 @@ const HomePage = () => {
 
     return (
         <>
-            {/* Главный слайдер */}
+            {/* Главный full-screen баннер вместо слайдера */}
             <HeroSlider />
 
-            {/* Категории товаров */}
-            <CategoriesSection />
 
-            {/* Популярные товары */}
-            <section className="py-5">
-                <div className="container">
+            <CollectionBanners />
+
+            {/* Секция товаров - минималистичная */}
+            <section id="products" className="py-5 bg-white">
+                {/* ИЗМЕНИ ЭТУ СТРОКУ: container -> container-fluid px-0 */}
+                <div className="container-fluid px-0">
+                    {/* Заголовок секции в минималистичном стиле */}
                     <div className="mb-5 text-center">
-                        <h2 className="fw-bold mb-3">ПОПУЛЯРНЫЕ ТОВАРЫ</h2>
-                        <p className="text-muted">Самые востребованные модели этого сезона</p>
+                        <h2 className="fw-light mb-2" style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem' }}>
+                            Избранное
+                        </h2>
+                        <p className="text-muted">Отобранные коллекционные предметы</p>
+                        <div className="mx-auto" style={{ width: '60px', borderTop: '1px solid #000', marginTop: '1rem' }}></div>
                     </div>
 
                     {loading && (
                         <div className="text-center py-5">
-                            <div className="spinner-border text-primary" role="status">
+                            <div className="spinner-border text-dark" role="status" style={{ width: '3rem', height: '3rem' }}>
                                 <span className="visually-hidden">Загрузка...</span>
                             </div>
                         </div>
                     )}
 
                     {error && (
-                        <div className="alert alert-danger text-center">
+                        <div className="alert alert-danger text-center rounded-0 border-0">
                             {error}
                         </div>
                     )}
 
                     {!loading && !error && (
-                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-0">
                             {featuredProducts.map((product) => (
                                 <div className="col" key={product.id}>
                                     <ProductCard product={product} />
@@ -69,33 +73,11 @@ const HomePage = () => {
                         </div>
                     )}
 
-                    <div className="text-center mt-5">
-                        <Link to="/catalog" className="btn btn-outline-dark btn-lg px-5">
-                            Смотреть все товары →
+                    {/* Кнопка "Смотреть всё" */}
+                    <div className="text-center mt-5 pt-3">
+                        <Link to="/catalog" className="btn btn-outline-dark btn-lg px-5 rounded-0 border-2 fw-light" style={{ letterSpacing: '0.1em' }}>
+                            ВЕСЬ КАТАЛОГ
                         </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* Преимущества */}
-            <FeaturesSection />
-
-            {/* Распродажа */}
-            <section className="py-5 bg-danger text-white">
-                <div className="container">
-                    <div className="row align-items-center">
-                        <div className="col-md-6">
-                            <h2 className="display-4 fw-bold mb-3">РАСПРОДАЖА</h2>
-                            <p className="lead mb-4">Скидки до 70% на прошлые коллекции</p>
-                            <p className="mb-4">Торопитесь! Предложение ограничено</p>
-                            <Link to="/sale" className="btn btn-light btn-lg px-5">
-                                Перейти к распродаже
-                            </Link>
-                        </div>
-                        <div className="col-md-6 text-center">
-                            <div className="display-1 fw-bold">-70%</div>
-                            <p className="h5">на отдельные позиции</p>
-                        </div>
                     </div>
                 </div>
             </section>
