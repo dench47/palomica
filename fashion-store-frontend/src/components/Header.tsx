@@ -43,7 +43,7 @@ const Header = () => {
 
                     {/* Навигация */}
                     <nav className="d-none d-md-flex">
-                        <a href="#catalog" className="text-dark text-decoration-none mx-3">КАТАЛОГ</a>
+                        <Link to="/catalog" className="text-dark text-decoration-none mx-3">КАТАЛОГ</Link>
                         <a href="#gallery" className="text-dark text-decoration-none mx-3">ФОТОГАЛЕРЕЯ</a>
                         <a href="#souvenirs" className="text-dark text-decoration-none mx-3">СУВЕНИРЫ</a>
                     </nav>

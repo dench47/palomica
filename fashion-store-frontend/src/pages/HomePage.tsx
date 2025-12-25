@@ -75,7 +75,9 @@ const HomePage = () => {
 
                     {/* Кнопка "Смотреть всё" */}
                     <div className="text-center mt-5 pt-3">
-                        <Link to="/catalog" className="btn btn-outline-dark btn-lg px-5 rounded-0 border-2 fw-light" style={{ letterSpacing: '0.1em' }}>
+                        <Link to="/catalog" className="btn btn-outline-dark btn-lg px-5 rounded-0 border-2 fw-light"
+                              style={{ letterSpacing: '0.1em' }}
+                              onClick={() => window.scrollTo(0, 0)}>
                             ВЕСЬ КАТАЛОГ
                         </Link>
                     </div>

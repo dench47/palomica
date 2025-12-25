@@ -241,6 +241,7 @@ public class DataInitializer {
         souvenirBrooch.setMaterial("Ткань, Бусины, Фурнитура");
         souvenirBrooch.setCategory("сувениры");
         products.add(souvenirBrooch);
+
         // Ещё платья для теста фильтрации
         Product summerDress = new Product(
                 "Летнее платье",
