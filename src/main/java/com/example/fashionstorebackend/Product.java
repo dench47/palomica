@@ -32,6 +32,9 @@ public class Product {
     @Column(name = "care_instructions", length = 500)
     private String careInstructions;
 
+    @Column(nullable = false) // Делаем обязательным
+    private String category = "одежда"; // Значение по умолчанию
+
     // Для галереи изображений
     @ElementCollection
     @CollectionTable(
@@ -67,6 +70,9 @@ public class Product {
     // Геттеры и сеттеры для ВСЕХ полей
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

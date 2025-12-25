@@ -1,4 +1,5 @@
 export type Product = {
+
     id: number;
     name: string;
     description: string;
@@ -9,6 +10,7 @@ export type Product = {
     material?: string;
     careInstructions?: string;
     additionalImages?: string[];
+    category: string;
 }
 
 const API_BASE_URL = 'https://api.palomica.ru/api';
@@ -61,7 +63,8 @@ function getMockProducts(): Product[] {
                 "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop",
                 "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop",
                 "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&h=1000&fit=crop"
-            ]
+            ],
+            category: "одежда"
         },
         {
             id: 2,
@@ -76,7 +79,9 @@ function getMockProducts(): Product[] {
             additionalImages: [
                 "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop",
                 "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop"
-            ]
+            ],
+            category: "одежда"
+
         },
         {
             id: 3,
@@ -87,7 +92,9 @@ function getMockProducts(): Product[] {
             color: "Белый",
             size: "XS,S,M,L",
             material: "Шёлк 100%",
-            careInstructions: "Только ручная стирка, сухая чистка"
+            careInstructions: "Только ручная стирка, сухая чистка",
+            category: "одежда"
+
         },
         {
             id: 4,
@@ -101,7 +108,9 @@ function getMockProducts(): Product[] {
             careInstructions: "Протирать влажной тряпкой, не стирать",
             additionalImages: [
                 "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop"
-            ]
+            ],
+            category: "одежда"
+
         },
         {
             id: 5,
@@ -112,7 +121,9 @@ function getMockProducts(): Product[] {
             color: "Чёрный",
             size: "38,40,42,44",
             material: "Натуральная кожа",
-            careInstructions: "Протирать влажной тряпкой, специальный уход за кожей"
+            careInstructions: "Протирать влажной тряпкой, специальный уход за кожей",
+            category: "одежда"
+
         },
         {
             id: 6,
@@ -127,7 +138,9 @@ function getMockProducts(): Product[] {
             additionalImages: [
                 "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop",
                 "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop"
-            ]
+            ],
+            category: "одежда"
+
         }
     ];
 }
