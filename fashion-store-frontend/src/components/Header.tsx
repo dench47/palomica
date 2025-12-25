@@ -111,7 +111,7 @@ const Header = () => {
                 {/* Мобильное меню */}
                 <div className="d-md-none mt-3">
                     <div className="d-flex justify-content-around">
-                        <a href="#catalog" className="text-dark text-decoration-none small">КАТАЛОГ</a>
+                        <Link to="/catalog" className="text-dark text-decoration-none mx-3">КАТАЛОГ</Link>
                         <a href="#gallery" className="text-dark text-decoration-none small">ФОТОГАЛЕРЕЯ</a>
                         <a href="#souvenirs" className="text-dark text-decoration-none small">СУВЕНИРЫ</a>
                     </div>
