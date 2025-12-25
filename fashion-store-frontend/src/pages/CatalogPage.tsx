@@ -54,38 +54,67 @@ const CatalogPage = () => {
             return;
         }
 
-        // Если выбрана основная категория
-        const filtered = products.filter(product =>
-            product.category?.toLowerCase() === selectedCategory.toLowerCase()
-        );
+        // Проверяем, это основная категория или подкатегория
+        const isMainCategory = categories.some(c => c.id === selectedCategory);
+        const isSubcategory = Object.keys(subcategoryKeywords).includes(selectedCategory) ||
+            categories.some(c => c.subcategories?.includes(selectedCategory));
 
-        // Если ничего не найдено в основной категории, ищем в подкатегориях по названию
-        if (filtered.length === 0) {
-            const subcategoryFiltered = products.filter(product =>
-                product.name.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-                product.description.toLowerCase().includes(selectedCategory.toLowerCase())
+        if (isMainCategory) {
+            // Основная категория - фильтр по полю category
+            const filtered = products.filter(product =>
+                product.category?.toLowerCase() === selectedCategory.toLowerCase()
             );
-            setFilteredProducts(subcategoryFiltered);
-        } else {
             setFilteredProducts(filtered);
+        } else if (isSubcategory) {
+            // Подкатегория - умный поиск по названию
+            const keywords = subcategoryKeywords[selectedCategory] || [selectedCategory.toLowerCase()];
+            const filtered = products.filter(product => {
+                const name = product.name.toLowerCase();
+                return keywords.some(keyword => name.includes(keyword));
+            });
+            setFilteredProducts(filtered);
+        } else {
+            // На всякий случай - показываем все
+            setFilteredProducts(products);
         }
     };
 
+    // Карта подкатегорий → ключевые слова для поиска (добавь в начало компонента, после useState)
+    const subcategoryKeywords: Record<string, string[]> = {
+        'платья': ['платье', 'платья'],
+        'блузки и рубашки': ['блузка', 'рубашка', 'блузки', 'рубашки'],
+        'топы': ['топ', 'топы', 'майка'],
+        'жилеты': ['жилет', 'жилеты', 'безрукавка'],
+        'юбки': ['юбка', 'юбки'],
+        'брюки': ['брюки', 'брюк', 'штаны', 'брюки-'],
+        'платки': ['платок', 'платки', 'шарф', 'кашне'],
+        'пояса': ['пояс', 'пояса', 'ремень'],
+        'баски': ['баска', 'баски'],
+        'воротники': ['воротник', 'воротники'],
+        'манжеты': ['манжета', 'манжеты']
+    };
+
+// 1. ОБНОВЛЁННАЯ ФУНКЦИЯ getCategoryCount
     const getCategoryCount = (categoryId: string): number => {
         if (categoryId === 'все') return products.length;
 
-        // Для основных категорий
-        const mainCategory = categories.find(c => c.id === categoryId);
-        if (mainCategory?.subcategories) {
-            // Для категорий с подкатегориями считаем все товары этой категории
-            return products.filter(p => p.category?.toLowerCase() === categoryId.toLowerCase()).length;
+        // Проверяем, это основная категория?
+        const isMainCategory = categories.some(c => c.id === categoryId);
+
+        if (isMainCategory) {
+            // Основная категория - ищем по полю category
+            return products.filter(p =>
+                p.category?.toLowerCase() === categoryId.toLowerCase()
+            ).length;
         }
 
-        // Для подкатегорий ищем по названию
-        return products.filter(product =>
-            product.name.toLowerCase().includes(categoryId.toLowerCase()) ||
-            product.description.toLowerCase().includes(categoryId.toLowerCase())
-        ).length;
+        // Это подкатегория - используем умный поиск
+        const keywords = subcategoryKeywords[categoryId] || [categoryId.toLowerCase()];
+
+        return products.filter(product => {
+            const name = product.name.toLowerCase();
+            return keywords.some(keyword => name.includes(keyword));
+        }).length;
     };
 
     const handleCategoryClick = (categoryId: string) => {
@@ -93,9 +122,24 @@ const CatalogPage = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // 2. ОБНОВЛЁННАЯ ФУНКЦИЯ handleSubcategoryClick
     const handleSubcategoryClick = (subcategory: string) => {
+        // Получаем ключевые слова для поиска
+        const keywords = subcategoryKeywords[subcategory] || [subcategory.toLowerCase()];
+
+        // Фильтруем товары
+        const filtered = products.filter(product => {
+            const name = product.name.toLowerCase();
+            return keywords.some(keyword => name.includes(keyword));
+        });
+
+        setFilteredProducts(filtered);
         setSelectedCategory(subcategory);
+
+        // Скроллим наверх
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
 
     if (loading) {
         return (
