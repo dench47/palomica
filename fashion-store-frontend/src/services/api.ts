@@ -13,7 +13,7 @@ export type Product = {
     category: string;
 }
 
-const API_BASE_URL = 'https://api.palomica.ru/api';
+const API_BASE_URL = 'https://api.palomika.ru/api';
 
 export const productService = {
     async getAllProducts(): Promise<Product[]> {

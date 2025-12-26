@@ -34,8 +34,8 @@ const Footer = () => {
                                 </a>
                             </li>
                             <li className="mb-2">
-                                <a href="mailto:info@palomica.ru" className="text-light text-decoration-none small opacity-75 hover-opacity-100">
-                                    info@palomica.ru
+                                <a href="mailto:info@palomika.ru" className="text-light text-decoration-none small opacity-75 hover-opacity-100">
+                                    info@palomika.ru
                                 </a>
                             </li>
                         </ul>
@@ -71,7 +71,7 @@ const Footer = () => {
                 <hr className="bg-dark my-5"/>
 
                 <div className="text-center">
-                    <p className="small opacity-75 mb-1">© 2025 PALOMICA. Все права защищены.</p>
+                    <p className="small opacity-75 mb-1">© 2025 PALOMIKA. Все права защищены.</p>
                     <p className="small opacity-50">Мы используем cookie, чтобы улучшить работу сайта</p>
                 </div>
             </div>
