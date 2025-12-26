@@ -11,8 +11,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**") // Разрешаем запросы ко всем эндпоинтам, начинающимся с /api
                 .allowedOrigins(
                         "http://localhost:5173",  // Для локальной разработки
-                        "https://palomica.ru",     // Ваш основной домен (ОБЯЗАТЕЛЬНО с https)
-                        "http://palomica.ru"       // На всякий случай, если кто-то введет без https
+                        "https://palomika.ru",     // Ваш основной домен (ОБЯЗАТЕЛЬНО с https)
+                        "http://palomika.ru"       // На всякий случай, если кто-то введет без https
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'palomica.ru' // Разрешаем запросы с вашего домена
+      'palomika.ru' // Разрешаем запросы с вашего домена
     ]
   }
 })
