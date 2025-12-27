@@ -5,7 +5,7 @@ const CollectionBanners = () => {
             title: "ВЕЧЕРНИЙ СТИЛЬ",
             subtitle: "Коллекция 2025",
             description: "Элегантные платья и костюмы для особых случаев",
-            image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
+            image: "/images/banners/ban1.jpeg",
             link: "/collection/evening",
             buttonText: "СМОТРЕТЬ КОЛЛЕКЦИЮ"
         },
@@ -14,7 +14,7 @@ const CollectionBanners = () => {
             title: "ПОВСЕДНЕВНАЯ КЛАССИКА",
             subtitle: "Новая коллекция",
             description: "Удобная и стильная одежда на каждый день",
-            image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
+            image: "/images/banners/ban2.jpeg",
             link: "/collection/casual",
             buttonText: "ИССЛЕДОВАТЬ"
         }
