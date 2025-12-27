@@ -1,14 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
+// Импортируем тип Product из api.ts
+import type { Product } from '../services/api';
+
 interface ProductCardProps {
-    product: {
-        id: number;
-        name: string;
-        description: string;
-        price: number;
-        imageUrl: string;
-    };
+    product: Product; // Используем полный тип Product
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
@@ -16,17 +13,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
     const navigate = useNavigate();
 
     const handleCardClick = () => {
-        // Скроллим наверх перед переходом
         window.scrollTo({ top: 0, behavior: 'smooth' });
         navigate(`/product/${product.id}`);
     };
 
     const handleAddToCart = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Важно! Останавливаем всплытие
+        e.stopPropagation();
         addToCart(product);
         alert(`Товар "${product.name}" добавлен в корзину!`);
     };
-
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU', {
@@ -40,7 +35,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div
             className="card h-100 border-0 rounded-0 hover-scale position-relative"
             onClick={handleCardClick}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', backgroundColor: '#edf2f2' }} // Белый фон карточки
         >
             {/* Изображение */}
             <div className="position-relative overflow-hidden" style={{ height: '400px' }}>
@@ -51,13 +46,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     style={{ transition: 'transform 0.5s ease' }}
                 />
 
-                {/* Кнопка корзины - с отдельным обработчиком */}
+                {/* Кнопка корзины */}
                 <div className="position-absolute bottom-0 start-0 w-100 p-3 text-center opacity-0 hover-opacity-100 translate-y-100 hover-translate-y-0"
                      style={{
                          transition: 'all 0.4s ease',
                          backgroundColor: 'rgba(255,255,255,0.95)'
                      }}
-                     onClick={(e) => e.stopPropagation()} // Не даём всплыть клику
+                     onClick={(e) => e.stopPropagation()}
                 >
                     <button
                         className="btn btn-outline-dark rounded-0 border-2 px-4 fw-light"

@@ -1,5 +1,5 @@
 const HeroSlider = () => {
-    const heroImage = "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80";
+    const heroImage = "/images/banners/banner.jpg";
 
     return (
         <div className="hero-banner position-relative vh-100 overflow-hidden">

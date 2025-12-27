@@ -38,7 +38,7 @@ const HomePage = () => {
 
             {/* Секция товаров - минималистичная */}
             <section id="products" className="py-5 bg-white">
-                {/* ИЗМЕНИ ЭТУ СТРОКУ: container -> container-fluid px-0 */}
+
                 <div className="container-fluid px-0">
                     {/* Заголовок секции в минималистичном стиле */}
                     <div className="mb-5 text-center">

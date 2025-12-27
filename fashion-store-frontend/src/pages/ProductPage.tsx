@@ -409,23 +409,7 @@ const ProductPage = () => {
                                 </button>
                             </div>
 
-                            {/* Гарантии */}
-                            <div className="mt-5 pt-4 border-top">
-                                <div className="row g-0 text-center small text-muted">
-                                    <div className="col-4 border-end">
-                                        <div className="mb-2">🚚</div>
-                                        <div>Бесплатная доставка</div>
-                                    </div>
-                                    <div className="col-4 border-end">
-                                        <div className="mb-2">↩️</div>
-                                        <div>Возврат 14 дней</div>
-                                    </div>
-                                    <div className="col-4">
-                                        <div className="mb-2">🛡️</div>
-                                        <div>Гарантия качества</div>
-                                    </div>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
