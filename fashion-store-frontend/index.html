@@ -27,7 +27,6 @@
   <meta name="twitter:title" content="Palomika | Магазин дизайнерской одежды">
   <meta name="twitter:description" content="Эксклюзивная дизайнерская одежда и аксессуары от российского дизайнера.">
   <meta name="twitter:image" content="https://palomika.ru/images/banners/logo.png">
-  <meta name="twitter:creator" content="@palomika">
 
   <!-- ========== CANONICAL & ALTERNATE ========== -->
   <link rel="canonical" href="https://palomika.ru">
@@ -49,16 +48,16 @@
   <meta name="format-detection" content="telephone=no">
 
   <!-- ========== FAVICON & APP ICONS ========== -->
-  <link rel="icon" type="image/png" href="/images/banners/logo.png">
+  <link rel="icon" type="image/svg+xml" href="/vite.svg">
   <link rel="apple-touch-icon" href="/images/banners/logo.png">
-  <link rel="apple-touch-icon" sizes="72x72" href="/images/banners/logo.png">
-  <link rel="apple-touch-icon" sizes="144x144" href="/images/banners/logo.png">
   <link rel="shortcut icon" href="/images/banners/logo.png" type="image/x-icon">
 
   <!-- ========== FONTS & STYLES ========== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+
+  <!-- ========== УБРАТЬ PRELOAD логотипа (он вызывает ошибку) ========== -->
 
   <!-- ========== SCHEMA.ORG / STRUCTURED DATA ========== -->
   <script type="application/ld+json">
@@ -70,25 +69,14 @@
       "url": "https://palomika.ru",
       "logo": "https://palomika.ru/images/banners/logo.png",
       "image": "https://palomika.ru/images/banners/banner.jpg",
-      "telephone": "+7-XXX-XXX-XX-XX",
-      "email": "info@palomika.ru",
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "RU",
         "addressLocality": "Москва"
       },
-      "priceRange": "₽₽₽",
-      "openingHours": "Mo-Su 09:00-21:00",
-      "sameAs": [
-        "https://www.instagram.com/palomika/",
-        "https://vk.com/palomika"
-      ]
+      "priceRange": "₽₽₽"
     }
   </script>
-
-  <!-- ========== PRELOAD CRITICAL ASSETS ========== -->
-  <link rel="preload" href="/src/main.tsx" as="script">
-  <link rel="preload" href="/images/banners/logo.png" as="image" type="image/png">
 
   <!-- ========== ADDITIONAL META ========== -->
   <meta name="copyright" content="Palomika © 2025">
@@ -97,14 +85,6 @@
   <meta name="rating" content="General">
   <meta name="revisit-after" content="7 days">
 
-  <!-- ========== SECURITY HEADERS (через meta, для рендера) ========== -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-
-  <!-- ========== VITE SVG (оставляем если нужно) ========== -->
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
 </head>
 <body>
 <!-- ========== NOSCRIPT CONTENT ========== -->
@@ -112,7 +92,6 @@
   <div style="text-align: center; padding: 50px; font-family: 'Cormorant Garamond', serif;">
     <h1 style="font-size: 2.5rem; margin-bottom: 20px;">Palomika</h1>
     <p style="font-size: 1.2rem; margin-bottom: 30px;">Для работы магазина требуется JavaScript. Пожалуйста, включите JavaScript в настройках вашего браузера.</p>
-    <p style="font-size: 1rem; color: #666;">Или свяжитесь с нами: <a href="mailto:info@palomika.ru">info@palomika.ru</a></p>
   </div>
 </noscript>
 
@@ -121,16 +100,5 @@
 
 <!-- ========== MAIN SCRIPT ========== -->
 <script type="module" src="/src/main.tsx"></script>
-
-<!-- ========== GOOGLE ANALYTICS (если будете добавлять) ========== -->
-<!--
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-XXXXXXX');
-</script>
--->
 </body>
 </html>
