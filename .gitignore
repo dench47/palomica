@@ -37,3 +37,4 @@ build/
 *.war
 *.ear
 *.zip
+target/
