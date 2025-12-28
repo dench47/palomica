@@ -7,7 +7,7 @@ import java.util.List;
 public class ProductFactory {
 
     // Путь к изображениям в статических ресурсах
-    private static final String IMAGE_BASE_PATH = "http://localhost:8085/images/products/";
+    private static final String IMAGE_BASE_PATH = "https://api.palomika.ru/images/products/";
 
     // ========== ОДЕЖДА (CLOTHING) ==========
 
