@@ -1,5 +1,4 @@
 import {useCart} from '../context/CartContext';
-import logo from '../../public/images/banners/LogoDark.jpg';
 import {useState, type FormEvent, type ChangeEvent} from 'react';
 import {Link} from "react-router-dom";
 
@@ -7,6 +6,8 @@ const Header = () => {
     const {totalItems} = useCart();
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const logo = "/images/dark-logo.jpeg";
+
 
     const handleSearch = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
