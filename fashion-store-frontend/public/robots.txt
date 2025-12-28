@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Sitemap: https://palomika.ru/sitemap.xml
+
+# Disallow для админ-панелей если будут
+# Disallow: /admin/
+# Disallow: /api/
