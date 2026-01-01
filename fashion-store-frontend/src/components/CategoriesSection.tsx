@@ -2,24 +2,24 @@ const CategoriesSection = () => {
     const categories = [
         {
             id: 1,
-            name: "Каталог",
+            name: "Одежда",
             image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=500&fit=crop",
             count: 120,
-            link: "#catalog"
+            link: "/catalog?category=одежда"
         },
         {
             id: 2,
-            name: "Фотогалерея",
+            name: "Аксессуары",
             image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=500&fit=crop",
             count: 85,
-            link: "#gallery"
+            link: "/catalog?category=аксессуары"
         },
         {
             id: 3,
-            name: "Сувениры",
+            name: "Сумки",
             image: "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=500&fit=crop",
             count: 42,
-            link: "#souvenirs"
+            link: "/catalog?category=сумки"
         }
     ];
 

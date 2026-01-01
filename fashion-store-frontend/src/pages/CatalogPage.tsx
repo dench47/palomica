@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useState, useEffect} from 'react';
+import {useNavigate} from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { productService } from '../services/api';
-import type { Product } from '../services/api';
+import {productService} from '../services/api';
+import type {Product} from '../services/api';
 
 interface Category {
     id: string;
@@ -17,13 +17,25 @@ const CatalogPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('все');
     useNavigate();
-// Категории как в твоём плане
+
+    // ОБНОВЛЕННЫЕ КАТЕГОРИИ (сувениры удалены)
     const categories: Category[] = [
-        { id: 'все', name: 'Все товары' },
-        { id: 'одежда', name: 'Одежда', subcategories: ['платья', 'блузки и рубашки', 'топы', 'жилеты', 'юбки', 'брюки'] },
-        { id: 'аксессуары', name: 'Аксессуары', subcategories: ['платки', 'пояса', 'баски', 'воротники', 'манжеты'] },
-        { id: 'сумки', name: 'Сумки' },
-        { id: 'сувениры', name: 'Сувениры' }
+        {id: 'все', name: 'Все товары'},
+        {
+            id: 'одежда',
+            name: 'Одежда',
+            subcategories: ['топы', 'футболки и лонгсливы', 'блузки и рубашки', 'жакеты', 'платья', 'сарафаны и фартуки', 'брюки', 'юбки']
+        },
+        {
+            id: 'аксессуары',
+            name: 'Аксессуары',
+            subcategories: ['баски', 'манжеты', 'платки', 'пояса', 'съемные карманы']
+        },
+        {
+            id: 'сумки',
+            name: 'Сумки',
+            subcategories: ['клатчи', 'поясные сумки', 'рюкзаки', 'шопперы']
+        }
     ];
 
     useEffect(() => {
@@ -54,19 +66,16 @@ const CatalogPage = () => {
             return;
         }
 
-        // Проверяем, это основная категория или подкатегория
         const isMainCategory = categories.some(c => c.id === selectedCategory);
         const isSubcategory = Object.keys(subcategoryKeywords).includes(selectedCategory) ||
             categories.some(c => c.subcategories?.includes(selectedCategory));
 
         if (isMainCategory) {
-            // Основная категория - фильтр по полю category
             const filtered = products.filter(product =>
                 product.category?.toLowerCase() === selectedCategory.toLowerCase()
             );
             setFilteredProducts(filtered);
         } else if (isSubcategory) {
-            // Подкатегория - умный поиск по названию
             const keywords = subcategoryKeywords[selectedCategory] || [selectedCategory.toLowerCase()];
             const filtered = products.filter(product => {
                 const name = product.name.toLowerCase();
@@ -74,41 +83,43 @@ const CatalogPage = () => {
             });
             setFilteredProducts(filtered);
         } else {
-            // На всякий случай - показываем все
             setFilteredProducts(products);
         }
     };
 
-    // Карта подкатегорий → ключевые слова для поиска (добавь в начало компонента, после useState)
     const subcategoryKeywords: Record<string, string[]> = {
-        'платья': ['платье', 'платья'],
-        'блузки и рубашки': ['блузка', 'рубашка', 'блузки', 'рубашки'],
-        'топы': ['топ', 'топы', 'майка'],
-        'жилеты': ['жилет', 'жилеты', 'безрукавка'],
-        'юбки': ['юбка', 'юбки'],
-        'брюки': ['брюки', 'брюк', 'штаны', 'брюки-'],
-        'платки': ['платок', 'платки', 'шарф', 'кашне'],
-        'пояса': ['пояс', 'пояса', 'ремень'],
-        'баски': ['баска', 'баски'],
-        'воротники': ['воротник', 'воротники'],
-        'манжеты': ['манжета', 'манжеты']
+        'топы': ['топ', 'топы', 'майка', 'безрукавка'],
+        'футболки и лонгсливы': ['футболка', 'лонгслив', 'лонгс', 'тельняшка', 'тельник'],
+        'блузки и рубашки': ['блузка', 'рубашка', 'блузки', 'рубашки', 'сорочка'],
+        'жакеты': ['жакет', 'пиджак', 'костюм', 'кардиган', 'блейзер'],
+        'платья': ['платье', 'платья', 'платьице'],
+        'сарафаны и фартуки': ['сарафан', 'фартук', 'передник', 'юбка-сарафан'],
+        'брюки': ['брюки', 'брюк', 'штаны', 'брюки-', 'шорты', 'бриджи'],
+        'юбки': ['юбка', 'юбки', 'юбочка', 'миди', 'мини', 'макси'],
+
+        'баски': ['баска', 'пеплум', 'пеплум-баска'],
+        'манжеты': ['манжета', 'манжеты', 'нарукавник'],
+        'платки': ['платок', 'платки', 'шарф', 'кашне', 'палантин', 'косынка'],
+        'пояса': ['пояс', 'пояса', 'ремень', 'поясок'],
+        'съемные карманы': ['карман', 'карманы', 'кармашек', 'кармашик'],
+
+        'клатчи': ['клатч', 'клатчи', 'вечерняя сумка', 'мини-сумка'],
+        'поясные сумки': ['поясная сумка', 'бананка', 'поясные', 'на пояс'],
+        'рюкзаки': ['рюкзак', 'ранец', 'рюкзаки', 'заплечный'],
+        'шопперы': ['шоппер', 'шопперы', 'холщовая сумка', 'эко-сумка', 'сумка-шоппер']
     };
 
-// 1. ОБНОВЛЁННАЯ ФУНКЦИЯ getCategoryCount
     const getCategoryCount = (categoryId: string): number => {
         if (categoryId === 'все') return products.length;
 
-        // Проверяем, это основная категория?
         const isMainCategory = categories.some(c => c.id === categoryId);
 
         if (isMainCategory) {
-            // Основная категория - ищем по полю category
             return products.filter(p =>
                 p.category?.toLowerCase() === categoryId.toLowerCase()
             ).length;
         }
 
-        // Это подкатегория - используем умный поиск
         const keywords = subcategoryKeywords[categoryId] || [categoryId.toLowerCase()];
 
         return products.filter(product => {
@@ -119,15 +130,12 @@ const CatalogPage = () => {
 
     const handleCategoryClick = (categoryId: string) => {
         setSelectedCategory(categoryId);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
-    // 2. ОБНОВЛЁННАЯ ФУНКЦИЯ handleSubcategoryClick
     const handleSubcategoryClick = (subcategory: string) => {
-        // Получаем ключевые слова для поиска
         const keywords = subcategoryKeywords[subcategory] || [subcategory.toLowerCase()];
 
-        // Фильтруем товары
         const filtered = products.filter(product => {
             const name = product.name.toLowerCase();
             return keywords.some(keyword => name.includes(keyword));
@@ -135,17 +143,14 @@ const CatalogPage = () => {
 
         setFilteredProducts(filtered);
         setSelectedCategory(subcategory);
-
-        // Скроллим наверх
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     };
-
 
     if (loading) {
         return (
             <div className="container-fluid px-4 px-md-5 py-5 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
-                    <div className="spinner-border text-dark" role="status" style={{ width: '3rem', height: '3rem' }}>
+                    <div className="spinner-border text-dark" role="status" style={{width: '3rem', height: '3rem'}}>
                         <span className="visually-hidden">Загрузка каталога...</span>
                     </div>
                     <p className="mt-3 text-muted small">Загружаем каталог товаров...</p>
@@ -158,8 +163,8 @@ const CatalogPage = () => {
         return (
             <div className="container-fluid px-4 px-md-5 py-5 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
-                    <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1 }}>⚠️</div>
-                    <h2 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>⚠️</div>
+                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
                         Ошибка загрузки
                     </h2>
                     <p className="text-muted mb-4">{error}</p>
@@ -176,7 +181,6 @@ const CatalogPage = () => {
 
     return (
         <div className="container-fluid px-0">
-            {/* Заголовок */}
             <div className="px-4 px-md-5 pt-5">
                 <h1 className="fw-light text-center mb-1" style={{
                     fontFamily: "'Playfair Display', serif",
@@ -193,13 +197,8 @@ const CatalogPage = () => {
             </div>
 
             <div className="row g-0">
-                {/* Сайдбар с категориями */}
                 <div className="col-lg-3 col-xl-2 px-4 px-md-5 pb-5">
-                    <div className="sticky-top" style={{ top: '2rem' }}>
-                        <h3 className="h6 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                            Категории
-                        </h3>
-
+                    <div className="sticky-top" style={{top: '2rem'}}>
                         <nav className="nav flex-column">
                             {categories.map(category => (
                                 <div key={category.id} className="mb-3">
@@ -220,7 +219,6 @@ const CatalogPage = () => {
                                         </span>
                                     </button>
 
-                                    {/* Подкатегории */}
                                     {category.subcategories && selectedCategory === category.id && (
                                         <div className="ms-3 mt-2">
                                             {category.subcategories.map(sub => (
@@ -249,17 +247,16 @@ const CatalogPage = () => {
                     </div>
                 </div>
 
-                {/* Основной контент - товары */}
                 <div className="col-lg-9 col-xl-10 px-4 px-md-5 pb-5">
-                    {/* Сообщение если нет товаров в категории */}
                     {filteredProducts.length === 0 && !loading && (
                         <div className="text-center py-5">
-                            <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1 }}>🛍️</div>
-                            <h3 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
+                            <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>🛍️</div>
+                            <h3 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
                                 Товары не найдены
                             </h3>
                             <p className="text-muted mb-4">
-                                В категории "{categories.find(c => c.id === selectedCategory)?.name || selectedCategory}" пока нет товаров
+                                В категории "{categories.find(c => c.id === selectedCategory)?.name || selectedCategory}"
+                                пока нет товаров
                             </p>
                             <button
                                 className="btn btn-outline-dark rounded-0 px-4 py-2"
@@ -270,13 +267,12 @@ const CatalogPage = () => {
                         </div>
                     )}
 
-                    {/* Сетка товаров */}
                     {filteredProducts.length > 0 && (
                         <>
-                            {/* Фильтр выбранной категории */}
                             <div className="mb-4 pb-3 border-bottom">
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <h2 className="h5 fw-light mb-0" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                    <h2 className="h5 fw-light mb-0"
+                                        style={{fontFamily: "'Cormorant Garamond', serif"}}>
                                         {categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
                                     </h2>
                                     <span className="small text-muted">
@@ -286,22 +282,20 @@ const CatalogPage = () => {
                                 </div>
                             </div>
 
-                            {/* Карточки товаров */}
                             <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
                                 {filteredProducts.map((product) => (
                                     <div className="col" key={product.id}>
-                                        <ProductCard product={product} />
+                                        <ProductCard product={product}/>
                                     </div>
                                 ))}
                             </div>
                         </>
                     )}
 
-                    {/* Кнопка "Наверх" для мобильных */}
                     <div className="d-lg-none text-center mt-5">
                         <button
                             className="btn btn-outline-dark rounded-0 px-4 py-2"
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
                         >
                             ↑ Наверх к категориям
                         </button>

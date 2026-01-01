@@ -3,16 +3,14 @@ import {useParams, useNavigate} from 'react-router-dom';
 import {useCart} from '../context/CartContext';
 import {productService} from '../services/api';
 import type {Product} from '../services/api';
-import ProductCard from '../components/ProductCard'; // Для рекомендаций
+import ProductCard from '../components/ProductCard';
 
-// Тип для варианта товара (размер + цвет)
 interface ProductVariant {
     size?: string;
     color?: string;
-    sku?: string; // Артикул, если нужен
+    sku?: string;
 }
 
-// Расширенный тип для товара в корзине с вариантами
 interface CartProduct extends Product {
     selectedVariant?: ProductVariant;
     quantity: number;
@@ -21,7 +19,7 @@ interface CartProduct extends Product {
 const ProductPage = () => {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const {addToCart} = useCart();
+    const {addToCart, items} = useCart();
 
     const [product, setProduct] = useState<CartProduct | null>(null);
     const [loading, setLoading] = useState(true);
@@ -42,6 +40,17 @@ const ProductPage = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
+    // Функция проверки, есть ли товар в корзине
+    const isProductInCart = (productId: number) => {
+        return items.some(item => item.product.id === productId);
+    };
+
+    // Функция получения количества товара в корзине
+    const getCartQuantity = (productId: number) => {
+        const item = items.find(item => item.product.id === productId);
+        return item ? item.quantity : 0;
+    };
+
     const loadProduct = async () => {
         try {
             setLoading(true);
@@ -49,7 +58,6 @@ const ProductPage = () => {
             const data = await productService.getProductById(productId);
 
             if (data) {
-                // Преобразуем Product в CartProduct
                 const cartProduct: CartProduct = {
                     ...data,
                     quantity: 1,
@@ -57,7 +65,6 @@ const ProductPage = () => {
                 };
                 setProduct(cartProduct);
 
-                // Если есть размеры, выбираем первый по умолчанию
                 if (data.size) {
                     const sizes = data.size.split(',');
                     if (sizes.length > 0) {
@@ -68,7 +75,6 @@ const ProductPage = () => {
                     }
                 }
 
-                // Если есть цвета, выбираем первый по умолчанию
                 if (data.color) {
                     const colors = data.color.split(',');
                     if (colors.length > 0) {
@@ -92,7 +98,6 @@ const ProductPage = () => {
     const loadRelatedProducts = async () => {
         try {
             const data = await productService.getAllProducts();
-            // Фильтруем товары той же категории (здесь просто берём 4 случайных)
             const shuffled = [...data].sort(() => 0.5 - Math.random());
             setRelatedProducts(shuffled.slice(0, 4));
         } catch (err) {
@@ -102,12 +107,10 @@ const ProductPage = () => {
 
     const handleAddToCart = () => {
         if (product) {
-            // Добавляем quantity раз
             for (let i = 0; i < quantity; i++) {
                 addToCart(product, selectedVariant);
             }
 
-            // Красивое сообщение
             let variantText = '';
             if (selectedVariant.size) variantText += `размер: ${selectedVariant.size}`;
             if (selectedVariant.color) {
@@ -116,12 +119,9 @@ const ProductPage = () => {
             }
 
             alert(`Товар "${product.name}" ${variantText ? `(${variantText})` : ''} добавлен в корзину (${quantity} шт.)!`);
-
-            // Сброс количества
             setQuantity(1);
         }
     };
-    ;
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU', {
@@ -131,7 +131,6 @@ const ProductPage = () => {
         }).format(price);
     };
 
-    // Функции для выбора вариантов
     const handleSizeSelect = (size: string) => {
         setSelectedVariant(prev => ({...prev, size}));
     };
@@ -142,8 +141,7 @@ const ProductPage = () => {
 
     if (loading) {
         return (
-            <div
-                className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
                     <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>⏳</div>
                     <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
@@ -159,8 +157,7 @@ const ProductPage = () => {
 
     if (error || !product) {
         return (
-            <div
-                className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100" style={{maxWidth: '500px'}}>
                     <div className="mb-4" style={{fontSize: '4rem'}}>❌</div>
                     <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
@@ -178,7 +175,6 @@ const ProductPage = () => {
         );
     }
 
-    // Подготовка данных
     const allImages = [
         product.imageUrl,
         ...(product.additionalImages || [])
@@ -186,10 +182,12 @@ const ProductPage = () => {
 
     const sizes = product.size ? product.size.split(',').map(s => s.trim()) : [];
     const colors = product.color ? product.color.split(',').map(c => c.trim()) : [];
+    const totalPrice = product.price * quantity;
+    const isInCart = isProductInCart(product.id);
+    const cartQuantity = getCartQuantity(product.id);
 
     return (
         <div className="container-fluid px-0">
-            {/* Хлебные крошки в минималистичном стиле */}
             <div className="px-4 px-md-5 pt-4">
                 <nav aria-label="Навигация" className="d-none d-md-block">
                     <div className="d-flex align-items-center small text-muted">
@@ -207,10 +205,8 @@ const ProductPage = () => {
             </div>
 
             <div className="row g-0">
-                {/* Галерея - левая колонка */}
                 <div className="col-lg-6">
                     <div className="px-4 px-md-5 py-5">
-                        {/* Главное изображение */}
                         <div className="main-image mb-4">
                             <div
                                 className="w-100 bg-light"
@@ -218,13 +214,12 @@ const ProductPage = () => {
                                     backgroundImage: `url(${allImages[selectedImage]})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
-                                    paddingBottom: '400px', // Квадратное соотношение
+                                    paddingBottom: '400px',
                                     cursor: 'zoom-in'
                                 }}
                             ></div>
                         </div>
 
-                        {/* Миниатюры */}
                         {allImages.length > 1 && (
                             <div className="d-flex gap-3 overflow-auto pb-2">
                                 {allImages.map((img, index) => (
@@ -253,11 +248,9 @@ const ProductPage = () => {
                     </div>
                 </div>
 
-                {/* Информация о товаре - правая колонка */}
                 <div className="col-lg-6 bg-light">
                     <div className="px-4 px-md-5 py-5 h-100">
                         <div className="d-flex flex-column h-100">
-                            {/* Заголовок и цена */}
                             <div className="mb-4">
                                 <h1 className="fw-light mb-3" style={{
                                     fontFamily: "'Playfair Display', serif",
@@ -276,13 +269,11 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            {/* Описание */}
                             <div className="mb-5">
                                 <p className="text-muted mb-4" style={{lineHeight: '1.6'}}>
                                     {product.description}
                                 </p>
 
-                                {/* Детали */}
                                 <div className="row small text-muted">
                                     {product.material && (
                                         <div className="col-6 mb-2">
@@ -299,7 +290,6 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            {/* ВАЖНО: Выбор размера (только если размеры есть) */}
                             {sizes.length > 0 && (
                                 <div className="mb-4">
                                     <h3 className="h6 fw-light mb-3"
@@ -325,7 +315,6 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            {/* ВАЖНО: Выбор цвета (только если цвета есть) */}
                             {colors.length > 0 && (
                                 <div className="mb-4">
                                     <h3 className="h6 fw-light mb-3"
@@ -351,32 +340,66 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            {/* Выбор количества */}
+                            {/* НАДПИСЬ "ТОВАР В КОРЗИНЕ" НА СТРАНИЦЕ ТОВАРА */}
+                            {isInCart && (
+                                <div className="mb-4">
+                                    <div className="bg-dark text-white px-4 py-3 rounded-0 d-inline-block"
+                                         style={{
+                                             fontSize: '0.9rem',
+                                             letterSpacing: '0.05em',
+                                             fontFamily: "'Cormorant Garamond', serif",
+                                             opacity: 0.95,
+                                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                         }}>
+                                        <div className="d-flex align-items-center">
+                                            <span className="me-3">✓</span>
+                                            <span>Товар в корзине</span>
+                                            <span className="ms-3 fw-bold">{cartQuantity} шт.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ОБНОВЛЕННЫЙ БЛОК С КОЛИЧЕСТВОМ */}
                             <div className="mb-5">
-                                <h3 className="h6 fw-light mb-3" style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                                    Количество
-                                </h3>
-                                <span className="small text-muted">
-            В наличии: <strong>10+ шт.</strong> {/* Пока заглушка */}
-        </span>
-                                <div className="d-flex align-items-center" style={{maxWidth: '150px'}}>
-                                    <button
-                                        className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
-                                        onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                                    >
-                                        –
-                                    </button>
-                                    <span className="flex-grow-1 text-center px-3">{quantity}</span>
-                                    <button
-                                        className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
-                                        onClick={() => setQuantity(prev => prev + 1)}
-                                    >
-                                        +
-                                    </button>
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 className="h6 fw-light mb-0" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                        Количество
+                                    </h3>
+                                    <span className="small text-muted">
+                                        В наличии: <strong>10+ шт.</strong>
+                                    </span>
+                                </div>
+
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div className="d-flex align-items-center" style={{maxWidth: '150px'}}>
+                                        <button
+                                            className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
+                                            onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                                        >
+                                            –
+                                        </button>
+                                        <span className="flex-grow-1 text-center px-3" style={{minWidth: '40px'}}>
+                                            {quantity}
+                                        </span>
+                                        <button
+                                            className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
+                                            onClick={() => setQuantity(prev => prev + 1)}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+
+                                    {/* ИТОГОВАЯ СУММА СПРАВА */}
+                                    <div className="text-end">
+                                        <div className="small text-muted mb-1">Сумма:</div>
+                                        <div className="fs-5" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                            {formatPrice(totalPrice)}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Кнопка добавления */}
                             <div className="mt-auto pt-4">
                                 <button
                                     className="btn btn-dark rounded-0 w-100 py-3 fw-light mb-3"
@@ -394,7 +417,7 @@ const ProductPage = () => {
                                         e.currentTarget.style.backgroundColor = '';
                                     }}
                                 >
-                                    ДОБАВИТЬ В КОРЗИНУ
+                                    {isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ'}
                                 </button>
 
                                 <button
@@ -408,14 +431,11 @@ const ProductPage = () => {
                                     ← ПРОДОЛЖИТЬ ПОКУПКИ
                                 </button>
                             </div>
-
-
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Рекомендации */}
             {relatedProducts.length > 0 && (
                 <div className="px-4 px-md-5 py-5">
                     <h3 className="fw-light text-center mb-5" style={{

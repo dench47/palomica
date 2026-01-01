@@ -22,40 +22,31 @@ public class DataInitializer {
 
     @PostConstruct
     public void initSomeData() {
-        // 1. Сначала обновляем категории у существующих товаров
         updateCategoriesForExistingProducts();
 
-        // 2. Проверяем, какие товары уже есть
         List<Product> existingProducts = productRepository.findAll();
         List<String> existingProductNames = existingProducts.stream()
                 .map(Product::getName)
                 .toList();
 
-        // 3. Создаём список ВСЕХ товаров через фабрику
         List<Product> allProducts = ProductFactory.createAllProducts();
 
-        // 4. Фильтруем только те, которых ещё нет
         List<Product> newProducts = allProducts.stream()
                 .filter(product -> !existingProductNames.contains(product.getName()))
                 .toList();
 
-        // 5. Добавляем только новые товары
         if (!newProducts.isEmpty()) {
             productRepository.saveAll(newProducts);
             System.out.println(">>> Добавлено " + newProducts.size() + " новых товаров.");
-
-            // Выводим список добавленных товаров
             System.out.println(">>> Добавленные товары:");
             newProducts.forEach(p -> System.out.println(">>>   - " + p.getName() + " (" + p.getCategory() + ")"));
         } else {
             System.out.println(">>> Все товары уже в базе. Новых не добавлено.");
         }
 
-        // 6. Статистика
         long totalCount = productRepository.count();
         System.out.println(">>> Всего в базе: " + totalCount + " товаров.");
 
-        // Подсчёт по категориям
         Map<String, Long> categoryCount = productRepository.findAll().stream()
                 .filter(p -> p.getCategory() != null)
                 .collect(Collectors.groupingBy(Product::getCategory, Collectors.counting()));
@@ -90,20 +81,18 @@ public class DataInitializer {
         if (name.contains("платье") || name.contains("рубашка") || name.contains("блуз") ||
                 name.contains("юбка") || name.contains("топ") || name.contains("жилет") ||
                 name.contains("блуза") || name.contains("брюки") || name.contains("пиджак") ||
-                name.contains("костюм") || name.contains("жакет")) {
+                name.contains("костюм") || name.contains("жакет") || name.contains("сарафан") ||
+                name.contains("фартук") || name.contains("футболка") || name.contains("лонгслив")) {
             return "одежда";
         } else if (name.contains("ремен") || name.contains("пояс") || name.contains("баска") ||
                 name.contains("пеплум") || name.contains("воротник") || name.contains("манжета") ||
-                name.contains("шарф") || name.contains("перчатка") || name.contains("шляпа")) {
+                name.contains("шарф") || name.contains("платок") || name.contains("карман")) {
             return "аксессуары";
         } else if (name.contains("сумка") || name.contains("рюкзак") || name.contains("клатч") ||
-                name.contains("кошелёк") || name.contains("портфель")) {
+                name.contains("шоппер") || name.contains("поясная сумка")) {
             return "сумки";
-        } else if (name.contains("сувенир") || name.contains("открытка") || name.contains("магнит") ||
-                name.contains("упаковка") || name.contains("подарок")) {
-            return "сувениры";
         }
 
-        return "одежда"; // категория по умолчанию
+        return "одежда";
     }
 }

@@ -1,5 +1,18 @@
-const HeroSlider = () => {
-    const heroImage = "/images/banners/banner.jpg";
+interface HeroSliderProps {
+    title?: string;
+    subtitle?: string;
+    buttonText?: string;
+    image?: string;
+    link?: string;
+}
+
+const HeroSlider = ({
+                        title = "FASHIONSTORE",
+                        subtitle = "Новое измерение стиля. Эксклюзивные коллекции.",
+                        buttonText = "Открыть коллекцию",
+                        image = "https://api.palomika.ru/images/banners/banner.jpg",
+                        link = "#collections"
+                    }: HeroSliderProps) => {
 
     return (
         <div className="hero-banner position-relative vh-100 overflow-hidden">
@@ -7,7 +20,7 @@ const HeroSlider = () => {
             <div
                 className="w-100 h-100"
                 style={{
-                    backgroundImage: `url(${heroImage})`,
+                    backgroundImage: `url(${image})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat'
@@ -36,7 +49,7 @@ const HeroSlider = () => {
                                 opacity: '0.95'
                             }}
                         >
-                            FASHIONSTORE
+                            {title}
                         </h1>
 
                         {/* Подзаголовок с тонкой анимацией */}
@@ -52,14 +65,14 @@ const HeroSlider = () => {
                                    transition: 'all 0.8s ease'
                                }}
                             >
-                                Новое измерение стиля. Эксклюзивные коллекции.
+                                {subtitle}
                             </p>
                         </div>
 
                         {/* Кнопка с эффектом наведения */}
                         <div className="overflow-hidden">
                             <a
-                                href="#collections"
+                                href={link}
                                 className="btn btn-outline-light btn-lg px-5 py-3 rounded-0 border-1 fw-light d-inline-block"
                                 style={{
                                     letterSpacing: '0.15em',
@@ -81,7 +94,7 @@ const HeroSlider = () => {
                                     e.currentTarget.style.transform = 'translateY(0)';
                                 }}
                             >
-                                Открыть коллекцию
+                                {buttonText}
                             </a>
                         </div>
                     </div>
