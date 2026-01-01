@@ -4,25 +4,36 @@
 .vscode/
 
 # Backend (Maven/Java)
-backend/target/
-backend/*.jar
-backend/logs/
-backend/.classpath
-backend/.project
-backend/.settings/
+target/
+*.jar
+logs/
+.classpath
+.project
+.settings/
+bin/
+
+# Spring Boot static build files (генерируются автоматически)
+src/main/resources/static/assets/
+src/main/resources/static/index.html
+src/main/resources/static/humans.txt
+src/main/resources/static/robots.txt
+src/main/resources/static/sitemap.xml
+src/main/resources/static/vite.svg
+# НО сохраняем изображения товаров:
+!src/main/resources/static/images/
 
 # Frontend (Node)
-frontend/node_modules/
-frontend/dist/
-frontend/build/
-frontend/.env
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
+fashion-store-frontend/node_modules/
+fashion-store-frontend/dist/
+fashion-store-frontend/build/
+fashion-store-frontend/.env
+fashion-store-frontend/.env.local
+fashion-store-frontend/.env.development.local
+fashion-store-frontend/.env.test.local
+fashion-store-frontend/.env.production.local
+fashion-store-frontend/npm-debug.log*
+fashion-store-frontend/yarn-debug.log*
+fashion-store-frontend/yarn-error.log*
 
 # Системные файлы
 .DS_Store
@@ -37,4 +48,8 @@ build/
 *.war
 *.ear
 *.zip
-target/
+
+# Operating System files
+*.swp
+*.swo
+*~

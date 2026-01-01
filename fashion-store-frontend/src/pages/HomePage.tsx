@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import HeroSlider from '../components/HeroSlider'; // Это теперь статичный баннер
-import CollectionBanners from '../components/CollectionBanners'; // вместо TwoPhotosSection
+import HeroSlider from '../components/HeroSlider';
 import { productService } from '../services/api';
 import type { Product } from '../services/api';
 
@@ -19,7 +18,7 @@ const HomePage = () => {
         try {
             setLoading(true);
             const data = await productService.getAllProducts();
-            setFeaturedProducts(data.slice(0, 8));
+            setFeaturedProducts(data.slice(0, 4));
         } catch (err) {
             setError('Ошибка при загрузке товаров');
             console.error(err);
@@ -30,17 +29,36 @@ const HomePage = () => {
 
     return (
         <>
-            {/* Главный full-screen баннер вместо слайдера */}
-            <HeroSlider />
+            {/* Первый баннер */}
+            <HeroSlider
+                title="FASHIONSTORE"
+                subtitle="Новое измерение стиля. Эксклюзивные коллекции."
+                buttonText="Открыть коллекцию"
+                image="https://api.palomika.ru/images/banners/banner.jpg"
+                link="#products"
+            />
 
+            {/* Второй баннер */}
+            <HeroSlider
+                title="ВЕЧЕРНИЙ СТИЛЬ"
+                subtitle="Коллекция 2025. Элегантные платья и костюмы для особых случаев."
+                buttonText="СМОТРЕТЬ КОЛЛЕКЦИЮ"
+                image="https://api.palomika.ru/images/banners/ban1.jpeg"
+                link="/catalog?category=одежда"
+            />
 
-            <CollectionBanners />
+            {/* Третий баннер */}
+            <HeroSlider
+                title="ПОВСЕДНЕВНАЯ КЛАССИКА"
+                subtitle="Новая коллекция. Удобная и стильная одежда на каждый день."
+                buttonText="ИССЛЕДОВАТЬ"
+                image="https://api.palomika.ru/images/banners/ban2.jpeg"
+                link="/catalog?category=одежда"
+            />
 
-            {/* Секция товаров - минималистичная */}
+            {/* Секция товаров */}
             <section id="products" className="py-5 bg-white">
-
                 <div className="container-fluid px-0">
-                    {/* Заголовок секции в минималистичном стиле */}
                     <div className="mb-5 text-center">
                         <h2 className="fw-light mb-2" style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem' }}>
                             Избранное
@@ -64,7 +82,7 @@ const HomePage = () => {
                     )}
 
                     {!loading && !error && (
-                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-0">
+                        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-0">
                             {featuredProducts.map((product) => (
                                 <div className="col" key={product.id}>
                                     <ProductCard product={product} />
@@ -73,7 +91,6 @@ const HomePage = () => {
                         </div>
                     )}
 
-                    {/* Кнопка "Смотреть всё" */}
                     <div className="text-center mt-5 pt-3">
                         <Link to="/catalog" className="btn btn-outline-dark btn-lg px-5 rounded-0 border-2 fw-light"
                               style={{ letterSpacing: '0.1em' }}

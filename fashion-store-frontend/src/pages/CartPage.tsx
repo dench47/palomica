@@ -2,7 +2,7 @@ import {useCart} from '../context/CartContext';
 import {Link} from 'react-router-dom'; // Добавляем импорт для ссылок
 
 const CartPage = () => {
-    const {items, removeFromCart, updateQuantity, totalPrice, clearCart} = useCart();
+    const {items, removeFromCart, totalPrice, clearCart} = useCart();
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -103,25 +103,11 @@ const CartPage = () => {
                                         </div>
 
                                         {/* Управление количеством */}
+                                        {/* Отображение количества и удаления */}
                                         <div className="d-flex justify-content-between align-items-center mt-3">
-                                            <div className="d-flex align-items-center">
-                                                <button
-                                                    className="btn btn-outline-dark border-1 rounded-0 px-3 py-1"
-                                                    onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                                                    style={{ minWidth: '40px' }}
-                                                >
-                                                    –
-                                                </button>
-                                                <span className="mx-3" style={{minWidth: '30px', textAlign: 'center'}}>
-                                                    {item.quantity}
-                                                </span>
-                                                <button
-                                                    className="btn btn-outline-dark border-1 rounded-0 px-3 py-1"
-                                                    onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                                                    style={{minWidth: '40px'}}
-                                                >
-                                                    +
-                                                </button>
+                                            <div>
+                                                <span className="me-3">Количество: <strong>{item.quantity} шт.</strong></span>
+                                                <span>Сумма: <strong>{formatPrice(item.product.price * item.quantity)}</strong></span>
                                             </div>
                                             <button
                                                 className="btn btn-link text-dark p-0 text-decoration-none small"
