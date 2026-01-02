@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 
-/* Основные настройки в стиле Ulyana Sergeenko */
+/* Основные настройки в стиле Ulyana Sergeenko + кремовая палитра */
 :root {
   font-family: 'Cormorant Garamond', 'Playfair Display', serif;
   line-height: 1.6;
@@ -14,14 +14,25 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* КРЕМОВАЯ ПАЛИТРА ДЛЯ ВСЕГО ПРОЕКТА */
+  --cream-bg: #f5f3ee;      /* Основной фон страниц */
+  --cream-light: #faf9f6;   /* Светлый фон для карточек */
+  --cream-dark: #e8e5de;    /* Тёмный крем для границ, разделителей */
+  --accent-brown: #8a7a63;  /* Акцентный тёплый коричневый */
+  --accent-brown-light: #a89b83; /* Светлый акцент */
+  --text-dark: #333333;     /* Основной текст */
+  --text-medium: #666666;   /* Вторичный текст */
+  --text-light: #777777;    /* Слабый текст, подписи */
+  --border-color: rgba(0, 0, 0, 0.08); /* Полупрозрачные границы */
 }
 
-/* Базовые стили для body */
+/* Базовые стили для body с кремовым фоном */
 body {
   margin: 0;
   font-family: 'Cormorant Garamond', serif;
-  color: #000;
-  background-color: #fff;
+  color: var(--text-dark);
+  background-color: var(--cream-bg); /* ИЗМЕНЕНО: был #fff */
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -31,6 +42,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
   font-weight: 300;
   letter-spacing: 0.05em;
+  color: var(--text-dark);
 }
 
 /* Ссылки */
@@ -44,21 +56,22 @@ a:hover {
   opacity: 0.7;
 }
 
-/* Кнопки в минималистичном стиле */
+/* Кнопки в минималистичном стиле с кремовой палитрой */
 button {
   background: transparent;
-  border: 1px solid #000;
+  border: 1px solid var(--text-dark);
   padding: 0.75rem 2rem;
   font-family: 'Cormorant Garamond', serif;
   font-size: 0.9rem;
   letter-spacing: 0.1em;
   cursor: pointer;
   transition: all 0.3s ease;
+  color: var(--text-dark);
 }
 
 button:hover {
-  background: #000;
-  color: #fff;
+  background: var(--text-dark);
+  color: var(--cream-light);
 }
 
 /* ========== ЭФФЕКТЫ ДЛЯ PRODUCT CARD ========== */
@@ -86,25 +99,53 @@ button:hover {
   transform: translateY(0);
 }
 
-/* Карточки товаров */
+/* Карточки товаров с кремовой палитрой */
 .card {
-  transition: box-shadow 0.4s ease;
+  transition: box-shadow 0.4s ease, border-color 0.3s ease;
   border-radius: 0 !important;
-  border: none !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--cream-light) !important; /* ИЗМЕНЕНО: фон карточек */
 }
 
 .card:hover {
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05) !important;
+  border-color: var(--accent-brown-light) !important;
 }
 
-/* Стили для кнопок Bootstrap */
+/* Стили для кнопок Bootstrap с кремовой палитрой */
 .btn-outline-dark {
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #000;
-  --bs-btn-hover-border-color: #000;
+  --bs-btn-color: var(--text-dark);
+  --bs-btn-border-color: var(--text-dark);
+  --bs-btn-hover-color: var(--cream-light);
+  --bs-btn-hover-bg: var(--text-dark);
+  --bs-btn-hover-border-color: var(--text-dark);
+  --bs-btn-active-color: var(--cream-light);
+  --bs-btn-active-bg: var(--text-dark);
+  --bs-btn-active-border-color: var(--text-dark);
   border-radius: 0 !important;
   letter-spacing: 0.1em;
   font-weight: 300;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--text-medium);
+  --bs-btn-border-color: var(--cream-dark);
+  --bs-btn-hover-color: var(--text-dark);
+  --bs-btn-hover-bg: var(--cream-dark);
+  --bs-btn-hover-border-color: var(--cream-dark);
+}
+
+/* Кнопки с акцентным коричневым */
+.btn-brown {
+  background-color: var(--accent-brown);
+  border-color: var(--accent-brown);
+  color: white;
+}
+
+.btn-brown:hover {
+  background-color: var(--accent-brown-light);
+  border-color: var(--accent-brown-light);
+  color: white;
 }
 
 /* Full-screen баннер */
@@ -122,21 +163,45 @@ button:hover {
   transition: transform 0.5s ease;
 }
 
+/* Текст с кремовой палитрой */
+.text-muted {
+  color: var(--text-medium) !important;
+}
+
+.text-light {
+  color: var(--text-light) !important;
+}
+
 /* Скрытие скроллбара для чистого вида */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--cream-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--accent-brown-light);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--accent-brown);
+}
+
+/* Стили для форм */
+.form-control {
+  background-color: var(--cream-light);
+  border: 1px solid var(--cream-dark);
+  color: var(--text-dark);
+  border-radius: 0;
+}
+
+.form-control:focus {
+  background-color: var(--cream-light);
+  border-color: var(--accent-brown-light);
+  box-shadow: 0 0 0 0.25rem rgba(138, 122, 99, 0.1);
+  color: var(--text-dark);
 }
 
 /* Стили для мобильных устройств */
@@ -238,4 +303,25 @@ button:hover {
       font-size: 1.2rem !important;
     }
   }
+}
+
+/* Дополнительные утилиты для кремовой палитры */
+.bg-cream {
+  background-color: var(--cream-bg) !important;
+}
+
+.bg-cream-light {
+  background-color: var(--cream-light) !important;
+}
+
+.border-cream {
+  border-color: var(--cream-dark) !important;
+}
+
+.text-brown {
+  color: var(--accent-brown) !important;
+}
+
+.bg-brown {
+  background-color: var(--accent-brown) !important;
 }

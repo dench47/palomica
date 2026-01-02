@@ -4,6 +4,7 @@ import {useCart} from '../context/CartContext';
 import {productService} from '../services/api';
 import type {Product} from '../services/api';
 import ProductCard from '../components/ProductCard';
+import { Package, Ruler, Palette, Check } from 'lucide-react'; // ИКОНКИ ДОБАВЛЕНЫ
 
 interface ProductVariant {
     size?: string;
@@ -40,12 +41,10 @@ const ProductPage = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
-    // Функция проверки, есть ли товар в корзине
     const isProductInCart = (productId: number) => {
         return items.some(item => item.product.id === productId);
     };
 
-    // Функция получения количества товара в корзине
     const getCartQuantity = (productId: number) => {
         const item = items.find(item => item.product.id === productId);
         return item ? item.quantity : 0;
@@ -141,13 +140,17 @@ const ProductPage = () => {
 
     if (loading) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'var(--cream-bg)' }}>
                 <div className="text-center w-100">
-                    <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>⏳</div>
-                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
+                    <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1, color: 'var(--accent-brown)'}}>⏳</div>
+                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif", color: 'var(--text-dark)'}}>
                         Загружаем товар
                     </h2>
-                    <div className="spinner-border text-dark" role="status" style={{width: '3rem', height: '3rem'}}>
+                    <div className="spinner-border" role="status" style={{
+                        width: '3rem',
+                        height: '3rem',
+                        color: 'var(--accent-brown)'
+                    }}>
                         <span className="visually-hidden">Загрузка...</span>
                     </div>
                 </div>
@@ -157,16 +160,21 @@ const ProductPage = () => {
 
     if (error || !product) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'var(--cream-bg)' }}>
                 <div className="text-center w-100" style={{maxWidth: '500px'}}>
-                    <div className="mb-4" style={{fontSize: '4rem'}}>❌</div>
-                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
+                    <div className="mb-4" style={{fontSize: '4rem', color: 'var(--accent-brown)', opacity: 0.7}}>❌</div>
+                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif", color: 'var(--text-dark)'}}>
                         {error || 'Товар не найден'}
                     </h2>
                     <button
                         className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
                         onClick={() => navigate('/')}
-                        style={{letterSpacing: '0.1em', fontSize: '0.9rem'}}
+                        style={{
+                            letterSpacing: '0.1em',
+                            fontSize: '0.9rem',
+                            borderColor: 'var(--text-dark)',
+                            color: 'var(--text-dark)'
+                        }}
                     >
                         ← ВЕРНУТЬСЯ В МАГАЗИН
                     </button>
@@ -187,19 +195,22 @@ const ProductPage = () => {
     const cartQuantity = getCartQuantity(product.id);
 
     return (
-        <div className="container-fluid px-0">
+        <div className="container-fluid px-0" style={{ backgroundColor: 'var(--cream-bg)' }}>
             <div className="px-4 px-md-5 pt-4">
                 <nav aria-label="Навигация" className="d-none d-md-block">
-                    <div className="d-flex align-items-center small text-muted">
+                    <div className="d-flex align-items-center small" style={{ color: 'var(--text-medium)' }}>
                         <button
-                            className="btn btn-link p-0 text-dark text-decoration-none me-2"
+                            className="btn btn-link p-0 text-decoration-none me-2"
                             onClick={() => navigate('/')}
-                            style={{fontSize: '0.85rem'}}
+                            style={{
+                                fontSize: '0.85rem',
+                                color: 'var(--text-dark)'
+                            }}
                         >
                             ГЛАВНАЯ
                         </button>
                         <span className="mx-2">/</span>
-                        <span className="opacity-50">{product.name}</span>
+                        <span style={{ opacity: 0.6, color: 'var(--text-medium)' }}>{product.name}</span>
                     </div>
                 </nav>
             </div>
@@ -209,13 +220,15 @@ const ProductPage = () => {
                     <div className="px-4 px-md-5 py-5">
                         <div className="main-image mb-4">
                             <div
-                                className="w-100 bg-light"
+                                className="w-100"
                                 style={{
+                                    backgroundColor: 'var(--cream-light)',
                                     backgroundImage: `url(${allImages[selectedImage]})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
                                     paddingBottom: '400px',
-                                    cursor: 'zoom-in'
+                                    cursor: 'zoom-in',
+                                    border: '1px solid var(--cream-dark)'
                                 }}
                             ></div>
                         </div>
@@ -238,7 +251,8 @@ const ProductPage = () => {
                                             style={{
                                                 backgroundImage: `url(${img})`,
                                                 backgroundSize: 'cover',
-                                                backgroundPosition: 'center'
+                                                backgroundPosition: 'center',
+                                                border: '1px solid var(--cream-dark)'
                                             }}
                                         ></div>
                                     </button>
@@ -248,43 +262,95 @@ const ProductPage = () => {
                     </div>
                 </div>
 
-                <div className="col-lg-6 bg-light">
+                <div className="col-lg-6 bg-cream-light" style={{
+                    borderLeft: '1px solid var(--cream-dark)',
+                    boxShadow: 'inset 1px 0 0 rgba(0,0,0,0.03)'
+                }}>
                     <div className="px-4 px-md-5 py-5 h-100">
                         <div className="d-flex flex-column h-100">
                             <div className="mb-4">
                                 <h1 className="fw-light mb-3" style={{
                                     fontFamily: "'Playfair Display', serif",
                                     fontSize: '2rem',
-                                    lineHeight: '1.2'
+                                    lineHeight: '1.2',
+                                    color: 'var(--text-dark)'
                                 }}>
                                     {product.name}
                                 </h1>
                                 <div className="d-flex align-items-center">
-                                    <span className="fs-3 fw-light" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                    <span className="fs-3 fw-light" style={{
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        color: 'var(--accent-brown)'
+                                    }}>
                                         {formatPrice(product.price)}
                                     </span>
                                     {product.price > 10000 && (
-                                        <span className="ms-3 small text-muted">(бесплатная доставка)</span>
+                                        <span className="ms-3 small" style={{color: 'var(--text-medium)'}}>
+                                            (бесплатная доставка)
+                                        </span>
                                     )}
                                 </div>
                             </div>
 
+                            {/* БЛОК С ИКОНКАМИ ХАРАКТЕРИСТИК */}
                             <div className="mb-5">
-                                <p className="text-muted mb-4" style={{lineHeight: '1.6'}}>
+                                <p className="mb-4" style={{
+                                    lineHeight: '1.6',
+                                    color: 'var(--text-medium)'
+                                }}>
                                     {product.description}
                                 </p>
 
-                                <div className="row small text-muted">
+                                <div className="row g-3 mb-4">
                                     {product.material && (
-                                        <div className="col-6 mb-2">
-                                            <span className="d-block opacity-75">Материал</span>
-                                            <span className="d-block">{product.material}</span>
+                                        <div className="col-12 col-sm-6 d-flex align-items-start">
+                                            <Package size={18} className="me-2 flex-shrink-0" style={{
+                                                color: 'var(--accent-brown)',
+                                                marginTop: '2px'
+                                            }} />
+                                            <div>
+                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Материал</div>
+                                                <div style={{ color: 'var(--text-dark)' }}>{product.material}</div>
+                                            </div>
                                         </div>
                                     )}
+
+                                    {product.size && (
+                                        <div className="col-12 col-sm-6 d-flex align-items-start">
+                                            <Ruler size={18} className="me-2 flex-shrink-0" style={{
+                                                color: 'var(--accent-brown)',
+                                                marginTop: '2px'
+                                            }} />
+                                            <div>
+                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Размеры</div>
+                                                <div style={{ color: 'var(--text-dark)' }}>{product.size}</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {product.color && (
+                                        <div className="col-12 col-sm-6 d-flex align-items-start">
+                                            <Palette size={18} className="me-2 flex-shrink-0" style={{
+                                                color: 'var(--accent-brown)',
+                                                marginTop: '2px'
+                                            }} />
+                                            <div>
+                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Цвет</div>
+                                                <div style={{ color: 'var(--text-dark)' }}>{product.color}</div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {product.careInstructions && (
-                                        <div className="col-6 mb-2">
-                                            <span className="d-block opacity-75">Уход</span>
-                                            <span className="d-block">{product.careInstructions}</span>
+                                        <div className="col-12 col-sm-6 d-flex align-items-start">
+                                            <Check size={18} className="me-2 flex-shrink-0" style={{
+                                                color: 'var(--accent-brown)',
+                                                marginTop: '2px'
+                                            }} />
+                                            <div>
+                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Уход</div>
+                                                <div style={{ color: 'var(--text-dark)' }}>{product.careInstructions}</div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -292,20 +358,25 @@ const ProductPage = () => {
 
                             {sizes.length > 0 && (
                                 <div className="mb-4">
-                                    <h3 className="h6 fw-light mb-3"
-                                        style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                    <h3 className="h6 fw-light mb-3" style={{
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        color: 'var(--text-dark)'
+                                    }}>
                                         Размер
                                     </h3>
                                     <div className="d-flex flex-wrap gap-2">
                                         {sizes.map(size => (
                                             <button
                                                 key={size}
-                                                className={`btn ${selectedVariant.size === size ? 'btn-dark rounded-0 border-1' : 'btn-outline-dark rounded-0 border-1'}`}
+                                                className={`btn ${selectedVariant.size === size ? '' : 'btn-outline-dark'} rounded-0 border-1`}
                                                 onClick={() => handleSizeSelect(size)}
                                                 style={{
                                                     padding: '0.5rem 1.5rem',
                                                     fontSize: '0.85rem',
-                                                    letterSpacing: '0.05em'
+                                                    letterSpacing: '0.05em',
+                                                    backgroundColor: selectedVariant.size === size ? 'var(--text-dark)' : 'transparent',
+                                                    borderColor: 'var(--text-dark)',
+                                                    color: selectedVariant.size === size ? 'var(--cream-light)' : 'var(--text-dark)'
                                                 }}
                                             >
                                                 {size}
@@ -317,20 +388,25 @@ const ProductPage = () => {
 
                             {colors.length > 0 && (
                                 <div className="mb-4">
-                                    <h3 className="h6 fw-light mb-3"
-                                        style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                    <h3 className="h6 fw-light mb-3" style={{
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        color: 'var(--text-dark)'
+                                    }}>
                                         Цвет
                                     </h3>
                                     <div className="d-flex flex-wrap gap-2">
                                         {colors.map(color => (
                                             <button
                                                 key={color}
-                                                className={`btn ${selectedVariant.color === color ? 'btn-dark rounded-0 border-1' : 'btn-outline-dark rounded-0 border-1'}`}
+                                                className={`btn ${selectedVariant.color === color ? '' : 'btn-outline-dark'} rounded-0 border-1`}
                                                 onClick={() => handleColorSelect(color)}
                                                 style={{
                                                     padding: '0.5rem 1.5rem',
                                                     fontSize: '0.85rem',
-                                                    letterSpacing: '0.05em'
+                                                    letterSpacing: '0.05em',
+                                                    backgroundColor: selectedVariant.color === color ? 'var(--text-dark)' : 'transparent',
+                                                    borderColor: 'var(--text-dark)',
+                                                    color: selectedVariant.color === color ? 'var(--cream-light)' : 'var(--text-dark)'
                                                 }}
                                             >
                                                 {color}
@@ -340,17 +416,18 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            {/* НАДПИСЬ "ТОВАР В КОРЗИНЕ" НА СТРАНИЦЕ ТОВАРА */}
                             {isInCart && (
                                 <div className="mb-4">
-                                    <div className="bg-dark text-white px-4 py-3 rounded-0 d-inline-block"
-                                         style={{
-                                             fontSize: '0.9rem',
-                                             letterSpacing: '0.05em',
-                                             fontFamily: "'Cormorant Garamond', serif",
-                                             opacity: 0.95,
-                                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                                         }}>
+                                    <div className="px-4 py-3 rounded-0 d-inline-block" style={{
+                                        backgroundColor: 'var(--accent-brown)',
+                                        color: 'white',
+                                        fontSize: '0.9rem',
+                                        letterSpacing: '0.05em',
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        opacity: 0.95,
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                        border: '1px solid var(--accent-brown-light)'
+                                    }}>
                                         <div className="d-flex align-items-center">
                                             <span className="me-3">✓</span>
                                             <span>Товар в корзине</span>
@@ -360,14 +437,16 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            {/* ОБНОВЛЕННЫЙ БЛОК С КОЛИЧЕСТВОМ */}
                             <div className="mb-5">
                                 <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <h3 className="h6 fw-light mb-0" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                    <h3 className="h6 fw-light mb-0" style={{
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        color: 'var(--text-dark)'
+                                    }}>
                                         Количество
                                     </h3>
-                                    <span className="small text-muted">
-                                        В наличии: <strong>10+ шт.</strong>
+                                    <span className="small" style={{color: 'var(--text-medium)'}}>
+                                        В наличии: <strong style={{color: 'var(--text-dark)'}}>10+ шт.</strong>
                                     </span>
                                 </div>
 
@@ -376,24 +455,37 @@ const ProductPage = () => {
                                         <button
                                             className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
                                             onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                                            style={{
+                                                borderColor: 'var(--text-dark)',
+                                                color: 'var(--text-dark)'
+                                            }}
                                         >
                                             –
                                         </button>
-                                        <span className="flex-grow-1 text-center px-3" style={{minWidth: '40px'}}>
+                                        <span className="flex-grow-1 text-center px-3" style={{
+                                            minWidth: '40px',
+                                            color: 'var(--text-dark)'
+                                        }}>
                                             {quantity}
                                         </span>
                                         <button
                                             className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
                                             onClick={() => setQuantity(prev => prev + 1)}
+                                            style={{
+                                                borderColor: 'var(--text-dark)',
+                                                color: 'var(--text-dark)'
+                                            }}
                                         >
                                             +
                                         </button>
                                     </div>
 
-                                    {/* ИТОГОВАЯ СУММА СПРАВА */}
                                     <div className="text-end">
-                                        <div className="small text-muted mb-1">Сумма:</div>
-                                        <div className="fs-5" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                        <div className="small mb-1" style={{color: 'var(--text-medium)'}}>Сумма:</div>
+                                        <div className="fs-5" style={{
+                                            fontFamily: "'Cormorant Garamond', serif",
+                                            color: 'var(--accent-brown)'
+                                        }}>
                                             {formatPrice(totalPrice)}
                                         </div>
                                     </div>
@@ -402,19 +494,24 @@ const ProductPage = () => {
 
                             <div className="mt-auto pt-4">
                                 <button
-                                    className="btn btn-dark rounded-0 w-100 py-3 fw-light mb-3"
+                                    className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
                                     disabled={!product}
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
-                                        transition: 'all 0.3s ease'
+                                        transition: 'all 0.3s ease',
+                                        backgroundColor: 'var(--text-dark)',
+                                        color: 'var(--cream-light)',
+                                        border: '1px solid var(--text-dark)'
                                     }}
                                     onMouseOver={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#000';
+                                        e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
+                                        e.currentTarget.style.borderColor = 'var(--accent-brown)';
                                     }}
                                     onMouseOut={(e) => {
-                                        e.currentTarget.style.backgroundColor = '';
+                                        e.currentTarget.style.backgroundColor = 'var(--text-dark)';
+                                        e.currentTarget.style.borderColor = 'var(--text-dark)';
                                     }}
                                 >
                                     {isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ'}
@@ -425,7 +522,9 @@ const ProductPage = () => {
                                     onClick={() => navigate('/')}
                                     style={{
                                         letterSpacing: '0.1em',
-                                        fontSize: '0.85rem'
+                                        fontSize: '0.85rem',
+                                        borderColor: 'var(--text-dark)',
+                                        color: 'var(--text-dark)'
                                     }}
                                 >
                                     ← ПРОДОЛЖИТЬ ПОКУПКИ
@@ -437,11 +536,12 @@ const ProductPage = () => {
             </div>
 
             {relatedProducts.length > 0 && (
-                <div className="px-4 px-md-5 py-5">
+                <div className="px-4 px-md-5 py-5" style={{ backgroundColor: 'var(--cream-bg)' }}>
                     <h3 className="fw-light text-center mb-5" style={{
                         fontFamily: "'Playfair Display', serif",
                         fontSize: '1.5rem',
-                        letterSpacing: '0.05em'
+                        letterSpacing: '0.05em',
+                        color: 'var(--text-dark)'
                     }}>
                         Похожие товары
                     </h3>

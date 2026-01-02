@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import type { Product } from '../services/api';
+import type {ReactNode} from 'react';
+import {createContext, useContext, useEffect, useState} from 'react';
+import type {Product} from '../services/api';
 
 // Тип для варианта товара
 export interface ProductVariant {
@@ -30,7 +30,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider = ({ children }: { children: ReactNode }) => {
+export const CartProvider = ({children}: { children: ReactNode }) => {
     // Загружаем корзину из localStorage при инициализации
     const [items, setItems] = useState<CartItem[]>(() => {
         const savedCart = localStorage.getItem('fashionstore_cart');
@@ -54,48 +54,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     // Добавление товара с учётом варианта
     const addToCart = (product: Product, variant?: ProductVariant) => {
-        console.log('=== addToCart ВЫЗВАН ===');
-        console.log('Полученный product:', {
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            имеет_id: 'id' in product,
-            имеет_name: 'name' in product,
-            имеет_price: 'price' in product,
-            тип_id: typeof product.id,
-            тип_name: typeof product.name,
-            тип_price: typeof product.price,
-            полностью: product
-        });
 
         const variantId = getVariantId(product.id, variant);
-        console.log('Сгенерированный variantId:', variantId);
 
         setItems(prevItems => {
-            console.log('Предыдущие items:', prevItems);
             const existingItem = prevItems.find(item => item.variantId === variantId);
 
             if (existingItem) {
-                console.log('Товар уже в корзине, увеличиваем количество');
-                const newItems = prevItems.map(item =>
+                return prevItems.map(item =>
                     item.variantId === variantId
-                        ? { ...item, quantity: item.quantity + 1 }
+                        ? {...item, quantity: item.quantity + 1}
                         : item
                 );
-                console.log('Новые items:', newItems);
-                return newItems;
             }
 
-            console.log('Товара нет в корзине, добавляем новый');
             const newItem = {
                 product,
                 quantity: 1,
                 selectedVariant: variant,
                 variantId
             };
-            const newItems = [...prevItems, newItem];
-            console.log('Новые items после добавления:', newItems);
-            return newItems;
+            return [...prevItems, newItem];
         });
     };
 
@@ -112,7 +91,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
         setItems(prevItems =>
             prevItems.map(item =>
-                item.variantId === variantId ? { ...item, quantity } : item
+                item.variantId === variantId ? {...item, quantity} : item
             )
         );
     };
