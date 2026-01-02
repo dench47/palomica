@@ -6,12 +6,12 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CatalogPage from './pages/CatalogPage';
-
+import SearchPage from './pages/SearchPage';
 import './App.css';
 
 function App() {
     return (
-        <div className="App d-flex flex-column min-vh-100">
+        <div className="App d-flex flex-column min-vh-100 bg-cream"> {/* ИЗМЕНЕНО: добавлен bg-cream */}
             <Header />
             <main className="flex-grow-1">
                 <Routes>
@@ -20,9 +20,12 @@ function App() {
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/catalog" element={<CatalogPage />} />
+                    <Route path="/search" element={<SearchPage />} />
                 </Routes>
             </main>
             <Footer />
         </div>
     );
-}export default App;
+}
+
+export default App;

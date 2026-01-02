@@ -27,6 +27,101 @@
   opacity: 0.9;
 }
 
+/* ========== КРЕМОВАЯ ПАЛИТРА ДЛЯ ВСЕГО ПРОЕКТА ========== */
+
+/* Убираем белый фон у всех контейнеров */
+.container, .container-fluid {
+  background-color: transparent !important;
+}
+
+/* Фон для всего приложения */
+.App {
+  background-color: var(--cream-bg) !important;
+}
+
+/* Убираем белый фон у основных секций */
+main {
+  background-color: transparent !important;
+}
+
+/* Обновляем карточки для кремовой палитры */
+.card {
+  background-color: var(--cream-light) !important;
+  border-color: var(--cream-dark) !important;
+}
+
+.card:hover {
+  border-color: var(--accent-brown-light) !important;
+}
+
+/* Кнопки с кремовой палитрой */
+.btn-outline-dark {
+  border-color: var(--text-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+.btn-outline-dark:hover {
+  background-color: var(--text-dark) !important;
+  color: var(--cream-light) !important;
+}
+
+/* Акцентные кнопки */
+.btn-brown {
+  background-color: var(--accent-brown) !important;
+  border-color: var(--accent-brown) !important;
+  color: white !important;
+}
+
+.btn-brown:hover {
+  background-color: var(--accent-brown-light) !important;
+  border-color: var(--accent-brown-light) !important;
+}
+
+/* Формы */
+.form-control {
+  background-color: var(--cream-light) !important;
+  border-color: var(--cream-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+.form-control:focus {
+  border-color: var(--accent-brown-light) !important;
+  box-shadow: 0 0 0 0.25rem rgba(138, 122, 99, 0.1) !important;
+}
+
+/* Тени для кремовой палитры */
+.shadow-soft {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+}
+
+.hover-lift:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Утилитарные классы для кремовой палитры */
+.bg-cream { background-color: var(--cream-bg) !important; }
+.bg-cream-light { background-color: var(--cream-light) !important; }
+.bg-cream-dark { background-color: var(--cream-dark) !important; }
+.text-brown { color: var(--accent-brown) !important; }
+.border-cream { border-color: var(--cream-dark) !important; }
+.border-brown { border-color: var(--accent-brown) !important; }
+
+/* Текст */
+.text-muted {
+  color: var(--text-medium) !important;
+}
+
+.text-light {
+  color: var(--text-light) !important;
+}
+
+/* Секции */
+.section {
+  background-color: transparent !important;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .display-4 {
@@ -86,7 +181,7 @@
 
   /* Тени и эффекты */
   .shadow-soft {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
   }
 
   .hover-lift {
@@ -95,8 +190,6 @@
 
   .hover-lift:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
   }
-
-
 }
