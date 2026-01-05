@@ -16,9 +16,9 @@ const CatalogPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('все');
+    const [openCategoryId, setOpenCategoryId] = useState<string | null>(null); // ← НОВОЕ СОСТОЯНИЕ
     useNavigate();
 
-    // ОБНОВЛЕННЫЕ КАТЕГОРИИ (сувениры удалены)
     const categories: Category[] = [
         {id: 'все', name: 'Все товары'},
         {
@@ -35,6 +35,16 @@ const CatalogPage = () => {
             id: 'сумки',
             name: 'Сумки',
             subcategories: ['клатчи', 'поясные сумки', 'рюкзаки', 'шопперы']
+        },
+        {
+            id: 'сувениры',
+            name: 'Сувениры',
+            subcategories: []
+        },
+        {
+            id: 'эксклюзив',
+            name: 'Эксклюзив',
+            subcategories: []
         }
     ];
 
@@ -67,46 +77,19 @@ const CatalogPage = () => {
         }
 
         const isMainCategory = categories.some(c => c.id === selectedCategory);
-        const isSubcategory = Object.keys(subcategoryKeywords).includes(selectedCategory) ||
-            categories.some(c => c.subcategories?.includes(selectedCategory));
 
         if (isMainCategory) {
             const filtered = products.filter(product =>
                 product.category?.toLowerCase() === selectedCategory.toLowerCase()
             );
             setFilteredProducts(filtered);
-        } else if (isSubcategory) {
-            const keywords = subcategoryKeywords[selectedCategory] || [selectedCategory.toLowerCase()];
-            const filtered = products.filter(product => {
-                const name = product.name.toLowerCase();
-                return keywords.some(keyword => name.includes(keyword));
-            });
-            setFilteredProducts(filtered);
         } else {
-            setFilteredProducts(products);
+            // Используем subcategory вместо keywords
+            const filtered = products.filter(product =>
+                product.subcategory?.toLowerCase() === selectedCategory.toLowerCase()
+            );
+            setFilteredProducts(filtered);
         }
-    };
-
-    const subcategoryKeywords: Record<string, string[]> = {
-        'топы': ['топ', 'топы', 'майка', 'безрукавка'],
-        'футболки и лонгсливы': ['футболка', 'лонгслив', 'лонгс', 'тельняшка', 'тельник'],
-        'блузки и рубашки': ['блузка', 'рубашка', 'блузки', 'рубашки', 'сорочка'],
-        'жакеты': ['жакет', 'пиджак', 'костюм', 'кардиган', 'блейзер'],
-        'платья': ['платье', 'платья', 'платьице'],
-        'сарафаны и фартуки': ['сарафан', 'фартук', 'передник', 'юбка-сарафан'],
-        'брюки': ['брюки', 'брюк', 'штаны', 'брюки-', 'шорты', 'бриджи'],
-        'юбки': ['юбка', 'юбки', 'юбочка', 'миди', 'мини', 'макси'],
-
-        'баски': ['баска', 'пеплум', 'пеплум-баска'],
-        'манжеты': ['манжета', 'манжеты', 'нарукавник'],
-        'платки': ['платок', 'платки', 'шарф', 'кашне', 'палантин', 'косынка'],
-        'пояса': ['пояс', 'пояса', 'ремень', 'поясок'],
-        'съемные карманы': ['карман', 'карманы', 'кармашек', 'кармашик'],
-
-        'клатчи': ['клатч', 'клатчи', 'вечерняя сумка', 'мини-сумка'],
-        'поясные сумки': ['поясная сумка', 'бананка', 'поясные', 'на пояс'],
-        'рюкзаки': ['рюкзак', 'ранец', 'рюкзаки', 'заплечный'],
-        'шопперы': ['шоппер', 'шопперы', 'холщовая сумка', 'эко-сумка', 'сумка-шоппер']
     };
 
     const getCategoryCount = (categoryId: string): number => {
@@ -120,29 +103,32 @@ const CatalogPage = () => {
             ).length;
         }
 
-        const keywords = subcategoryKeywords[categoryId] || [categoryId.toLowerCase()];
-
-        return products.filter(product => {
-            const name = product.name.toLowerCase();
-            return keywords.some(keyword => name.includes(keyword));
-        }).length;
+        // ПРОВЕРЯЕМ subcategory ТОВАРА
+        return products.filter(product =>
+            product.subcategory?.toLowerCase() === categoryId.toLowerCase()
+        ).length;
     };
 
     const handleCategoryClick = (categoryId: string) => {
-        setSelectedCategory(categoryId);
+        // Если кликаем на уже открытую категорию - закрываем
+        if (openCategoryId === categoryId) {
+            setOpenCategoryId(null);
+        } else {
+            // Если кликаем на другую категорию - открываем ее
+            setOpenCategoryId(categoryId);
+            setSelectedCategory(categoryId);
+        }
         window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
     const handleSubcategoryClick = (subcategory: string) => {
-        const keywords = subcategoryKeywords[subcategory] || [subcategory.toLowerCase()];
-
-        const filtered = products.filter(product => {
-            const name = product.name.toLowerCase();
-            return keywords.some(keyword => name.includes(keyword));
-        });
+        const filtered = products.filter(product =>
+            product.subcategory?.toLowerCase() === subcategory.toLowerCase()
+        );
 
         setFilteredProducts(filtered);
         setSelectedCategory(subcategory);
+        // При клике на подкатегорию НЕ закрываем список подкатегорий
         window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
@@ -215,30 +201,32 @@ const CatalogPage = () => {
                                     >
                                         {category.name}
                                         <span className="ms-2 small opacity-75">
-                                            ({getCategoryCount(category.id)})
-                                        </span>
+                    ({getCategoryCount(category.id)})
+                </span>
                                     </button>
 
-                                    {category.subcategories && selectedCategory === category.id && (
+                                    {category.subcategories && openCategoryId === category.id && (
                                         <div className="ms-3 mt-2">
-                                            {category.subcategories.map(sub => (
-                                                <button
-                                                    key={sub}
-                                                    className={`btn btn-link p-0 d-block text-start text-decoration-none small ${selectedCategory === sub ? 'text-dark' : 'text-muted'}`}
-                                                    onClick={() => handleSubcategoryClick(sub)}
-                                                    style={{
-                                                        fontSize: '0.85rem',
-                                                        border: 'none',
-                                                        background: 'none',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    {sub}
-                                                    <span className="ms-2 opacity-75">
-                                                        ({getCategoryCount(sub)})
-                                                    </span>
-                                                </button>
-                                            ))}
+                                            {category.subcategories
+                                                .filter(sub => getCategoryCount(sub) > 0)
+                                                .map(sub => (
+                                                    <button
+                                                        key={sub}
+                                                        className={`btn btn-link p-0 d-block text-start text-decoration-none small ${selectedCategory === sub ? 'text-dark' : 'text-muted'}`}
+                                                        onClick={() => handleSubcategoryClick(sub)}
+                                                        style={{
+                                                            fontSize: '0.85rem',
+                                                            border: 'none',
+                                                            background: 'none',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        {sub}
+                                                        <span className="ms-2 opacity-75">
+                                    ({getCategoryCount(sub)})
+                                </span>
+                                                    </button>
+                                                ))}
                                         </div>
                                     )}
                                 </div>

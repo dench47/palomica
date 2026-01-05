@@ -10,6 +10,9 @@ export type Product = {
     careInstructions?: string;
     additionalImages?: string[];
     category: string;
+    subcategory?: string;
+    availableQuantity: number; // ← ДОБАВЛЕНО
+
 }
 
 // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ

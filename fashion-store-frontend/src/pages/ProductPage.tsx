@@ -4,7 +4,7 @@ import {useCart} from '../context/CartContext';
 import {productService} from '../services/api';
 import type {Product} from '../services/api';
 import ProductCard from '../components/ProductCard';
-import { Package, Ruler, Palette, Check } from 'lucide-react'; // ИКОНКИ ДОБАВЛЕНЫ
+import {Package, Ruler, Palette, Check} from 'lucide-react';
 
 interface ProductVariant {
     size?: string;
@@ -33,7 +33,6 @@ const ProductPage = () => {
     useEffect(() => {
         if (id) {
             loadProduct();
-            loadRelatedProducts();
         }
     }, [id]);
 
@@ -41,13 +40,38 @@ const ProductPage = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
+    useEffect(() => {
+        if (product) {
+            loadRelatedProducts();
+        }
+    }, [product]);
+
+    // Проверяем, находится ли текущий товар в корзине
     const isProductInCart = (productId: number) => {
         return items.some(item => item.product.id === productId);
     };
 
+    const isCurrentProductInCart = items.some(item => item.product.id === product?.id);
+
+
     const getCartQuantity = (productId: number) => {
         const item = items.find(item => item.product.id === productId);
         return item ? item.quantity : 0;
+    };
+
+    const getAvailableQuantity = (): number => {
+        if (!product) return 0;
+
+        // Берем базовое количество из продукта
+        const baseQuantity = product.availableQuantity || 3;
+
+        // Вычитаем количество, которое уже в корзине
+        const cartItemsForThisProduct = items.filter(item =>
+            item.product.id === product.id
+        );
+        const inCartQuantity = cartItemsForThisProduct.reduce((sum, item) => sum + item.quantity, 0);
+
+        return Math.max(0, baseQuantity - inCartQuantity);
     };
 
     const loadProduct = async () => {
@@ -97,30 +121,54 @@ const ProductPage = () => {
     const loadRelatedProducts = async () => {
         try {
             const data = await productService.getAllProducts();
-            const shuffled = [...data].sort(() => 0.5 - Math.random());
-            setRelatedProducts(shuffled.slice(0, 4));
+
+            if (!product || !product.subcategory) {
+                setRelatedProducts([]);
+                return;
+            }
+
+            // Фильтруем ТОЛЬКО товары из той же подкатегории
+            const sameSubcategoryProducts = data.filter(p =>
+                p.id !== product.id &&
+                p.subcategory &&
+                p.subcategory === product.subcategory
+            );
+
+            // Если меньше 1 товара в подкатегории - не показываем ничего
+            if (sameSubcategoryProducts.length < 1) {
+                setRelatedProducts([]);
+                return;
+            }
+
+            // Показываем максимум 4 товара из той же подкатегории
+            const shuffled = [...sameSubcategoryProducts]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 4);
+
+            setRelatedProducts(shuffled);
         } catch (err) {
             console.error('Ошибка загрузки похожих товаров:', err);
+            setRelatedProducts([]);
         }
     };
 
     const handleAddToCart = () => {
-        if (product) {
-            for (let i = 0; i < quantity; i++) {
+        if (product && getAvailableQuantity() > 0) {
+            // Не добавляем больше, чем доступно
+            const maxToAdd = Math.min(quantity, getAvailableQuantity());
+            for (let i = 0; i < maxToAdd; i++) {
                 addToCart(product, selectedVariant);
             }
 
-            let variantText = '';
-            if (selectedVariant.size) variantText += `размер: ${selectedVariant.size}`;
-            if (selectedVariant.color) {
-                if (variantText) variantText += ', ';
-                variantText += `цвет: ${selectedVariant.color}`;
+            if (maxToAdd < quantity) {
+                // Показываем сообщение, если пытались добавить больше чем есть
+                alert(`Доступно только ${getAvailableQuantity()} шт.`);
             }
 
-            alert(`Товар "${product.name}" ${variantText ? `(${variantText})` : ''} добавлен в корзину (${quantity} шт.)!`);
             setQuantity(1);
         }
     };
+
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU', {
@@ -134,16 +182,15 @@ const ProductPage = () => {
         setSelectedVariant(prev => ({...prev, size}));
     };
 
-    const handleColorSelect = (color: string) => {
-        setSelectedVariant(prev => ({...prev, color}));
-    };
-
     if (loading) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'var(--cream-bg)' }}>
+            <div
+                className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center"
+                style={{backgroundColor: 'var(--cream-bg)'}}>
                 <div className="text-center w-100">
                     <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1, color: 'var(--accent-brown)'}}>⏳</div>
-                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif", color: 'var(--text-dark)'}}>
+                    <h2 className="fw-light mb-3"
+                        style={{fontFamily: "'Playfair Display', serif", color: 'var(--text-dark)'}}>
                         Загружаем товар
                     </h2>
                     <div className="spinner-border" role="status" style={{
@@ -160,10 +207,13 @@ const ProductPage = () => {
 
     if (error || !product) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'var(--cream-bg)' }}>
+            <div
+                className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center"
+                style={{backgroundColor: 'var(--cream-bg)'}}>
                 <div className="text-center w-100" style={{maxWidth: '500px'}}>
                     <div className="mb-4" style={{fontSize: '4rem', color: 'var(--accent-brown)', opacity: 0.7}}>❌</div>
-                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif", color: 'var(--text-dark)'}}>
+                    <h2 className="fw-light mb-3"
+                        style={{fontFamily: "'Playfair Display', serif", color: 'var(--text-dark)'}}>
                         {error || 'Товар не найден'}
                     </h2>
                     <button
@@ -189,16 +239,15 @@ const ProductPage = () => {
     ].filter(Boolean);
 
     const sizes = product.size ? product.size.split(',').map(s => s.trim()) : [];
-    const colors = product.color ? product.color.split(',').map(c => c.trim()) : [];
     const totalPrice = product.price * quantity;
     const isInCart = isProductInCart(product.id);
     const cartQuantity = getCartQuantity(product.id);
 
     return (
-        <div className="container-fluid px-0" style={{ backgroundColor: 'var(--cream-bg)' }}>
+        <div className="container-fluid px-0" style={{backgroundColor: 'var(--cream-bg)'}}>
             <div className="px-4 px-md-5 pt-4">
                 <nav aria-label="Навигация" className="d-none d-md-block">
-                    <div className="d-flex align-items-center small" style={{ color: 'var(--text-medium)' }}>
+                    <div className="d-flex align-items-center small" style={{color: 'var(--text-medium)'}}>
                         <button
                             className="btn btn-link p-0 text-decoration-none me-2"
                             onClick={() => navigate('/')}
@@ -210,7 +259,7 @@ const ProductPage = () => {
                             ГЛАВНАЯ
                         </button>
                         <span className="mx-2">/</span>
-                        <span style={{ opacity: 0.6, color: 'var(--text-medium)' }}>{product.name}</span>
+                        <span style={{opacity: 0.6, color: 'var(--text-medium)'}}>{product.name}</span>
                     </div>
                 </nav>
             </div>
@@ -292,7 +341,6 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            {/* БЛОК С ИКОНКАМИ ХАРАКТЕРИСТИК */}
                             <div className="mb-5">
                                 <p className="mb-4" style={{
                                     lineHeight: '1.6',
@@ -307,10 +355,12 @@ const ProductPage = () => {
                                             <Package size={18} className="me-2 flex-shrink-0" style={{
                                                 color: 'var(--accent-brown)',
                                                 marginTop: '2px'
-                                            }} />
+                                            }}/>
                                             <div>
-                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Материал</div>
-                                                <div style={{ color: 'var(--text-dark)' }}>{product.material}</div>
+                                                <div className="small"
+                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Материал
+                                                </div>
+                                                <div style={{color: 'var(--text-dark)'}}>{product.material}</div>
                                             </div>
                                         </div>
                                     )}
@@ -320,10 +370,12 @@ const ProductPage = () => {
                                             <Ruler size={18} className="me-2 flex-shrink-0" style={{
                                                 color: 'var(--accent-brown)',
                                                 marginTop: '2px'
-                                            }} />
+                                            }}/>
                                             <div>
-                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Размеры</div>
-                                                <div style={{ color: 'var(--text-dark)' }}>{product.size}</div>
+                                                <div className="small"
+                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Размеры
+                                                </div>
+                                                <div style={{color: 'var(--text-dark)'}}>{product.size}</div>
                                             </div>
                                         </div>
                                     )}
@@ -333,10 +385,12 @@ const ProductPage = () => {
                                             <Palette size={18} className="me-2 flex-shrink-0" style={{
                                                 color: 'var(--accent-brown)',
                                                 marginTop: '2px'
-                                            }} />
+                                            }}/>
                                             <div>
-                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Цвет</div>
-                                                <div style={{ color: 'var(--text-dark)' }}>{product.color}</div>
+                                                <div className="small"
+                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Цвет
+                                                </div>
+                                                <div style={{color: 'var(--text-dark)'}}>{product.color}</div>
                                             </div>
                                         </div>
                                     )}
@@ -346,10 +400,13 @@ const ProductPage = () => {
                                             <Check size={18} className="me-2 flex-shrink-0" style={{
                                                 color: 'var(--accent-brown)',
                                                 marginTop: '2px'
-                                            }} />
+                                            }}/>
                                             <div>
-                                                <div className="small" style={{ opacity: 0.75, color: 'var(--text-medium)' }}>Уход</div>
-                                                <div style={{ color: 'var(--text-dark)' }}>{product.careInstructions}</div>
+                                                <div className="small"
+                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Уход
+                                                </div>
+                                                <div
+                                                    style={{color: 'var(--text-dark)'}}>{product.careInstructions}</div>
                                             </div>
                                         </div>
                                     )}
@@ -386,36 +443,6 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            {colors.length > 0 && (
-                                <div className="mb-4">
-                                    <h3 className="h6 fw-light mb-3" style={{
-                                        fontFamily: "'Cormorant Garamond', serif",
-                                        color: 'var(--text-dark)'
-                                    }}>
-                                        Цвет
-                                    </h3>
-                                    <div className="d-flex flex-wrap gap-2">
-                                        {colors.map(color => (
-                                            <button
-                                                key={color}
-                                                className={`btn ${selectedVariant.color === color ? '' : 'btn-outline-dark'} rounded-0 border-1`}
-                                                onClick={() => handleColorSelect(color)}
-                                                style={{
-                                                    padding: '0.5rem 1.5rem',
-                                                    fontSize: '0.85rem',
-                                                    letterSpacing: '0.05em',
-                                                    backgroundColor: selectedVariant.color === color ? 'var(--text-dark)' : 'transparent',
-                                                    borderColor: 'var(--text-dark)',
-                                                    color: selectedVariant.color === color ? 'var(--cream-light)' : 'var(--text-dark)'
-                                                }}
-                                            >
-                                                {color}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
                             {isInCart && (
                                 <div className="mb-4">
                                     <div className="px-4 py-3 rounded-0 d-inline-block" style={{
@@ -446,7 +473,7 @@ const ProductPage = () => {
                                         Количество
                                     </h3>
                                     <span className="small" style={{color: 'var(--text-medium)'}}>
-                                        В наличии: <strong style={{color: 'var(--text-dark)'}}>10+ шт.</strong>
+                                         В наличии: <strong style={{color: 'var(--text-dark)'}}>{getAvailableQuantity()} шт.</strong>
                                     </span>
                                 </div>
 
@@ -496,7 +523,8 @@ const ProductPage = () => {
                                 <button
                                     className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
-                                    disabled={!product}
+                                    disabled={!product || getAvailableQuantity() === 0}
+
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
@@ -517,6 +545,42 @@ const ProductPage = () => {
                                     {isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ'}
                                 </button>
 
+                                {/* КНОПКА "ПЕРЕЙТИ В КОРЗИНУ" С ПЛАВНОЙ АНИМАЦИЕЙ */}
+                                {isCurrentProductInCart && (
+                                    <div style={{
+                                        overflow: 'hidden',
+                                        transition: 'all 0.3s ease',
+                                        maxHeight: '60px',
+                                        opacity: 1,
+                                        marginBottom: '1rem'
+                                    }}>
+                                        <button
+                                            className="btn rounded-0 w-100 py-3 fw-light"
+                                            onClick={() => navigate('/cart')}
+                                            style={{
+                                                letterSpacing: '0.1em',
+                                                fontSize: '0.85rem',
+                                                transition: 'all 0.3s ease',
+                                                backgroundColor: 'transparent',
+                                                color: 'var(--text-dark)',
+                                                border: '1px solid var(--text-dark)'
+                                            }}
+                                            onMouseOver={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
+                                                e.currentTarget.style.borderColor = 'var(--accent-brown)';
+                                                e.currentTarget.style.color = 'white';
+                                            }}
+                                            onMouseOut={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                e.currentTarget.style.borderColor = 'var(--text-dark)';
+                                                e.currentTarget.style.color = 'var(--text-dark)';
+                                            }}
+                                        >
+                                            ПЕРЕЙТИ В КОРЗИНУ
+                                        </button>
+                                    </div>
+                                )}
+
                                 <button
                                     className="btn btn-outline-dark rounded-0 w-100 py-3 fw-light"
                                     onClick={() => navigate('/')}
@@ -536,14 +600,16 @@ const ProductPage = () => {
             </div>
 
             {relatedProducts.length > 0 && (
-                <div className="px-4 px-md-5 py-5" style={{ backgroundColor: 'var(--cream-bg)' }}>
+                <div className="px-4 px-md-5 py-5" style={{backgroundColor: 'var(--cream-bg)'}}>
                     <h3 className="fw-light text-center mb-5" style={{
                         fontFamily: "'Playfair Display', serif",
                         fontSize: '1.5rem',
                         letterSpacing: '0.05em',
                         color: 'var(--text-dark)'
                     }}>
-                        Похожие товары
+                        {product.subcategory
+                            ? `Похожие товары: ${product.subcategory}`
+                            : `Рекомендуем также: ${product.category}`}
                     </h3>
 
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
