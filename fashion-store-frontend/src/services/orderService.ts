@@ -1,56 +1,72 @@
 // services/orderService.ts
 import type { CartItem } from '../context/CartContext';
+import type { OrderRequest } from './api';
+
+// АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
+const API_BASE_URL = import.meta.env.DEV
+    ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
+    : '';  // В продакшене: пустая строка (относительный путь)
 
 export interface OrderData {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    deliveryAddress: string;
+    deliveryMethod: string;
+    paymentMethod: string;
     comment?: string;
     items: CartItem[];
     total: number;
 }
 
 export const orderService = {
-    async sendOrder(orderData: OrderData): Promise<boolean> {
+    async createOrder(orderData: OrderData): Promise<{ success: boolean; orderId?: number; error?: string }> {
         try {
-            // Отправка на бэкенд
-            const response = await fetch('http://localhost:8085/api/orders', {
+            // Преобразуем данные корзины в формат для бэкенда
+            const orderRequest: OrderRequest = {
+                customerName: orderData.customerName,
+                customerEmail: orderData.customerEmail,
+                customerPhone: orderData.customerPhone,
+                deliveryAddress: orderData.deliveryAddress,
+                deliveryMethod: orderData.deliveryMethod,
+                paymentMethod: orderData.paymentMethod,
+                comment: orderData.comment,
+                items: orderData.items.map(item => ({
+                    productId: item.product.id,
+                    quantity: item.quantity,
+                    size: item.selectedVariant?.size,
+                    color: item.selectedVariant?.color
+                }))
+            };
+
+            console.log('Отправка заказа:', orderRequest);
+
+            const response = await fetch(`${API_BASE_URL}/api/orders`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(orderData),
+                body: JSON.stringify(orderRequest),
             });
 
-            return response.ok;
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Ошибка сервера:', response.status, errorText);
+                return {
+                    success: false,
+                    error: errorText || `Ошибка ${response.status}`
+                };
+            }
+
+            const orderId = await response.json();
+            return { success: true, orderId };
+
         } catch (error) {
             console.error('Ошибка отправки заказа:', error);
-            return false;
-        }
-    },
-
-    // Альтернатива: отправка на email/WhatsApp через сервис
-    async sendToTelegram(orderData: OrderData): Promise<boolean> {
-        const message = `
-🎉 НОВЫЙ ЗАКАЗ!
-Имя: ${orderData.name}
-Телефон: ${orderData.phone}
-Email: ${orderData.email}
-Адрес: ${orderData.address}
-Сумма: ${orderData.total} ₽
-
-Товары:
-${orderData.items.map(item => `• ${item.product.name} (${item.quantity} шт.) - ${item.product.price * item.quantity} ₽`).join('\n')}
-        `.trim();
-
-        try {
-            // Здесь можно подключить Telegram Bot API
-            console.log('Сообщение для Telegram:', message);
-            return true;
-        } catch (error) {
-            console.error('Ошибка отправки в Telegram:', error);
-            return false;
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Неизвестная ошибка'
+            };
         }
     }
 };

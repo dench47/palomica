@@ -160,7 +160,7 @@ const CartPage = () => {
 
                         {/* Кнопка оформления */}
                         <Link
-                            to="/checkout" // Добавим позже страницу оформления
+                            to="/auth-choice" // Изменили с "/checkout" на "/auth-choice"
                             className="btn btn-dark rounded-0 w-100 py-3 fw-light mb-3"
                             style={{letterSpacing: '0.1em', fontSize: '0.9rem'}}
                         >

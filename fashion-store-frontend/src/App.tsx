@@ -7,6 +7,8 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CatalogPage from './pages/CatalogPage';
 import SearchPage from './pages/SearchPage';
+import AuthChoicePage from './pages/AuthChoicePage';
+
 import './App.css';
 
 function App() {
@@ -21,6 +23,7 @@ function App() {
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/catalog" element={<CatalogPage />} />
                     <Route path="/search" element={<SearchPage />} />
+                    <Route path="/auth-choice" element={<AuthChoicePage />} />
                 </Routes>
             </main>
             <Footer />

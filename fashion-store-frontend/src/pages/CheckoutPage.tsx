@@ -1,20 +1,31 @@
+// Заменяем весь файл CheckoutPage.tsx на этот код:
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { orderService } from '../services/orderService';
 
 const CheckoutPage = () => {
     const { items, totalPrice, clearCart } = useCart();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const isGuest = searchParams.get('guest') === 'true';
+
     const [step, setStep] = useState(1); // 1 - доставка, 2 - оплата
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
-    const [orderNumber] = useState(
-        // eslint-disable-next-line react-hooks/purity
-        'ORD' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
-    );
+    const [orderNumber, setOrderNumber] = useState<string>('');
     const [comment, setComment] = useState('');
+
+    // Состояние для полей клиента (только для гостей)
+    const [customerData, setCustomerData] = useState({
+        name: '',
+        email: '',
+        phone: ''
+    });
+
+    // Состояние для выбора доставки и оплаты
+    const [deliveryMethod, setDeliveryMethod] = useState('courier');
+    const [paymentMethod, setPaymentMethod] = useState('card');
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -24,13 +35,50 @@ const CheckoutPage = () => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Имитация отправки на сервер
-        setTimeout(() => {
-            console.log('Заказ оформлен:', { items, totalPrice, comment });
+        try {
+            // Собираем данные для заказа
+            const orderData = {
+                customerName: isGuest ? customerData.name : "Зарегистрированный пользователь",
+                customerEmail: isGuest ? customerData.email : "user@example.com",
+                customerPhone: isGuest ? customerData.phone : "+79991234567",
+                deliveryAddress: "Москва, ул. Тверская, 15", // Позже добавим поле адреса
+                deliveryMethod,
+                paymentMethod,
+                comment,
+                items,
+                total: totalPrice
+            };
+
+            console.log('Отправка заказа:', orderData);
+
+            // Отправляем заказ на сервер
+            const result = await orderService.createOrder(orderData);
+
+            if (result.success && result.orderId) {
+                // Генерируем номер заказа
+                const generatedOrderNumber = 'ORD' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                setOrderNumber(generatedOrderNumber);
+
+                // Очищаем корзину
+                clearCart();
+
+                // Показываем успех
+                setIsSubmitting(false);
+                setOrderComplete(true);
+
+                console.log('Заказ успешно создан, ID:', result.orderId);
+            } else {
+                // Обработка ошибки
+                setIsSubmitting(false);
+                alert('Ошибка при создании заказа: ' + (result.error || 'Неизвестная ошибка'));
+                console.error('Ошибка создания заказа:', result.error);
+            }
+
+        } catch (error) {
             setIsSubmitting(false);
-            setOrderComplete(true);
-            clearCart(); // Очищаем корзину после успешного заказа
-        }, 1500);
+            alert('Произошла ошибка при оформлении заказа');
+            console.error('Ошибка:', error);
+        }
     };
 
     if (items.length === 0 && !orderComplete) {
@@ -81,6 +129,23 @@ const CheckoutPage = () => {
         );
     }
 
+    const handleCustomerDataChange = (field: string, value: string) => {
+        setCustomerData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    // Проверяем, можно ли перейти к шагу 2
+    const canGoToStep2 = () => {
+        if (isGuest) {
+            return customerData.name.trim() !== '' &&
+                customerData.email.trim() !== '' &&
+                customerData.phone.trim() !== '';
+        }
+        return true; // Для вошедших пользователей всегда можно
+    };
+
     return (
         <div className="container-fluid px-0">
             {/* Заголовок */}
@@ -101,9 +166,52 @@ const CheckoutPage = () => {
                 {/* Форма */}
                 <div className="col-lg-8 px-4 px-md-5 pb-5">
                     <form onSubmit={handleSubmit}>
-                        {/* Шаг 1: Доставка */}
+                        {/* Шаг 1: Доставка и данные клиента */}
                         {step === 1 && (
                             <div className="mb-5">
+                                {/* Данные клиента (только для гостей) */}
+                                {isGuest && (
+                                    <div className="mb-5">
+                                        <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                            Ваши данные
+                                        </h3>
+                                        <div className="row">
+                                            <div className="col-md-4 mb-3">
+                                                <label className="form-label small text-muted">Имя *</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control rounded-0 border-1"
+                                                    required
+                                                    value={customerData.name}
+                                                    onChange={(e) => handleCustomerDataChange('name', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="col-md-4 mb-3">
+                                                <label className="form-label small text-muted">Email *</label>
+                                                <input
+                                                    type="email"
+                                                    className="form-control rounded-0 border-1"
+                                                    required
+                                                    value={customerData.email}
+                                                    onChange={(e) => handleCustomerDataChange('email', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="col-md-4 mb-3">
+                                                <label className="form-label small text-muted">Телефон *</label>
+                                                <input
+                                                    type="tel"
+                                                    className="form-control rounded-0 border-1"
+                                                    required
+                                                    value={customerData.phone}
+                                                    onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
+                                                    placeholder="+7 (999) 123-45-67"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Способ доставки */}
                                 <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                                     Способ доставки
                                 </h3>
@@ -115,7 +223,8 @@ const CheckoutPage = () => {
                                             type="radio"
                                             name="delivery"
                                             id="courier"
-                                            defaultChecked
+                                            checked={deliveryMethod === 'courier'}
+                                            onChange={() => setDeliveryMethod('courier')}
                                         />
                                         <label className="form-check-label w-100" htmlFor="courier">
                                             <div className="d-flex justify-content-between">
@@ -134,6 +243,8 @@ const CheckoutPage = () => {
                                             type="radio"
                                             name="delivery"
                                             id="post"
+                                            checked={deliveryMethod === 'post'}
+                                            onChange={() => setDeliveryMethod('post')}
                                         />
                                         <label className="form-check-label w-100" htmlFor="post">
                                             <div className="d-flex justify-content-between">
@@ -152,6 +263,8 @@ const CheckoutPage = () => {
                                             type="radio"
                                             name="delivery"
                                             id="pickup"
+                                            checked={deliveryMethod === 'pickup'}
+                                            onChange={() => setDeliveryMethod('pickup')}
                                         />
                                         <label className="form-check-label w-100" htmlFor="pickup">
                                             <div className="d-flex justify-content-between">
@@ -181,7 +294,7 @@ const CheckoutPage = () => {
                                     <button
                                         type="button"
                                         className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
-                                        onClick={() => navigate('/cart')} // Возврат в корзину
+                                        onClick={() => navigate('/cart')}
                                         style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
                                     >
                                         ← НАЗАД
@@ -191,7 +304,12 @@ const CheckoutPage = () => {
                                         type="button"
                                         className="btn btn-dark rounded-0 px-5 py-3 fw-light"
                                         onClick={() => setStep(2)}
-                                        style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                                        disabled={!canGoToStep2()}
+                                        style={{
+                                            letterSpacing: '0.1em',
+                                            fontSize: '0.9rem',
+                                            opacity: canGoToStep2() ? 1 : 0.5
+                                        }}
                                     >
                                         ДАЛЕЕ: ОПЛАТА
                                     </button>
@@ -199,24 +317,22 @@ const CheckoutPage = () => {
                             </div>
                         )}
 
-                        {/* Шаг 2: Оплата + комментарий */}
+                        {/* Шаг 2: Оплата */}
                         {step === 2 && (
                             <div className="mb-5">
                                 <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                                     Способ оплаты
                                 </h3>
 
-                                {/* Способ оплаты */}
                                 <div className="mb-5">
-
-
                                     <div className="form-check mb-3 border-bottom pb-3">
                                         <input
                                             className="form-check-input rounded-0"
                                             type="radio"
                                             name="payment"
                                             id="card"
-                                            defaultChecked
+                                            checked={paymentMethod === 'card'}
+                                            onChange={() => setPaymentMethod('card')}
                                         />
                                         <label className="form-check-label w-100" htmlFor="card">
                                             <div>
@@ -232,6 +348,8 @@ const CheckoutPage = () => {
                                             type="radio"
                                             name="payment"
                                             id="cash"
+                                            checked={paymentMethod === 'cash'}
+                                            onChange={() => setPaymentMethod('cash')}
                                         />
                                         <label className="form-check-label w-100" htmlFor="cash">
                                             <div>
@@ -247,6 +365,8 @@ const CheckoutPage = () => {
                                             type="radio"
                                             name="payment"
                                             id="sbp"
+                                            checked={paymentMethod === 'sbp'}
+                                            onChange={() => setPaymentMethod('sbp')}
                                         />
                                         <label className="form-check-label w-100" htmlFor="sbp">
                                             <div>
@@ -257,7 +377,6 @@ const CheckoutPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Согласие и кнопки */}
                                 <div className="mt-5 pt-3 border-top">
                                     <div className="form-check mb-4">
                                         <input
@@ -325,7 +444,6 @@ const CheckoutPage = () => {
                                     <div className="flex-grow-1">
                                         <p className="small mb-1">{item.product.name}</p>
 
-                                        {/* Показываем варианты */}
                                         {item.selectedVariant && (
                                             <div className="mb-1">
                                                 {item.selectedVariant.size && (
