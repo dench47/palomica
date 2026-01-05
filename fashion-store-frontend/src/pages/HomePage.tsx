@@ -34,7 +34,7 @@ const HomePage = () => {
                 title="FASHIONSTORE"
                 subtitle="Новое измерение стиля. Эксклюзивные коллекции."
                 buttonText="Открыть коллекцию"
-                image="https://api.palomika.ru/images/banners/banner.jpg"
+                image="images/banners/banner.jpg"
                 link="#products"
             />
 
@@ -43,7 +43,7 @@ const HomePage = () => {
                 title="ВЕЧЕРНИЙ СТИЛЬ"
                 subtitle="Коллекция 2025. Элегантные платья и костюмы для особых случаев."
                 buttonText="СМОТРЕТЬ КОЛЛЕКЦИЮ"
-                image="https://api.palomika.ru/images/banners/ban1.jpeg"
+                image="/images/banners/ban1.jpeg"
                 link="/catalog?category=одежда"
             />
 
@@ -52,7 +52,7 @@ const HomePage = () => {
                 title="ПОВСЕДНЕВНАЯ КЛАССИКА"
                 subtitle="Новая коллекция. Удобная и стильная одежда на каждый день."
                 buttonText="ИССЛЕДОВАТЬ"
-                image="https://api.palomika.ru/images/banners/ban2.jpeg"
+                image="/images/banners/ban2.jpeg"
                 link="/catalog?category=одежда"
             />
 

@@ -16,13 +16,16 @@ public class ProductFactory {
                 "Вечернее платье из шифона",
                 "Элегантное вечернее платье из легкого шифона с цветочным принтом. Идеально для свадеб, выпускных и торжественных мероприятий. Имеет свободный крой и пояс для регулировки талии.",
                 25900.0,
-                IMAGE_BASE_PATH + "clothing/dress_1.jpg"
+                IMAGE_BASE_PATH + "clothing/dress_1.jpg",
+                "Чёрный с цветочным принтом",  // color
+                "XS,S,M,L",  // size
+                "Шифон 100%",  // material
+                "Стирка при 30°C, не отжимать, сушить в расправленном виде",  // careInstructions
+                "одежда",  // category
+                "платья",   // subcategory
+                null  // availableQuantity
         );
-        dress.setColor("Чёрный с цветочным принтом");
-        dress.setSize("XS,S,M,L");
-        dress.setMaterial("Шифон 100%");
-        dress.setCareInstructions("Стирка при 30°C, не отжимать, сушить в расправленном виде");
-        dress.setCategory("одежда");
+        dress.setAvailableQuantity(3);
         dress.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/dress_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/dress_1.3.jpg"
@@ -35,13 +38,16 @@ public class ProductFactory {
                 "Летнее платье с рюшами",
                 "Стильное летнее платье с асимметричными рюшами и открытыми плечами. Идеально для летних вечеринок и отдыха. Выполнено из натурального хлопка.",
                 18900.0,
-                IMAGE_BASE_PATH + "clothing/dress_2.jpg"
+                IMAGE_BASE_PATH + "clothing/dress_2.jpg",
+                "Белый",  // color
+                "S,M,L",  // size
+                "Хлопок 100%",  // material
+                "Стирка при 40°C, гладить при средней температуре",  // careInstructions
+                "одежда",  // category
+                "платья",   // subcategory
+                null  // availableQuantity
         );
-        dress.setColor("Белый");
-        dress.setSize("S,M,L");
-        dress.setMaterial("Хлопок 100%");
-        dress.setCareInstructions("Стирка при 40°C, гладить при средней температуре");
-        dress.setCategory("одежда");
+        dress.setAvailableQuantity(3);
         dress.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/dress_2.2.jpg",
                 IMAGE_BASE_PATH + "clothing/dress_2.3.jpg"
@@ -54,13 +60,16 @@ public class ProductFactory {
                 "Дизайнерская рубашка",
                 "Стильная дизайнерская рубашка с объемными рукавами и вышивкой. Идеально сочетается с джинсами, брюками и юбками. Премиальное качество пошива.",
                 14900.0,
-                IMAGE_BASE_PATH + "clothing/shirt_1.jpg"
+                IMAGE_BASE_PATH + "clothing/shirt_1.jpg",
+                "Бежевый",  // color
+                "XS,S,M,L",  // size
+                "Хлопок 100%",  // material
+                "Стирка при 30°C, не отбеливать, гладить на низкой температуре",  // careInstructions
+                "одежда",  // category
+                "блузки и рубашки",   // subcategory
+                null  // availableQuantity
         );
-        shirt.setColor("Бежевый");
-        shirt.setSize("XS,S,M,L");
-        shirt.setMaterial("Хлопок 100%");
-        shirt.setCareInstructions("Стирка при 30°C, не отбеливать, гладить на низкой температуре");
-        shirt.setCategory("одежда");
+        shirt.setAvailableQuantity(3);
         shirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/shirt_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/shirt_1.3.jpg"
@@ -73,13 +82,16 @@ public class ProductFactory {
                 "Атласный топ с бантом",
                 "Элегантный топ из атласной ткани с декоративным бантом на шее. Идеален для вечерних выходов и особых случаев. Комфортная посадка.",
                 8900.0,
-                IMAGE_BASE_PATH + "clothing/top_1.jpg"
+                IMAGE_BASE_PATH + "clothing/top_1.jpg",
+                "Чёрный",  // color
+                "XS,S,M",  // size
+                "Атлас 100%",  // material
+                "Химчистка, не стирать",  // careInstructions
+                "одежда",  // category
+                "топы",   // subcategory
+                null  // availableQuantity
         );
-        top.setColor("Чёрный");
-        top.setSize("XS,S,M");
-        top.setMaterial("Атлас 100%");
-        top.setCareInstructions("Химчистка, не стирать");
-        top.setCategory("одежда");
+        top.setAvailableQuantity(3);
         top.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/top_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/top_1.3.jpg"
@@ -92,13 +104,16 @@ public class ProductFactory {
                 "Бархатный жилет",
                 "Стильный бархатный жилет для создания элегантных образов. Идеально сочетается с рубашками, блузами и водолазками. Универсальный элемент гардероба.",
                 12700.0,
-                IMAGE_BASE_PATH + "clothing/vest_1.jpg"
+                IMAGE_BASE_PATH + "clothing/vest_1.jpg",
+                "Бордовый",  // color
+                "S,M,L",  // size
+                "Бархат 100%",  // material
+                "Химчистка, хранить на вешалке",  // careInstructions
+                "одежда",  // category
+                "жакеты",   // subcategory
+                null  // availableQuantity
         );
-        vest.setColor("Бордовый");
-        vest.setSize("S,M,L");
-        vest.setMaterial("Бархат 100%");
-        vest.setCareInstructions("Химчистка, хранить на вешалке");
-        vest.setCategory("одежда");
+        vest.setAvailableQuantity(3);
         vest.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/vest_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/vest_1.3.jpg"
@@ -111,13 +126,16 @@ public class ProductFactory {
                 "Кожаная юбка-карандаш",
                 "Стильная кожаная юбка-карандаш премиального качества. Идеальный выбор для офиса и вечерних выходов. Хорошо держит форму.",
                 21800.0,
-                IMAGE_BASE_PATH + "clothing/skirt_1.jpg"
+                IMAGE_BASE_PATH + "clothing/skirt_1.jpg",
+                "Коричневый",  // color
+                "36,38,40,42",  // size
+                "Натуральная кожа",  // material
+                "Протирать влажной тканью, использовать средства для ухода за кожей",  // careInstructions
+                "одежда",  // category
+                "юбки",   // subcategory
+                null  // availableQuantity
         );
-        skirt.setColor("Коричневый");
-        skirt.setSize("36,38,40,42");
-        skirt.setMaterial("Натуральная кожа");
-        skirt.setCareInstructions("Протирать влажной тканью, использовать средства для ухода за кожей");
-        skirt.setCategory("одежда");
+        skirt.setAvailableQuantity(3);
         skirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/skirt_1.jpg",
                 IMAGE_BASE_PATH + "clothing/skirt_1.jpg"
@@ -130,13 +148,16 @@ public class ProductFactory {
                 "Шерстяная юбка плиссе",
                 "Элегантная юбка плиссе из шерсти. Классический фасон, подходит для любого времени года. Комфортная посадка.",
                 15600.0,
-                IMAGE_BASE_PATH + "clothing/skirt_2.jpg"
+                IMAGE_BASE_PATH + "clothing/skirt_2.jpg",
+                "Серый",  // color
+                "S,M,L",  // size
+                "Шерсть 80%, Полиэстер 20%",  // material
+                "Химчистка, не гладить",  // careInstructions
+                "одежда",  // category
+                "юбки",   // subcategory
+                null  // availableQuantity
         );
-        skirt.setColor("Серый");
-        skirt.setSize("S,M,L");
-        skirt.setMaterial("Шерсть 80%, Полиэстер 20%");
-        skirt.setCareInstructions("Химчистка, не гладить");
-        skirt.setCategory("одежда");
+        skirt.setAvailableQuantity(3);
         skirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/skirt_2.jpg",
                 IMAGE_BASE_PATH + "clothing/skirt_2.jpg"
@@ -149,13 +170,16 @@ public class ProductFactory {
                 "Джинсовая юбка миди",
                 "Универсальная джинсовая юбка миди длины. Идеальна для повседневной носки. Выполнена из качественного денима.",
                 9900.0,
-                IMAGE_BASE_PATH + "clothing/skirt_3.jpg"
+                IMAGE_BASE_PATH + "clothing/skirt_3.jpg",
+                "Голубой деним",  // color
+                "36,38,40,42",  // size
+                "Хлопок 98%, Эластан 2%",  // material
+                "Стирка при 40°C, не отбеливать",  // careInstructions
+                "одежда",  // category
+                "юбки",   // subcategory
+                null  // availableQuantity
         );
-        skirt.setColor("Голубой деним");
-        skirt.setSize("36,38,40,42");
-        skirt.setMaterial("Хлопок 98%, Эластан 2%");
-        skirt.setCareInstructions("Стирка при 40°C, не отбеливать");
-        skirt.setCategory("одежда");
+        skirt.setAvailableQuantity(3);
         skirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/skirt_3.jpg",
                 IMAGE_BASE_PATH + "clothing/skirt_3.jpg"
@@ -168,13 +192,16 @@ public class ProductFactory {
                 "Воздушная блуза",
                 "Легкая воздушная блуза из натуральной ткани. Имеет свободный крой и рюши. Идеальна для лета и теплой погоды.",
                 11200.0,
-                IMAGE_BASE_PATH + "clothing/air_1.jpg"
+                IMAGE_BASE_PATH + "clothing/air_1.jpg",
+                "Белый",  // color
+                "XS,S,M,L",  // size
+                "Хлопок 100%",  // material
+                "Ручная стирка, сушить в тени",  // careInstructions
+                "одежда",  // category
+                "блузки и рубашки",   // subcategory
+                null  // availableQuantity
         );
-        blouse.setColor("Белый");
-        blouse.setSize("XS,S,M,L");
-        blouse.setMaterial("Хлопок 100%");
-        blouse.setCareInstructions("Ручная стирка, сушить в тени");
-        blouse.setCategory("одежда");
+        blouse.setAvailableQuantity(3);
         blouse.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/air_1.jpg",
                 IMAGE_BASE_PATH + "clothing/air_1.jpg"
@@ -187,13 +214,16 @@ public class ProductFactory {
                 "Блуза с драпировкой",
                 "Элегантная блуза с драпировкой и французскими манжетами. Идеальна для деловых встреч и особых случаев.",
                 13400.0,
-                IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22.jpg"
+                IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22.jpg",
+                "Бежевый",  // color
+                "S,M,L",  // size
+                "Шёлк 70%, Вискоза 30%",  // material
+                "Химчистка",  // careInstructions
+                "одежда",  // category
+                "блузки и рубашки",   // subcategory
+                null  // availableQuantity
         );
-        blouse.setColor("Бежевый");
-        blouse.setSize("S,M,L");
-        blouse.setMaterial("Шёлк 70%, Вискоза 30%");
-        blouse.setCareInstructions("Химчистка");
-        blouse.setCategory("одежда");
+        blouse.setAvailableQuantity(3);
         blouse.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22 (2).jpg",
                 IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22 (3).jpg"
@@ -208,13 +238,16 @@ public class ProductFactory {
                 "Кожаный ремень с пряжкой",
                 "Качественный кожаный ремень с металлической пряжкой. Универсальный аксессуар для брюк, джинсов и юбок. Регулируемая длина.",
                 4500.0,
-                IMAGE_BASE_PATH + "accessories/belt_1.jpg"
+                IMAGE_BASE_PATH + "accessories/belt_1.jpg",
+                "Коричневый",  // color
+                "75-85 см, 85-95 см, 95-105 см",  // size
+                "Натуральная кожа, металлическая фурнитура",  // material
+                "Протирать влажной тканью, использовать крем для кожи",  // careInstructions
+                "аксессуары",  // category
+                "пояса",   // subcategory
+                null  // availableQuantity
         );
-        belt.setColor("Коричневый");
-        belt.setSize("75-85 см, 85-95 см, 95-105 см");
-        belt.setMaterial("Натуральная кожа, металлическая фурнитура");
-        belt.setCareInstructions("Протирать влажной тканью, использовать крем для кожи");
-        belt.setCategory("аксессуары");
+        belt.setAvailableQuantity(3);
         belt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "accessories/belt_2.jpg",
                 IMAGE_BASE_PATH + "accessories/belt_3.jpg"
@@ -227,13 +260,16 @@ public class ProductFactory {
                 "Пеплум-баска",
                 "Стильный пеплум (декоративная баска) для платьев и блузок. Создает эффект тонкой талии и добавляет элегантности любому наряду.",
                 3200.0,
-                IMAGE_BASE_PATH + "accessories/peplum_1.jpg"
+                IMAGE_BASE_PATH + "accessories/peplum_1.jpg",
+                "Чёрный",  // color
+                "Универсальный",  // size
+                "Полиэстер 100%",  // material
+                "Стирка при 30°C, не отжимать",  // careInstructions
+                "аксессуары",  // category
+                "баски",   // subcategory
+                null  // availableQuantity
         );
-        peplum.setColor("Чёрный");
-        peplum.setSize("Универсальный");
-        peplum.setMaterial("Полиэстер 100%");
-        peplum.setCareInstructions("Стирка при 30°C, не отжимать");
-        peplum.setCategory("аксессуары");
+        peplum.setAvailableQuantity(3);
         peplum.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "accessories/peplum_2.jpg",
                 IMAGE_BASE_PATH + "accessories/peplum_3.jpg"
@@ -248,12 +284,16 @@ public class ProductFactory {
                 "Сумка-тоут из экокожи",
                 "Вместительная сумка-тоут из качественной экокожи. Имеет внутренний карман на молнии и крепкие ручки. Идеальна на каждый день.",
                 18900.0,
-                IMAGE_BASE_PATH + "bags/bag_1.jpg"
+                IMAGE_BASE_PATH + "bags/bag_1.jpg",
+                "Чёрный",  // color
+                null,  // size
+                "Экокожа 100%, металлическая фурнитура",  // material
+                "Протирать влажной тканью, избегать контакта с химическими веществами",  // careInstructions
+                "сумки",  // category
+                "шопперы",   // subcategory
+                null  // availableQuantity
         );
-        bag.setColor("Чёрный");
-        bag.setMaterial("Экокожа 100%, металлическая фурнитура");
-        bag.setCareInstructions("Протирать влажной тканью, избегать контакта с химическими веществами");
-        bag.setCategory("сумки");
+        bag.setAvailableQuantity(3);
         bag.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "bags/bag_1.2.jpg",
                 IMAGE_BASE_PATH + "bags/bag_1.3.jpg"

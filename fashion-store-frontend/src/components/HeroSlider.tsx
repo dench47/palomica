@@ -1,19 +1,18 @@
 interface HeroSliderProps {
-    title?: string;
-    subtitle?: string;
-    buttonText?: string;
-    image?: string;
-    link?: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    image: string;
+    link: string;
 }
 
 const HeroSlider = ({
-                        title = "FASHIONSTORE",
-                        subtitle = "Новое измерение стиля. Эксклюзивные коллекции.",
-                        buttonText = "Открыть коллекцию",
-                        image = "https://api.palomika.ru/images/banners/banner.jpg",
-                        link = "#collections"
+                        title,
+                        subtitle,
+                        buttonText,
+                        image,
+                        link
                     }: HeroSliderProps) => {
-
     return (
         <div className="hero-banner position-relative vh-100 overflow-hidden">
             {/* Фоновое изображение */}

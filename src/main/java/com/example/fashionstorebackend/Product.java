@@ -1,14 +1,19 @@
 package com.example.fashionstorebackend;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "products")
 public class Product {
 
+    // Геттеры и сеттеры для ВСЕХ полей
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_seq")
     @SequenceGenerator(name = "product_seq", sequenceName = "product_sequence", allocationSize = 1)
@@ -24,18 +29,25 @@ public class Product {
 
     private String imageUrl;
 
+    // Новые геттеры/сеттеры
     // НОВЫЕ ПОЛЯ ДЛЯ ДЕТАЛЬНОЙ СТРАНИЦЫ
     private String color;
 
-    private String size; // Например: "S,M,L,XL" или "36,38,40,42"
+    private String size; // Например: "S, M, L, XL" или "36,38,40,42"
 
     private String material;
 
     @Column(name = "care_instructions", length = 500)
     private String careInstructions;
 
-    @Column(nullable = false) // Делаем обязательным
+    @Column(nullable = false)
     private String category = "одежда"; // Значение по умолчанию
+
+    private String subcategory;
+
+
+    @Column(name = "available_quantity")
+    private Integer availableQuantity; 
 
     // Для галереи изображений
     @ElementCollection
@@ -56,7 +68,7 @@ public class Product {
         this.imageUrl = imageUrl;
     }
 
-    // Полный конструктор со всеми полями
+    // Конструктор для ProductFactory
     public Product(String name, String description, Double price, String imageUrl,
                    String color, String size, String material, String careInstructions) {
         this.name = name;
@@ -69,40 +81,22 @@ public class Product {
         this.careInstructions = careInstructions;
     }
 
-    // Геттеры и сеттеры для ВСЕХ полей
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
-
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    // Новые геттеры/сеттеры
-    public String getColor() { return color; }
-    public void setColor(String color) { this.color = color; }
-
-    public String getSize() { return size; }
-    public void setSize(String size) { this.size = size; }
-
-    public String getMaterial() { return material; }
-    public void setMaterial(String material) { this.material = material; }
-
-    public String getCareInstructions() { return careInstructions; }
-    public void setCareInstructions(String careInstructions) { this.careInstructions = careInstructions; }
-
-    public List<String> getAdditionalImages() { return additionalImages; }
-    public void setAdditionalImages(List<String> additionalImages) { this.additionalImages = additionalImages; }
+    // Полный конструктор со всеми полями
+    public Product(String name, String description, Double price, String imageUrl,
+                   String color, String size, String material, String careInstructions,
+                   String category, String subcategory, Integer availableQuantity) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.color = color;
+        this.size = size;
+        this.material = material;
+        this.careInstructions = careInstructions;
+        this.category = category;
+        this.subcategory = subcategory;
+        this.availableQuantity = availableQuantity;
+    }
 
     // toString для удобства
     @Override
@@ -110,6 +104,9 @@ public class Product {
         return "Product{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", subcategory='" + subcategory + '\'' +
+                ", availableQuantity=" + getAvailableQuantity() +
                 ", price=" + price +
                 '}';
     }
