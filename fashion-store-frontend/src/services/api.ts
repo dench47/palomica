@@ -15,6 +15,25 @@ export type Product = {
 
 }
 
+// Типы для заказа
+export interface OrderItemRequest {
+    productId: number;
+    quantity: number;
+    size?: string;
+    color?: string;
+}
+
+export interface OrderRequest {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    deliveryAddress: string;
+    deliveryMethod: string;
+    paymentMethod: string;
+    comment?: string;
+    items: OrderItemRequest[];
+}
+
 // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
 const API_BASE_URL = import.meta.env.DEV
     ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
