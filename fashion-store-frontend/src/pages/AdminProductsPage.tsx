@@ -299,12 +299,12 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
         category: product?.category || 'одежда',
         subcategory: product?.subcategory || '',
         availableQuantity: product?.availableQuantity || 0,
+        reservedQuantity: product?.reservedQuantity || 0, // ← ДОБАВЬТЕ ЭТО
         color: product?.color || '',
         size: product?.size || '',
         material: product?.material || '',
         careInstructions: product?.careInstructions || ''
     });
-
     const [saving, setSaving] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -312,31 +312,78 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
         setSaving(true);
 
         try {
+            // Проверяем что все числовые поля валидны
+            const submitData = {
+                ...formData,
+                availableQuantity: formData.availableQuantity || 0,
+                price: formData.price || 0,
+                reservedQuantity: formData.reservedQuantity || 0
+            };
+
+            console.log('Submitting product data:', submitData);
+
+            const token = localStorage.getItem('admin_token');
+            console.log('Current token:', token ? token.substring(0, 20) + '...' : 'MISSING');
+
             const url = isEditing
                 ? `/api/admin/products/${product.id}`
                 : '/api/admin/products';
 
             const method = isEditing ? 'PUT' : 'POST';
 
+            console.log('Making request to:', url, 'with method:', method);
+
             const response = await fetch(url, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(submitData),
             });
 
-            if (response.ok) {
-                onSave();
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+            if (response.status === 403) {
+                console.error('Access forbidden - token might be invalid');
+                alert('Доступ запрещен. Попробуйте войти заново.');
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_logged_in');
+                window.location.href = '/admin/login';
+                return;
             }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server error:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('Save successful:', result);
+
+            alert('Товар успешно сохранен!');
+            onSave();
+            onClose();
+
         } catch (error) {
             console.error('Error saving product:', error);
+            alert('Ошибка сохранения: ' + error);
         } finally {
             setSaving(false);
         }
     };
 
     const handleChange = (field: string, value: string | number) => {
+        // Для числовых полей убедимся что это число
+        if (['price', 'availableQuantity', 'reservedQuantity'].includes(field)) {
+            if (typeof value === 'string') {
+                value = value === '' ? 0 : parseFloat(value);
+                if (isNaN(value)) value = 0;
+            }
+        }
+
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -470,8 +517,19 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                                         <input
                                             type="number"
                                             className="form-control rounded-0"
-                                            value={formData.availableQuantity}
-                                            onChange={(e) => handleChange('availableQuantity', parseInt(e.target.value))}
+                                            value={formData.availableQuantity || 0}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Проверяем что значение - валидное число
+                                                if (value === '') {
+                                                    handleChange('availableQuantity', 0);
+                                                } else {
+                                                    const numValue = parseInt(value);
+                                                    if (!isNaN(numValue)) {
+                                                        handleChange('availableQuantity', numValue);
+                                                    }
+                                                }
+                                            }}
                                             min="0"
                                             required
                                         />
