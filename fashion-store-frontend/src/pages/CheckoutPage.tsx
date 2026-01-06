@@ -17,7 +17,6 @@ const CheckoutPage = () => {
     const [step, setStep] = useState(1); // 1 - доставка, 2 - оплата
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
-    const [orderNumber, setOrderNumber] = useState<string>('');
     const [comment, setComment] = useState('');
 
     // Состояние для полей клиента (только для гостей)
@@ -71,7 +70,6 @@ const CheckoutPage = () => {
                  Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
                  Сумма заказа: <strong>${formatPrice(totalPrice)}</strong>`
                 ).then(() => {
-                    setOrderNumber(generatedOrderNumber);
                     setIsSubmitting(false);
                     setOrderComplete(true);
                 });
@@ -117,26 +115,65 @@ const CheckoutPage = () => {
 
     if (orderComplete) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
-                <div className="text-center w-100" style={{ maxWidth: '600px' }}>
-                    <div className="mb-4" style={{ fontSize: '4rem' }}>✅</div>
-                    <h2 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
-                        Заказ оформлен!
-                    </h2>
-                    <p className="text-muted mb-4">
-                        Мы свяжемся с вами для подтверждения заказа
-                    </p>
-                    <p className="small text-muted mb-5">
-                        Номер заказа: #{orderNumber}<br/>
-                        Менеджер свяжется с вами в течение 30 минут.
-                    </p>
-                    <Link
-                        to="/"
-                        className="btn btn-dark rounded-0 px-5 py-3 fw-light"
-                        style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
-                    >
-                        НА ГЛАВНУЮ
-                    </Link>
+            <div style={{
+                backgroundColor: '#9696a8',
+                minHeight: '100vh',
+                width: '100%',
+                paddingTop: '120px' // Добавляем отступ сверу для шапки
+            }}>
+                <div className="container-fluid px-0 d-flex flex-column align-items-center justify-content-center">
+                    <div className="text-center w-100" style={{ maxWidth: '900px' }}>
+                        {/* Логотип из бэкенда */}
+                        <div className="mb-4 d-flex justify-content-center">
+                            <img
+                                src="/images/logo-thanks.jpg"
+                                alt="Fashion Store"
+                                className="img-fluid"
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '40vh', // Уменьшили высоту логотипа
+                                    objectFit: 'contain'
+                                }}
+                            />
+                        </div>
+
+                        {/* Текст и кнопка */}
+                        <div className="mt-2">
+                            {/* Новая надпись */}
+                            <div className="mb-4">
+                                <h2
+                                    className="fw-light mb-3"
+                                    style={{
+                                        fontFamily: "'Playfair Display', serif",
+                                        color: '#282840',
+                                        fontSize: '1.8rem',
+                                        letterSpacing: '0.05em'
+                                    }}
+                                >
+                                    Спасибо за заказ!
+                                </h2>
+
+                            </div>
+
+                            {/* Кнопка */}
+                            <div className="d-flex justify-content-center">
+                                <Link
+                                    to="/"
+                                    className="btn btn-dark rounded-0 px-5 py-3 fw-light"
+                                    style={{
+                                        letterSpacing: '0.1em',
+                                        fontSize: '0.9rem',
+                                        minWidth: '200px',
+                                        backgroundColor: '#282840',
+                                        borderColor: '#282840',
+                                        marginTop: '10px'
+                                    }}
+                                >
+                                    НА ГЛАВНУЮ
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );

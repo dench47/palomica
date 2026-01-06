@@ -106,86 +106,12 @@ const CartPage = () => {
         });
     };
 
-    // Функция подтверждения очистки корзины
     const handleClearCart = () => {
-        MySwal.fire({
-            title: '<div style="font-family: \'Playfair Display\', serif; font-weight: 300">Очистить корзину?</div>',
-            html: `<div style="font-family: 'Cormorant Garamond', serif; color: #666">
-                    Вы уверены, что хотите удалить все товары из корзины?<br>
-                    <span class="text-danger small">Это действие нельзя отменить.</span>
-                  </div>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Да, очистить',
-            cancelButtonText: 'Отмена',
-            customClass: {
-                popup: 'rounded-0 border-0',
-                title: 'fw-light mb-3',
-                htmlContainer: 'text-muted',
-                confirmButton: 'btn btn-danger rounded-0 px-4 py-2',
-                cancelButton: 'btn btn-outline-dark rounded-0 px-4 py-2',
-                actions: 'mt-4'
-            },
-            buttonsStyling: false,
-            background: '#f8f9fa',
-            width: '480px'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                clearCart();
-
-                MySwal.fire({
-                    title: '<div style="font-family: \'Playfair Display\', serif; font-weight: 300; color: #28a745">Корзина очищена</div>',
-                    html: `<div style="font-family: 'Cormorant Garamond', serif; color: #666">
-                            Все товары удалены из корзины.
-                          </div>`,
-                    icon: 'success',
-                    customClass: {
-                        popup: 'rounded-0 border-0',
-                        title: 'fw-light mb-3',
-                        htmlContainer: 'text-muted',
-                        confirmButton: 'btn btn-dark rounded-0 px-4 py-2',
-                        actions: 'mt-4'
-                    },
-                    buttonsStyling: false,
-                    background: '#f8f9fa',
-                    showConfirmButton: true,
-                    confirmButtonText: 'Понятно',
-                    confirmButtonColor: '#000',
-                    width: '450px',
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-            }
-        });
+        clearCart();
     };
 
-    // Функция подтверждения удаления одного товара
-    const handleRemoveItem = (itemName: string, variantId: string) => {
-        MySwal.fire({
-            title: '<div style="font-family: \'Playfair Display\', serif; font-weight: 300">Удалить товар?</div>',
-            html: `<div style="font-family: 'Cormorant Garamond', serif; color: #666">
-                    Вы уверены, что хотите удалить <strong>"${itemName}"</strong> из корзины?
-                  </div>`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Да, удалить',
-            cancelButtonText: 'Отмена',
-            customClass: {
-                popup: 'rounded-0 border-0',
-                title: 'fw-light mb-3',
-                htmlContainer: 'text-muted',
-                confirmButton: 'btn btn-danger rounded-0 px-4 py-2',
-                cancelButton: 'btn btn-outline-dark rounded-0 px-4 py-2',
-                actions: 'mt-4'
-            },
-            buttonsStyling: false,
-            background: '#f8f9fa',
-            width: '480px'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                removeFromCart(variantId);
-            }
-        });
+    const handleRemoveItem = (variantId: string) => {
+        removeFromCart(variantId);
     };
 
     if (items.length === 0) {
@@ -289,7 +215,7 @@ const CartPage = () => {
                                             </div>
                                             <button
                                                 className="btn btn-link text-dark p-0 text-decoration-none small"
-                                                onClick={() => handleRemoveItem(item.product.name, item.variantId)}
+                                                onClick={() => handleRemoveItem(item.variantId)} // Убрали название товара
                                                 style={{letterSpacing: '0.05em'}}
                                             >
                                                 УДАЛИТЬ
