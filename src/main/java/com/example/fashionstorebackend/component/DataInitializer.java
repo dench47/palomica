@@ -1,10 +1,15 @@
 package com.example.fashionstorebackend.component;
 
+import com.example.fashionstorebackend.model.AdminUser;
 import com.example.fashionstorebackend.model.Product;
+import com.example.fashionstorebackend.repository.AdminUserRepository;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -14,10 +19,28 @@ import java.util.stream.Collectors;
 public class DataInitializer {
 
     private final ProductRepository productRepository;
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
+
 
     @Autowired
     public DataInitializer(ProductRepository productRepository) {
         this.productRepository = productRepository;
+    }
+
+    @Autowired
+    private AdminUserRepository adminUserRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostConstruct
+    public void initAdminUsers() {
+        if (adminUserRepository.count() == 0) {
+            AdminUser admin = new AdminUser("admin", passwordEncoder.encode("admin123"));
+            admin.setRole("ROLE_ADMIN"); // ← УСТАНОВИТЕ РОЛЬ
+            adminUserRepository.save(admin);
+            log.info("Создан администратор: admin / admin123");
+        }
     }
 
     @PostConstruct
