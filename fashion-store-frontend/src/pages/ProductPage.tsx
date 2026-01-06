@@ -5,6 +5,8 @@ import {productService} from '../services/api';
 import type {Product} from '../services/api';
 import ProductCard from '../components/ProductCard';
 import {Package, Ruler, Palette, Check} from 'lucide-react';
+import toast from "react-hot-toast";
+
 
 interface ProductVariant {
     size?: string;
@@ -59,18 +61,28 @@ const ProductPage = () => {
         return item ? item.quantity : 0;
     };
 
+    // ЗАМЕНИТЕ функцию getAvailableQuantity() на:
     const getAvailableQuantity = (): number => {
         if (!product) return 0;
 
-        // Берем базовое количество из продукта
-        const baseQuantity = product.availableQuantity || 3;
+        // Просто возвращаем количество из БД (product.availableQuantity)
+        // Не вычитаем товары из корзины!
+        return product.availableQuantity || 0;
+    };
 
-        // Вычитаем количество, которое уже в корзине
+// ДОБАВЬТЕ новую функцию для проверки лимита добавления:
+    const getRemainingToAdd = (): number => {
+        if (!product) return 0;
+
+        const baseQuantity = product.availableQuantity || 0;
+
+        // Сколько уже в корзине для этого товара (все варианты)
         const cartItemsForThisProduct = items.filter(item =>
             item.product.id === product.id
         );
         const inCartQuantity = cartItemsForThisProduct.reduce((sum, item) => sum + item.quantity, 0);
 
+        // Сколько еще можно добавить
         return Math.max(0, baseQuantity - inCartQuantity);
     };
 
@@ -152,23 +164,67 @@ const ProductPage = () => {
         }
     };
 
+    // ЗАМЕНИТЕ функцию handleAddToCart():
     const handleAddToCart = () => {
-        if (product && getAvailableQuantity() > 0) {
-            // Не добавляем больше, чем доступно
-            const maxToAdd = Math.min(quantity, getAvailableQuantity());
-            for (let i = 0; i < maxToAdd; i++) {
-                addToCart(product, selectedVariant);
+        if (product) {
+            const remainingToAdd = getRemainingToAdd();
+
+            if (remainingToAdd === 0) {
+                toast.error(
+                    <div className="d-flex align-items-center">
+                        <span className="me-2" style={{color: '#dc3545'}}>😔</span>
+                        <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                        <strong>"${product.name}"</strong> закончился на складе
+                    </span>
+                    </div>,
+                    {
+                        duration: 4000,
+                        style: {
+                            background: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '0',
+                            padding: '16px 20px',
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: '1rem'
+                        }
+                    }
+                );
+                return;
             }
 
+            const maxToAdd = Math.min(quantity, remainingToAdd);
+
             if (maxToAdd < quantity) {
-                // Показываем сообщение, если пытались добавить больше чем есть
-                alert(`Доступно только ${getAvailableQuantity()} шт.`);
+                toast(
+                    <div className="d-flex align-items-center">
+                        <span className="me-2" style={{color: '#ffc107'}}>⚠️</span>
+                        <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
+            <strong>"${product.name}"</strong> доступно только {remainingToAdd} шт.
+        </span>
+                    </div>,
+                    {
+                        duration: 4000,
+                        style: {
+                            background: '#fff3cd',
+                            color: '#856404',
+                            border: '1px solid #ffc107',
+                            borderRadius: '0',
+                            padding: '16px 20px',
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: '1rem'
+                        }
+                    }
+                );
+            }
+
+            // Добавляем товар
+            for (let i = 0; i < maxToAdd; i++) {
+                addToCart(product, selectedVariant);
             }
 
             setQuantity(1);
         }
     };
-
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU', {
@@ -472,9 +528,15 @@ const ProductPage = () => {
                                     }}>
                                         Количество
                                     </h3>
+
                                     <span className="small" style={{color: 'var(--text-medium)'}}>
-                                         В наличии: <strong style={{color: 'var(--text-dark)'}}>{getAvailableQuantity()} шт.</strong>
-                                    </span>
+    В наличии: <strong style={{color: 'var(--text-dark)'}}>{getAvailableQuantity()} шт.</strong>
+                                        {getCartQuantity(product.id) > 0 && (
+                                            <span style={{marginLeft: '8px', color: 'var(--accent-brown)'}}>
+            (в корзине: {getCartQuantity(product.id)} шт.)
+        </span>
+                                        )}
+</span>
                                 </div>
 
                                 <div className="d-flex align-items-center justify-content-between">
@@ -495,9 +557,39 @@ const ProductPage = () => {
                                         }}>
                                             {quantity}
                                         </span>
+
                                         <button
                                             className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
-                                            onClick={() => setQuantity(prev => prev + 1)}
+                                            onClick={() => {
+                                                const remainingToAdd = getRemainingToAdd();
+                                                const currentInCart = getCartQuantity(product.id);
+
+                                                // Проверяем, можно ли добавить еще quantity+1
+                                                if (currentInCart + quantity + 1 <= getAvailableQuantity()) {
+                                                    setQuantity(prev => prev + 1);
+                                                } else {
+                                                    // Если нельзя, показываем toast вместо alert
+                                                    toast(
+                                                        <div className="d-flex align-items-center">
+                                                            <span className="me-2" style={{ color: '#ffc107' }}>⚠️</span>
+                                                            <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                        <strong>"{product.name}"</strong> доступно только {remainingToAdd} шт.
+                    </span>
+                                                        </div>,
+                                                        {
+                                                            duration: 3000,
+                                                            position: 'bottom-right',
+                                                            style: {
+                                                                background: '#fff3cd',
+                                                                color: '#856404',
+                                                                border: '1px solid #ffc107',
+                                                                borderRadius: '0',
+                                                                padding: '12px 16px'
+                                                            }
+                                                        }
+                                                    );
+                                                }
+                                            }}
                                             style={{
                                                 borderColor: 'var(--text-dark)',
                                                 color: 'var(--text-dark)'
@@ -520,29 +612,34 @@ const ProductPage = () => {
                             </div>
 
                             <div className="mt-auto pt-4">
+
                                 <button
                                     className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
-                                    disabled={!product || getAvailableQuantity() === 0}
-
+                                    disabled={!product || getRemainingToAdd() === 0} // Используем getRemainingToAdd()!
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
                                         transition: 'all 0.3s ease',
-                                        backgroundColor: 'var(--text-dark)',
+                                        backgroundColor: getRemainingToAdd() === 0 ? 'var(--text-medium)' : 'var(--text-dark)',
                                         color: 'var(--cream-light)',
-                                        border: '1px solid var(--text-dark)'
+                                        border: `1px solid ${getRemainingToAdd() === 0 ? 'var(--text-medium)' : 'var(--text-dark)'}`,
+                                        cursor: getRemainingToAdd() === 0 ? 'not-allowed' : 'pointer'
                                     }}
                                     onMouseOver={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
-                                        e.currentTarget.style.borderColor = 'var(--accent-brown)';
+                                        if (getRemainingToAdd() > 0) {
+                                            e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
+                                            e.currentTarget.style.borderColor = 'var(--accent-brown)';
+                                        }
                                     }}
                                     onMouseOut={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'var(--text-dark)';
-                                        e.currentTarget.style.borderColor = 'var(--text-dark)';
+                                        if (getRemainingToAdd() > 0) {
+                                            e.currentTarget.style.backgroundColor = 'var(--text-dark)';
+                                            e.currentTarget.style.borderColor = 'var(--text-dark)';
+                                        }
                                     }}
                                 >
-                                    {isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ'}
+                                    {getRemainingToAdd() === 0 ? 'ТОВАР ЗАКОНЧИЛСЯ' : (isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
                                 </button>
 
                                 {/* КНОПКА "ПЕРЕЙТИ В КОРЗИНУ" С ПЛАВНОЙ АНИМАЦИЕЙ */}
@@ -599,7 +696,8 @@ const ProductPage = () => {
                 </div>
             </div>
 
-            {relatedProducts.length > 0 && (
+
+            {relatedProducts.filter(p => p.availableQuantity > 0).length > 0 && (
                 <div className="px-4 px-md-5 py-5" style={{backgroundColor: 'var(--cream-bg)'}}>
                     <h3 className="fw-light text-center mb-5" style={{
                         fontFamily: "'Playfair Display', serif",
@@ -613,11 +711,14 @@ const ProductPage = () => {
                     </h3>
 
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-                        {relatedProducts.map((product) => (
-                            <div className="col" key={product.id}>
-                                <ProductCard product={product}/>
-                            </div>
-                        ))}
+                        {relatedProducts
+                            .filter(p => p.availableQuantity > 0) // ← ТОЛЬКО ТОВАРЫ В НАЛИЧИИ
+                            .slice(0, 4) // максимум 4 товара
+                            .map((product) => (
+                                <div className="col" key={product.id}>
+                                    <ProductCard product={product}/>
+                                </div>
+                            ))}
                     </div>
                 </div>
             )}

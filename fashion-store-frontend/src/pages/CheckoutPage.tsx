@@ -3,6 +3,10 @@ import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { orderService } from '../services/orderService';
+import {showCartNotification, showOrderNotification} from '../utils/swalConfig';
+
+
+
 
 const CheckoutPage = () => {
     const { items, totalPrice, clearCart } = useCart();
@@ -55,29 +59,38 @@ const CheckoutPage = () => {
             const result = await orderService.createOrder(orderData);
 
             if (result.success && result.orderId) {
-                // Генерируем номер заказа
                 const generatedOrderNumber = 'ORD' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-                setOrderNumber(generatedOrderNumber);
 
                 // Очищаем корзину
                 clearCart();
 
-                // Показываем успех
-                setIsSubmitting(false);
-                setOrderComplete(true);
-
-                console.log('Заказ успешно создан, ID:', result.orderId);
+                // Показываем красивое уведомление о заказе
+                showOrderNotification(
+                    'Заказ оформлен!',
+                    `Номер заказа: <strong>#${generatedOrderNumber}</strong><br><br>
+                 Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
+                 Сумма заказа: <strong>${formatPrice(totalPrice)}</strong>`
+                ).then(() => {
+                    setOrderNumber(generatedOrderNumber);
+                    setIsSubmitting(false);
+                    setOrderComplete(true);
+                });
             } else {
-                // Обработка ошибки
                 setIsSubmitting(false);
-                alert('Ошибка при создании заказа: ' + (result.error || 'Неизвестная ошибка'));
-                console.error('Ошибка создания заказа:', result.error);
+                showCartNotification(
+                    'Ошибка оформления',
+                    result.error || 'Не удалось оформить заказ',
+                    'error'
+                );
             }
-
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             setIsSubmitting(false);
-            alert('Произошла ошибка при оформлении заказа');
-            console.error('Ошибка:', error);
+            showCartNotification(
+                'Ошибка',
+                'Произошла ошибка при оформлении заказа',
+                'error'
+            );
         }
     };
 

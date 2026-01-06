@@ -1,6 +1,6 @@
 package com.example.fashionstorebackend.component;
 
-import com.example.fashionstorebackend.Product;
+import com.example.fashionstorebackend.model.Product;
 import java.util.Arrays;
 import java.util.List;
 

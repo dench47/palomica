@@ -1,4 +1,4 @@
-package com.example.fashionstorebackend;
+package com.example.fashionstorebackend.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

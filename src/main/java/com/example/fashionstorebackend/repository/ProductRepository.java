@@ -1,11 +1,9 @@
 package com.example.fashionstorebackend.repository;
 
-import com.example.fashionstorebackend.Product;
+import com.example.fashionstorebackend.model.Product; // ← ИЗМЕНИТЬ ИМПОРТ
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository // Указывает, что это компонент Spring, отвечающий за доступ к данным
+@Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    // Наследуя JpaRepository, мы получаем готовые методы:
-    // save(), findAll(), findById(), deleteById() и многие другие.
 }
