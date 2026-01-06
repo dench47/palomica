@@ -9,6 +9,14 @@ import CatalogPage from './pages/CatalogPage';
 import SearchPage from './pages/SearchPage';
 import CartNotifications from './components/CartNotifications';
 import {CartProvider} from './context/CartContext';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminProductsPage from './pages/AdminProductsPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminLayout from './components/admin/AdminLayout';
+import ProtectedRoute from './components/admin/ProtectedRoute';
+
+
 import {Toaster} from 'react-hot-toast';
 import './App.css';
 
@@ -61,6 +69,32 @@ function App() {
                         <Route path="/checkout" element={<CheckoutPage/>}/>
                         <Route path="/catalog" element={<CatalogPage/>}/>
                         <Route path="/search" element={<SearchPage/>}/>
+                        {/* Админ маршруты */}
+                        <Route path="/admin/login" element={<AdminLoginPage />} />
+
+                        <Route path="/admin" element={
+                            <ProtectedRoute>
+                                <AdminLayout>
+                                    <AdminDashboardPage />
+                                </AdminLayout>
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="/admin/products" element={
+                            <ProtectedRoute>
+                                <AdminLayout>
+                                    <AdminProductsPage />
+                                </AdminLayout>
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="/admin/orders" element={
+                            <ProtectedRoute>
+                                <AdminLayout>
+                                    <AdminOrdersPage />
+                                </AdminLayout>
+                            </ProtectedRoute>
+                        } />
                     </Routes>
                 </main>
                 <Footer/>
