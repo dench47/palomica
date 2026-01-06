@@ -1,3 +1,5 @@
+/* Анимации для SweetAlert2 */
+@import 'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css';
 /* Обнуляем стандартные стили для минимализма */
 * {
   margin: 0;
@@ -324,4 +326,55 @@ button:hover {
 
 .bg-brown {
   background-color: var(--accent-brown) !important;
+}
+
+/* Кастомные стили для SweetAlert2 */
+.swal2-popup {
+  border: 1px solid #dee2e6 !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+}
+
+.swal2-title {
+  font-size: 1.5rem !important;
+  line-height: 1.4 !important;
+}
+
+.swal2-html-container {
+  font-size: 1.1rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.swal2-icon {
+  width: 4rem !important;
+  height: 4rem !important;
+  margin: 1rem auto 1.5rem !important;
+}
+
+.swal2-icon.swal2-success {
+  border-color: #28a745 !important;
+  color: #28a745 !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #dc3545 !important;
+  color: #dc3545 !important;
+}
+
+.swal2-icon.swal2-warning {
+  border-color: #ffc107 !important;
+  color: #ffc107 !important;
+}
+
+.swal2-icon.swal2-info {
+  border-color: #17a2b8 !important;
+  color: #17a2b8 !important;
+}
+
+/* Иконки в стиле сайта */
+.swal2-success-line-tip, .swal2-success-line-long {
+  background-color: #28a745 !important;
+}
+
+.swal2-x-mark-line-left, .swal2-x-mark-line-right {
+  background-color: #dc3545 !important;
 }

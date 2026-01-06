@@ -93,19 +93,21 @@ const CatalogPage = () => {
     };
 
     const getCategoryCount = (categoryId: string): number => {
-        if (categoryId === 'все') return products.length;
+        if (categoryId === 'все') return products.filter(p => p.availableQuantity > 0).length;
 
         const isMainCategory = categories.some(c => c.id === categoryId);
 
         if (isMainCategory) {
             return products.filter(p =>
-                p.category?.toLowerCase() === categoryId.toLowerCase()
+                p.category?.toLowerCase() === categoryId.toLowerCase() &&
+                p.availableQuantity > 0 // ← ДОБАВЛЕНО
             ).length;
         }
 
         // ПРОВЕРЯЕМ subcategory ТОВАРА
         return products.filter(product =>
-            product.subcategory?.toLowerCase() === categoryId.toLowerCase()
+            product.subcategory?.toLowerCase() === categoryId.toLowerCase() &&
+            product.availableQuantity > 0 // ← ДОБАВЛЕНО
         ).length;
     };
 
@@ -175,10 +177,11 @@ const CatalogPage = () => {
                 }}>
                     КАТАЛОГ
                 </h1>
+
                 <p className="text-center text-muted small mb-5">
                     {selectedCategory === 'все'
-                        ? `${products.length} товаров`
-                        : `${filteredProducts.length} товаров в "${categories.find(c => c.id === selectedCategory)?.name || selectedCategory}"`}
+                        ? `${products.filter(p => p.availableQuantity > 0).length} товаров`
+                        : `${filteredProducts.filter(p => p.availableQuantity > 0).length} товаров в "${categories.find(c => c.id === selectedCategory)?.name || selectedCategory}"`}
                 </p>
             </div>
 
@@ -236,7 +239,7 @@ const CatalogPage = () => {
                 </div>
 
                 <div className="col-lg-9 col-xl-10 px-4 px-md-5 pb-5">
-                    {filteredProducts.length === 0 && !loading && (
+                    {filteredProducts.filter(p => p.availableQuantity > 0).length === 0 && !loading && (
                         <div className="text-center py-5">
                             <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>🛍️</div>
                             <h3 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
@@ -244,7 +247,7 @@ const CatalogPage = () => {
                             </h3>
                             <p className="text-muted mb-4">
                                 В категории "{categories.find(c => c.id === selectedCategory)?.name || selectedCategory}"
-                                пока нет товаров
+                                пока нет товаров в наличии
                             </p>
                             <button
                                 className="btn btn-outline-dark rounded-0 px-4 py-2"
@@ -264,18 +267,23 @@ const CatalogPage = () => {
                                         {categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
                                     </h2>
                                     <span className="small text-muted">
-                                        {filteredProducts.length} {filteredProducts.length === 1 ? 'товар' :
-                                        filteredProducts.length > 1 && filteredProducts.length < 5 ? 'товара' : 'товаров'}
-                                    </span>
+    {filteredProducts.filter(p => p.availableQuantity > 0).length} {
+                                        filteredProducts.filter(p => p.availableQuantity > 0).length === 1 ? 'товар' :
+                                            filteredProducts.filter(p => p.availableQuantity > 0).length > 1 &&
+                                            filteredProducts.filter(p => p.availableQuantity > 0).length < 5 ? 'товара' : 'товаров'
+                                    }
+</span>
                                 </div>
                             </div>
 
                             <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-                                {filteredProducts.map((product) => (
-                                    <div className="col" key={product.id}>
-                                        <ProductCard product={product}/>
-                                    </div>
-                                ))}
+                                {filteredProducts
+                                    .filter(product => product.availableQuantity > 0)
+                                    .map((product) => (
+                                        <div className="col" key={product.id}>
+                                            <ProductCard product={product}/>
+                                        </div>
+                                    ))}
                             </div>
                         </>
                     )}

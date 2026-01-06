@@ -1,4 +1,4 @@
-package com.example.fashionstorebackend;
+package com.example.fashionstorebackend.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,7 +13,6 @@ import java.util.List;
 @Table(name = "products")
 public class Product {
 
-    // Геттеры и сеттеры для ВСЕХ полей
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_seq")
     @SequenceGenerator(name = "product_seq", sequenceName = "product_sequence", allocationSize = 1)
@@ -29,11 +28,9 @@ public class Product {
 
     private String imageUrl;
 
-    // Новые геттеры/сеттеры
-    // НОВЫЕ ПОЛЯ ДЛЯ ДЕТАЛЬНОЙ СТРАНИЦЫ
     private String color;
 
-    private String size; // Например: "S, M, L, XL" или "36,38,40,42"
+    private String size;
 
     private String material;
 
@@ -47,7 +44,10 @@ public class Product {
 
 
     @Column(name = "available_quantity")
-    private Integer availableQuantity; 
+    private Integer availableQuantity;
+
+    @Column(name = "reserved_quantity")
+    private Integer reservedQuantity = 0;
 
     // Для галереи изображений
     @ElementCollection

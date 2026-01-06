@@ -1,6 +1,6 @@
 package com.example.fashionstorebackend.controller;
 
-import com.example.fashionstorebackend.Product;
+import com.example.fashionstorebackend.model.Product;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,7 @@
 package com.example.fashionstorebackend.controller;
 
-import com.example.fashionstorebackend.*;
+import com.example.fashionstorebackend.dto.OrderRequest;
+import com.example.fashionstorebackend.model.*;
 import com.example.fashionstorebackend.repository.OrderRepository;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class OrderController {
 
             double totalAmount = 0;
 
-            // Проверяем доступность товаров и создаем позиции заказа
+            // Проверяем доступность товаров
             for (OrderRequest.OrderItemRequest itemRequest : orderRequest.getItems()) {
                 Optional<Product> productOpt = productRepository.findById(itemRequest.getProductId());
                 if (productOpt.isEmpty()) {
@@ -41,20 +42,30 @@ public class OrderController {
                 }
 
                 Product product = productOpt.get();
+                int available = product.getAvailableQuantity() != null ? product.getAvailableQuantity() : 0;
+                int reserved = product.getReservedQuantity() != null ? product.getReservedQuantity() : 0;
+                int actuallyAvailable = available - reserved;
 
-                // Проверяем наличие товара
-                if (product.getAvailableQuantity() == null ||
-                        product.getAvailableQuantity() < itemRequest.getQuantity()) {
+                if (actuallyAvailable < itemRequest.getQuantity()) {
                     return ResponseEntity.badRequest()
                             .body("Недостаточно товара на складе: " + product.getName() +
-                                    ". Доступно: " + product.getAvailableQuantity());
+                                    ". Доступно: " + Math.max(0, actuallyAvailable) + " шт.");
                 }
+            }
 
-                // Уменьшаем количество товара
+            // Создаем заказ и уменьшаем количество
+            for (OrderRequest.OrderItemRequest itemRequest : orderRequest.getItems()) {
+                Product product = productRepository.findById(itemRequest.getProductId()).get();
+
+                // Уменьшаем доступное количество
                 product.setAvailableQuantity(product.getAvailableQuantity() - itemRequest.getQuantity());
+                // Уменьшаем зарезервированное количество (если было в резерве этой сессии)
+                product.setReservedQuantity(
+                        Math.max(0, (product.getReservedQuantity() != null ? product.getReservedQuantity() : 0)
+                                - itemRequest.getQuantity())
+                );
                 productRepository.save(product);
 
-                // Создаем позицию заказа
                 OrderItem orderItem = new OrderItem(
                         product,
                         itemRequest.getQuantity(),

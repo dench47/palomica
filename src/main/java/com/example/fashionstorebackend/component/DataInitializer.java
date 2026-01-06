@@ -1,12 +1,11 @@
 package com.example.fashionstorebackend.component;
 
-import com.example.fashionstorebackend.Product;
+import com.example.fashionstorebackend.model.Product;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
