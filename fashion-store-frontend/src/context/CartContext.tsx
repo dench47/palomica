@@ -521,56 +521,30 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
     const clearCart = async () => {
         if (items.length === 0) return;
 
-        // Подтверждение перед очисткой через SweetAlert2
-        const result = await MySwal.fire({
-            title: '<div style="font-family: \'Playfair Display\', serif; font-weight: 300">Очистить корзину?</div>',
-            html: `<div style="font-family: 'Cormorant Garamond', serif; color: #666">
-                    Вы уверены, что хотите удалить все товары из корзины?<br>
-                    <span class="text-danger small">Отменить это действие будет невозможно.</span>
-                  </div>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Да, очистить',
-            cancelButtonText: 'Отмена',
-            customClass: {
-                popup: 'rounded-0 border-0',
-                title: 'fw-light mb-3',
-                htmlContainer: 'text-muted',
-                confirmButton: 'btn btn-danger rounded-0 px-4 py-2',
-                cancelButton: 'btn btn-outline-dark rounded-0 px-4 py-2',
-                actions: 'mt-4'
-            },
-            buttonsStyling: false,
-            background: '#f8f9fa',
-            width: '500px'
-        });
+        // Освобождаем все резервирования
+        await releaseItems(convertToSyncItems(items));
+        setItems([]);
 
-        if (result.isConfirmed) {
-            // Освобождаем все резервирования
-            await releaseItems(convertToSyncItems(items));
-            setItems([]);
-
-            // Показываем уведомление об очистке через toast
-            toast.success(
-                <div className="d-flex align-items-center">
-                    <Check size={18} className="me-2" />
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                        Корзина очищена
-                    </span>
-                </div>,
-                {
-                    duration: 2500,
-                    position: 'bottom-right',
-                    style: {
-                        background: '#f8f9fa',
-                        border: '1px solid #28a745',
-                        borderLeft: '3px solid #28a745',
-                        borderRadius: '0',
-                        padding: '12px 16px'
-                    }
+        // Показываем уведомление об очистке через toast
+        toast.success(
+            <div className="d-flex align-items-center">
+                <Check size={18} className="me-2" />
+                <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                Корзина очищена
+            </span>
+            </div>,
+            {
+                duration: 2500,
+                position: 'bottom-right',
+                style: {
+                    background: '#f8f9fa',
+                    border: '1px solid #28a745',
+                    borderLeft: '3px solid #28a745',
+                    borderRadius: '0',
+                    padding: '12px 16px'
                 }
-            );
-        }
+            }
+        );
     };
 
     // Общее количество товаров (сумма quantity всех вариантов)
