@@ -1,3 +1,4 @@
+// FileUploadComponent.tsx - упрощенная версия
 import React, { useState, useRef } from 'react';
 import Swal from 'sweetalert2';
 
@@ -14,6 +15,15 @@ interface UploadedFile {
     size: number;
 }
 
+interface UploadResponse {
+    success: boolean;
+    uploadedFiles: UploadedFile[];
+    totalUploaded: number;
+    totalFailed: number;
+    errors: string[];
+    message?: string;
+}
+
 const FileUploadComponent: React.FC<FileUploadProps> = ({
                                                             folder,
                                                             onFilesUploaded,
@@ -22,7 +32,6 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                                                         }) => {
     const [uploading, setUploading] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-    const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,14 +97,10 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                 body: formData
             });
 
-            const data = await response.json();
+            const data: UploadResponse = await response.json();
 
             if (response.ok && data.success) {
-                const newUploadedFiles: UploadedFile[] = data.uploadedFiles;
-                const urls = newUploadedFiles.map(file => file.url);
-
-                // Добавляем к уже загруженным
-                setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
+                const urls = data.uploadedFiles.map((file: UploadedFile) => file.url);
 
                 // Передаем URLs родительскому компоненту
                 onFilesUploaded(urls);
@@ -104,7 +109,9 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                 Swal.fire({
                     icon: 'success',
                     title: 'Файлы загружены',
-                    text: `Успешно загружено ${newUploadedFiles.length} файлов`
+                    text: `Успешно загружено ${data.uploadedFiles.length} файлов`,
+                    timer: 2000,
+                    showConfirmButton: false
                 });
 
                 // Очищаем выбранные файлы
@@ -144,50 +151,6 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
         setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleRemoveUploadedFile = async (fileUrl: string, index: number) => {
-        try {
-            const result = await Swal.fire({
-                title: 'Удаление файла',
-                text: 'Вы уверены, что хотите удалить этот файл?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Удалить',
-                cancelButtonText: 'Отмена'
-            });
-
-            if (result.isConfirmed) {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`/api/admin/s3/files/delete?url=${encodeURIComponent(fileUrl)}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    }
-                });
-
-                if (response.ok) {
-                    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Файл удален'
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Ошибка',
-                        text: 'Не удалось удалить файл'
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Delete error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Ошибка',
-                text: 'Не удалось удалить файл'
-            });
-        }
-    };
-
     const formatFileSize = (bytes: number) => {
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -213,25 +176,28 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                 </div>
             </div>
 
-            {/* Выбранные файлы */}
+            {/* Выбранные файлы (только список, без превью) */}
             {selectedFiles.length > 0 && (
                 <div className="mb-3">
-                    <h6>Файлы для загрузки ({selectedFiles.length}):</h6>
+                    <div className="alert alert-info py-2 mb-2 rounded-0">
+                        <small>Выбрано файлов: {selectedFiles.length}</small>
+                    </div>
                     <div className="list-group">
                         {selectedFiles.map((file, index) => (
-                            <div key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                            <div key={index} className="list-group-item d-flex justify-content-between align-items-center py-2">
                                 <div>
                                     <span className="badge bg-secondary me-2">{index + 1}</span>
-                                    {file.name}
-                                    <span className="text-muted ms-2">
+                                    <small>{file.name}</small>
+                                    <small className="text-muted ms-2">
                                         ({formatFileSize(file.size)})
-                                    </span>
+                                    </small>
                                 </div>
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleRemoveSelectedFile(index)}
                                     disabled={uploading}
+                                    title="Убрать из списка"
                                 >
                                     ✕
                                 </button>
@@ -244,7 +210,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             {/* Кнопка загрузки */}
             <button
                 type="button"
-                className="btn btn-dark rounded-0 mb-3"
+                className="btn btn-dark rounded-0"
                 onClick={handleUpload}
                 disabled={uploading || selectedFiles.length === 0}
             >
@@ -258,40 +224,11 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                 )}
             </button>
 
-            {/* Загруженные файлы */}
-            {uploadedFiles.length > 0 && (
-                <div className="mt-4">
-                    <h6>Загруженные файлы ({uploadedFiles.length}):</h6>
-                    <div className="row">
-                        {uploadedFiles.map((file, index) => (
-                            <div key={index} className="col-md-3 mb-3">
-                                <div className="card">
-                                    <img
-                                        src={file.url}
-                                        alt={file.originalName}
-                                        className="card-img-top"
-                                        style={{ height: '150px', objectFit: 'cover' }}
-                                    />
-                                    <div className="card-body">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <small className="text-muted">
-                                                {formatFileSize(file.size)}
-                                            </small>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleRemoveUploadedFile(file.url, index)}
-                                            >
-                                                Удалить
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <div className="mt-2">
+                <small className="text-muted">
+                    Файлы будут сохранены в: /images/products/{folder}/
+                </small>
+            </div>
         </div>
     );
 };

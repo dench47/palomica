@@ -168,4 +168,34 @@ public class S3FileController {
         }
         return false;
     }
+
+    // S3FileController.java - добавляем эндпоинты
+    @DeleteMapping("/delete-multiple")
+    public ResponseEntity<?> deleteMultipleFiles(
+            @RequestBody List<String> fileUrls,
+            HttpServletRequest request) {
+
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
+        }
+
+        try {
+            s3Service.deleteMultipleFiles(fileUrls);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Файлы удалены из S3",
+                    "deletedCount", fileUrls.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Ошибка удаления файлов: " + e.getMessage()
+            ));
+        }
+    }
+
+
 }
