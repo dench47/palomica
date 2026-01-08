@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Filter } from 'lucide-react';
 import FileUploadComponent from '../components/admin/FileUploadComponent';
 import Swal from 'sweetalert2';
+import { s3Service } from '../services/api';
 
 
 interface Product {
@@ -62,25 +63,21 @@ const AdminProductsPage = () => {
         }
     };
 
+// Обновляем handleDelete
     const handleDelete = async (id: number) => {
         try {
-            const productName = products.find(p => p.id === id)?.name || 'этот товар';
+            const product = products.find(p => p.id === id);
 
             const result = await Swal.fire({
                 title: 'Удаление товара',
-                html: `Вы уверены, что хотите удалить товар "<strong>${productName}</strong>"?`,
+                html: `Вы уверены, что хотите удалить товар "<strong>${product?.name}</strong>"?<br>
+                  <small class="text-muted">Все фотографии товара также будут удалены из хранилища</small>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Да, удалить',
                 cancelButtonText: 'Отмена',
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                reverseButtons: true,
-                customClass: {
-                    confirmButton: 'btn btn-danger',
-                    cancelButton: 'btn btn-secondary'
-                },
-                buttonsStyling: false
+                cancelButtonColor: '#6c757d'
             });
 
             if (result.isConfirmed) {
@@ -92,28 +89,21 @@ const AdminProductsPage = () => {
                     }
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (response.ok && data.success) {
                     setProducts(products.filter(p => p.id !== id));
 
                     await Swal.fire({
                         title: 'Удалено!',
-                        text: 'Товар успешно удален',
+                        html: `Товар успешно удален<br>
+                          <small class="text-muted">Удалено фотографий: ${data.imagesDeleted || 0}</small>`,
                         icon: 'success',
                         confirmButtonColor: '#28a745',
-                        timer: 2000,
-                        timerProgressBar: true
+                        timer: 2000
                     });
                 } else {
-                    if (response.status === 403) {
-                        await Swal.fire({
-                            title: 'Ошибка доступа',
-                            text: 'Недостаточно прав для удаления товара',
-                            icon: 'error',
-                            confirmButtonColor: '#dc3545'
-                        });
-                    } else {
-                        throw new Error('Ошибка удаления');
-                    }
+                    throw new Error(data.message || 'Ошибка удаления');
                 }
             }
         } catch (error) {
@@ -121,8 +111,7 @@ const AdminProductsPage = () => {
             await Swal.fire({
                 title: 'Ошибка!',
                 text: 'Не удалось удалить товар',
-                icon: 'error',
-                confirmButtonColor: '#dc3545'
+                icon: 'error'
             });
         }
     };
@@ -349,37 +338,53 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
         color: product?.color || '',
         size: product?.size || '',
         material: product?.material || '',
-        careInstructions: product?.careInstructions || '',
-        additionalImages: product?.additionalImages || []
+        careInstructions: product?.careInstructions || ''
     });
     const [saving, setSaving] = useState(false);
-    const [additionalImages, setAdditionalImages] = useState<string[]>(product?.additionalImages || []);
+
+    // Все текущие изображения товара
+    const [allImages, setAllImages] = useState<string[]>(() => {
+        if (product) {
+            const images = [product.imageUrl];
+            if (product.additionalImages && product.additionalImages.length > 0) {
+                images.push(...product.additionalImages);
+            }
+            return images;
+        }
+        return [];
+    });
+
+    // Временные фото (загружены в текущей сессии)
+    const [tempImages, setTempImages] = useState<string[]>([]);
+
+    // Фото для удаления (только при редактировании существующего товара)
+    const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
 
         try {
+            // Основное изображение
+            const mainImage = allImages.length > 0 ? allImages[0] : '';
+            const additional = allImages.length > 1 ? allImages.slice(1) : [];
+
             const submitData = {
                 ...formData,
+                imageUrl: mainImage,
+                additionalImages: additional,
                 availableQuantity: formData.availableQuantity || 0,
                 price: formData.price || 0,
                 reservedQuantity: formData.reservedQuantity || 0,
-                additionalImages: additionalImages
+                deletedImages: isEditing ? imagesToDelete : [] // Только при редактировании
             };
 
-            console.log('Submitting product data:', submitData);
-
             const token = localStorage.getItem('admin_token');
-            console.log('Current token:', token ? token.substring(0, 20) + '...' : 'MISSING');
-
             const url = isEditing
                 ? `/api/admin/products/${product.id}`
                 : '/api/admin/products';
 
             const method = isEditing ? 'PUT' : 'POST';
-
-            console.log('Making request to:', url, 'with method:', method);
 
             const response = await fetch(url, {
                 method,
@@ -390,12 +395,13 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                 body: JSON.stringify(submitData),
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
             if (response.status === 403) {
-                console.error('Access forbidden - token might be invalid');
-                alert('Доступ запрещен. Попробуйте войти заново.');
+                await Swal.fire({
+                    title: 'Доступ запрещен',
+                    text: 'Токен недействителен. Попробуйте войти заново.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
                 localStorage.removeItem('admin_token');
                 localStorage.removeItem('admin_logged_in');
                 window.location.href = '/admin/login';
@@ -408,22 +414,33 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
-            const result = await response.json();
-            console.log('Save successful:', result);
+            // Успешное сохранение
+            await Swal.fire({
+                title: 'Успешно!',
+                text: 'Товар сохранен',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                timer: 2000,
+                timerProgressBar: true
+            });
 
-            alert('Товар успешно сохранен!');
             onSave();
             onClose();
 
         } catch (error) {
             console.error('Error saving product:', error);
-            alert('Ошибка сохранения: ' + error);
+            await Swal.fire({
+                title: 'Ошибка сохранения',
+                text: error instanceof Error ? error.message : 'Неизвестная ошибка',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         } finally {
             setSaving(false);
         }
     };
 
-    const handleChange = (field: string, value: string | number | string[]) => {
+    const handleChange = (field: string, value: string | number) => {
         if (['price', 'availableQuantity', 'reservedQuantity'].includes(field)) {
             if (typeof value === 'string') {
                 value = value === '' ? 0 : parseFloat(value);
@@ -437,23 +454,55 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
         }));
     };
 
+    // Функция загрузки новых фото
     const handleFilesUploaded = (fileUrls: string[]) => {
         if (fileUrls.length > 0) {
-            // Первое изображение - основное
-            handleChange('imageUrl', fileUrls[0]);
-
-            // Остальные - дополнительные (сохраняем с 1 индекса)
-            if (fileUrls.length > 1) {
-                const newAdditional = [...additionalImages, ...fileUrls.slice(1)];
-                setAdditionalImages(newAdditional);
-            }
+            setAllImages(prev => [...prev, ...fileUrls]);
+            setTempImages(prev => [...prev, ...fileUrls]);
         }
     };
 
-    const handleRemoveAdditionalImage = (index: number) => {
-        const newAdditional = [...additionalImages];
-        newAdditional.splice(index, 1);
-        setAdditionalImages(newAdditional);
+    // Удалить фото - БЕЗ ДИАЛОГА
+    const handleRemoveImage = (index: number) => {
+        const imageToDelete = allImages[index];
+
+        // Если это временное фото (только что загруженное)
+        if (tempImages.includes(imageToDelete)) {
+            // Удаляем из временных и сразу из S3
+            setTempImages(prev => prev.filter(img => img !== imageToDelete));
+            s3Service.deleteFile(imageToDelete).catch(err => {
+                console.error('Failed to delete temp image:', err);
+            });
+        } else if (isEditing) {
+            // Если редактируем существующий товар - добавляем в список для удаления
+            setImagesToDelete(prev => [...prev, imageToDelete]);
+        }
+
+        // Убираем фото из массива
+        setAllImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Сделать фото основным
+    const handleMakeMainImage = (index: number) => {
+        if (index === 0) return;
+
+        const newImages = [...allImages];
+        const [imageToMove] = newImages.splice(index, 1);
+        newImages.unshift(imageToMove);
+        setAllImages(newImages);
+    };
+
+    // Обработка закрытия модального окна
+    const handleClose = () => {
+        // Если есть незакрепленные временные фото - удаляем их из S3 молча
+        if (tempImages.length > 0) {
+            tempImages.forEach(imgUrl => {
+                s3Service.deleteFile(imgUrl).catch(err => {
+                    console.error('Failed to delete temp image on cancel:', err);
+                });
+            });
+        }
+        onClose();
     };
 
     return (
@@ -464,7 +513,7 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                         <h5 className="modal-title fw-light" style={{ fontFamily: "'Playfair Display', serif" }}>
                             {isEditing ? 'Редактировать товар' : 'Добавить товар'}
                         </h5>
-                        <button type="button" className="btn-close" onClick={onClose}></button>
+                        <button type="button" className="btn-close" onClick={handleClose}></button>
                     </div>
 
                     <form onSubmit={handleSubmit}>
@@ -505,17 +554,11 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                                         />
                                     </div>
 
+                                    {/* Секция фотографий */}
                                     <div className="mb-3">
-                                        <label className="form-label small text-muted">Фотографии товара *</label>
-
-                                        <input
-                                            type="text"
-                                            className="form-control rounded-0 mb-2"
-                                            value={formData.imageUrl}
-                                            onChange={(e) => handleChange('imageUrl', e.target.value)}
-                                            placeholder="URL основного изображения или загрузите ниже"
-                                            required
-                                        />
+                                        <label className="form-label small text-muted">
+                                            Фотографии товара
+                                        </label>
 
                                         <FileUploadComponent
                                             folder="products"
@@ -523,23 +566,6 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                                             multiple={true}
                                             maxFiles={10}
                                         />
-
-                                        {formData.imageUrl && formData.imageUrl.startsWith('http') && (
-                                            <div className="mt-2">
-                                                <small className="text-muted">Основное изображение:</small>
-                                                <div className="mt-1 position-relative d-inline-block">
-                                                    <img
-                                                        src={formData.imageUrl}
-                                                        alt="Предпросмотр"
-                                                        className="img-thumbnail"
-                                                        style={{width: '100px', height: '100px', objectFit: 'cover'}}
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
 
@@ -624,42 +650,75 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                                             required
                                         />
                                     </div>
-
-                                    {additionalImages.length > 0 && (
-                                        <div className="mb-3">
-                                            <label className="form-label small text-muted">Дополнительные изображения ({additionalImages.length})</label>
-                                            <div className="d-flex flex-wrap gap-2">
-                                                {additionalImages.map((img, index) => (
-                                                    <div key={index} className="position-relative">
-                                                        <img
-                                                            src={img}
-                                                            alt={`Дополнительное ${index + 1}`}
-                                                            className="img-thumbnail"
-                                                            style={{width: '60px', height: '60px', objectFit: 'cover'}}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-danger position-absolute top-0 end-0"
-                                                            style={{padding: '0.1rem', fontSize: '0.7rem'}}
-                                                            onClick={() => handleRemoveAdditionalImage(index)}
-                                                            title="Удалить"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
+
+                            {/* Галерея фотографий - ПРОСТАЯ ВЕРСИЯ */}
+                            {allImages.length > 0 && (
+                                <div className="mt-4 pt-3 border-top">
+                                    <h6 className="mb-3">
+                                        Фотографии товара ({allImages.length})
+                                    </h6>
+                                    <div className="row g-3">
+                                        {allImages.map((img, index) => (
+                                            <div key={index} className="col-4 col-md-3">
+                                                <div className="card border position-relative">
+                                                    <img
+                                                        src={img}
+                                                        alt={`Фото ${index + 1}`}
+                                                        className="card-img-top"
+                                                        style={{
+                                                            height: '150px',
+                                                            objectFit: 'cover'
+                                                        }}
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
+                                                        }}
+                                                    />
+                                                    <div className="card-body p-2">
+                                                        <div className="d-flex justify-content-between align-items-center">
+                                                            <small className="badge bg-secondary">
+                                                                {index === 0 ? 'Основное' : `Фото ${index + 1}`}
+                                                            </small>
+                                                            <div className="btn-group btn-group-sm">
+                                                                {index !== 0 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-outline-secondary btn-sm"
+                                                                        onClick={() => handleMakeMainImage(index)}
+                                                                        title="Сделать основным"
+                                                                    >
+                                                                        ☆
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-danger btn-sm"
+                                                                    onClick={() => handleRemoveImage(index)}
+                                                                    title="Удалить"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-2 text-muted small">
+                                        <div>• Первое фото - основное изображение товара</div>
+                                        <div>• Используйте ☆ чтобы сделать фото основным</div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="modal-footer border-0">
                             <button
                                 type="button"
                                 className="btn btn-outline-dark rounded-0"
-                                onClick={onClose}
+                                onClick={handleClose}
                                 disabled={saving}
                             >
                                 Отмена
@@ -667,7 +726,8 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                             <button
                                 type="submit"
                                 className="btn btn-dark rounded-0"
-                                disabled={saving}
+                                disabled={saving || allImages.length === 0}
+                                title={allImages.length === 0 ? "Добавьте хотя бы одно фото" : ""}
                             >
                                 {saving ? (
                                     <>

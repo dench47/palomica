@@ -5,19 +5,26 @@ import com.example.fashionstorebackend.model.Order;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import com.example.fashionstorebackend.repository.OrderRepository;
 import com.example.fashionstorebackend.service.JwtService;
+import com.example.fashionstorebackend.service.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     @Autowired
     private JwtService jwtService;
@@ -27,6 +34,9 @@ public class AdminController {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private S3Service s3Service;
 
     private boolean isAdmin(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -101,7 +111,7 @@ public class AdminController {
 
     @PutMapping("/products/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
-                                           @RequestBody Product productDetails,
+                                           @RequestBody Map<String, Object> productDetails,
                                            HttpServletRequest request) {
         if (!isAdmin(request)) {
             return ResponseEntity.status(403).body("Доступ запрещен");
@@ -116,50 +126,103 @@ public class AdminController {
 
             Product product = productOptional.get();
 
-            // Обновляем только переданные поля
-            if (productDetails.getName() != null) {
-                product.setName(productDetails.getName());
+            // Сохраняем старые фото для сравнения
+            List<String> oldImages = new ArrayList<>();
+            if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
+                oldImages.add(product.getImageUrl());
             }
-            if (productDetails.getDescription() != null) {
-                product.setDescription(productDetails.getDescription());
-            }
-            if (productDetails.getPrice() != null) {
-                product.setPrice(productDetails.getPrice());
-            }
-            if (productDetails.getImageUrl() != null) {
-                product.setImageUrl(productDetails.getImageUrl());
-            }
-            if (productDetails.getColor() != null) {
-                product.setColor(productDetails.getColor());
-            }
-            if (productDetails.getSize() != null) {
-                product.setSize(productDetails.getSize());
-            }
-            if (productDetails.getMaterial() != null) {
-                product.setMaterial(productDetails.getMaterial());
-            }
-            if (productDetails.getCareInstructions() != null) {
-                product.setCareInstructions(productDetails.getCareInstructions());
-            }
-            if (productDetails.getCategory() != null) {
-                product.setCategory(productDetails.getCategory());
-            }
-            if (productDetails.getSubcategory() != null) {
-                product.setSubcategory(productDetails.getSubcategory());
-            }
-            if (productDetails.getAvailableQuantity() != null) {
-                product.setAvailableQuantity(productDetails.getAvailableQuantity());
-            }
-            if (productDetails.getReservedQuantity() != null) {
-                product.setReservedQuantity(productDetails.getReservedQuantity());
-            }
-            if (productDetails.getAdditionalImages() != null) {
-                product.setAdditionalImages(productDetails.getAdditionalImages());
+            if (product.getAdditionalImages() != null) {
+                oldImages.addAll(product.getAdditionalImages());
             }
 
+            // Обновляем только переданные поля
+            if (productDetails.get("name") != null) {
+                product.setName((String) productDetails.get("name"));
+            }
+            if (productDetails.get("description") != null) {
+                product.setDescription((String) productDetails.get("description"));
+            }
+            if (productDetails.get("price") != null) {
+                product.setPrice(((Number) productDetails.get("price")).doubleValue());
+            }
+            if (productDetails.get("imageUrl") != null) {
+                product.setImageUrl((String) productDetails.get("imageUrl"));
+            }
+            if (productDetails.get("color") != null) {
+                product.setColor((String) productDetails.get("color"));
+            }
+            if (productDetails.get("size") != null) {
+                product.setSize((String) productDetails.get("size"));
+            }
+            if (productDetails.get("material") != null) {
+                product.setMaterial((String) productDetails.get("material"));
+            }
+            if (productDetails.get("careInstructions") != null) {
+                product.setCareInstructions((String) productDetails.get("careInstructions"));
+            }
+            if (productDetails.get("category") != null) {
+                product.setCategory((String) productDetails.get("category"));
+            }
+            if (productDetails.get("subcategory") != null) {
+                product.setSubcategory((String) productDetails.get("subcategory"));
+            }
+            if (productDetails.get("availableQuantity") != null) {
+                product.setAvailableQuantity(((Number) productDetails.get("availableQuantity")).intValue());
+            }
+            if (productDetails.get("reservedQuantity") != null) {
+                product.setReservedQuantity(((Number) productDetails.get("reservedQuantity")).intValue());
+            }
+            if (productDetails.get("additionalImages") != null) {
+                product.setAdditionalImages((List<String>) productDetails.get("additionalImages"));
+            } else {
+                product.setAdditionalImages(new ArrayList<>());
+            }
+
+            // Получаем новые фото
+            List<String> newImages = new ArrayList<>();
+            if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
+                newImages.add(product.getImageUrl());
+            }
+            if (product.getAdditionalImages() != null) {
+                newImages.addAll(product.getAdditionalImages());
+            }
+
+            // Находим удаленные фото (есть в старых, но нет в новых)
+            List<String> deletedImages = oldImages.stream()
+                    .filter(oldImg -> !newImages.contains(oldImg))
+                    .collect(Collectors.toList());
+
+            // Также проверяем переданный список удаленных фото от фронтенда
+            if (productDetails.get("deletedImages") != null) {
+                List<String> frontendDeletedImages = (List<String>) productDetails.get("deletedImages");
+                // Объединяем оба списка, убирая дубликаты
+                deletedImages.addAll(frontendDeletedImages.stream()
+                        .filter(img -> !deletedImages.contains(img))
+                        .collect(Collectors.toList()));
+            }
+
+            // Сохраняем обновленный товар
             Product updatedProduct = productRepository.save(product);
+
+            // Удаляем удаленные фото из S3 в фоне
+            if (!deletedImages.isEmpty()) {
+                new Thread(() -> {
+                    try {
+                        s3Service.deleteMultipleFiles(deletedImages);
+                        log.info("Deleted {} images for product ID {}: {}",
+                                deletedImages.size(), id, deletedImages);
+                    } catch (Exception e) {
+                        log.error("Failed to delete images for product ID {}: {}", id, e.getMessage());
+                    }
+                }).start();
+            }
+
+            log.info("Product updated: ID {}, images deleted: {}, images total: {}",
+                    id, deletedImages.size(), newImages.size());
+
             return ResponseEntity.ok(updatedProduct);
         } catch (Exception e) {
+            log.error("Error updating product ID {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Ошибка обновления товара: " + e.getMessage()
@@ -167,26 +230,66 @@ public class AdminController {
         }
     }
 
+    // ProductController.java - обновляем метод deleteProduct
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {
-            if (!productRepository.existsById(id)) {
+            Optional<Product> productOptional = productRepository.findById(id);
+
+            if (productOptional.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
+            Product product = productOptional.get();
+
+            // Собираем все URL фотографий товара
+            List<String> imageUrls = new ArrayList<>();
+
+            // Основное фото
+            if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
+                imageUrls.add(product.getImageUrl());
+            }
+
+            // Дополнительные фото
+            if (product.getAdditionalImages() != null && !product.getAdditionalImages().isEmpty()) {
+                imageUrls.addAll(product.getAdditionalImages());
+            }
+
+            // Удаляем товар из БД
             productRepository.deleteById(id);
+
+            // Удаляем фото из S3 (в фоновом режиме, чтобы не блокировать ответ)
+            if (!imageUrls.isEmpty()) {
+                new Thread(() -> {
+                    try {
+                        s3Service.deleteMultipleFiles(imageUrls);
+                        log.info("Deleted {} images for product ID {}", imageUrls.size(), id);
+                    } catch (Exception e) {
+                        log.error("Failed to delete images for product ID {}: {}", id, e.getMessage());
+                    }
+                }).start();
+            }
+
+            log.info("Product deleted: ID {}, images deleted: {}", id, imageUrls.size());
+
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Товар удален"
+                    "message", "Товар и его фотографии удалены",
+                    "imagesDeleted", imageUrls.size()
             ));
+
         } catch (Exception e) {
+            log.error("Error deleting product: {}", e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
-                    "message", "Ошибка удаления товара: " + e.getMessage()
+                    "message", "Ошибка удаления товара"
             ));
         }
     }

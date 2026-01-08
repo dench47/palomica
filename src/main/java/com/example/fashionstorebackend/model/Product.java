@@ -42,7 +42,6 @@ public class Product {
 
     private String subcategory;
 
-
     @Column(name = "available_quantity")
     private Integer availableQuantity;
 

@@ -11,8 +11,7 @@ export type Product = {
     additionalImages?: string[];
     category: string;
     subcategory?: string;
-    availableQuantity: number; // ← ДОБАВЛЕНО
-
+    availableQuantity: number;
 }
 
 // Типы для заказа
@@ -147,7 +146,6 @@ export const cartService = {
 export const productService = {
     async getAllProducts(): Promise<Product[]> {
         try {
-            // Всегда добавляем /api/ к пути
             const response = await fetch(`${API_BASE_URL}/api/products`);
 
             if (!response.ok) {
@@ -163,7 +161,6 @@ export const productService = {
 
     async getProductById(id: number): Promise<Product | null> {
         try {
-            // ВАЖНО: здесь тоже добавляем /api/
             const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
             if (!response.ok) {
                 console.error(`HTTP error! status: ${response.status}`);
@@ -173,6 +170,58 @@ export const productService = {
         } catch (error) {
             console.error('Error fetching product:', error);
             return null;
+        }
+    }
+};
+
+// ========== S3 Service ==========
+export const s3Service = {
+    async deleteFile(fileUrl: string): Promise<boolean> {
+        try {
+            const token = localStorage.getItem('admin_token');
+            if (!token) {
+                console.error('No admin token found');
+                return false;
+            }
+
+            const response = await fetch(`/api/admin/s3/files/delete?url=${encodeURIComponent(fileUrl)}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            return response.ok && data.success;
+        } catch (error) {
+            console.error('Error deleting file from S3:', error);
+            return false;
+        }
+    },
+
+    async deleteMultipleFiles(fileUrls: string[]): Promise<boolean> {
+        try {
+            const token = localStorage.getItem('admin_token');
+            if (!token) {
+                console.error('No admin token found');
+                return false;
+            }
+
+            const response = await fetch(`/api/admin/s3/files/delete-multiple`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(fileUrls)
+            });
+
+            const data = await response.json();
+            return response.ok && data.success;
+        } catch (error) {
+            console.error('Error deleting multiple files from S3:', error);
+            return false;
         }
     }
 };
