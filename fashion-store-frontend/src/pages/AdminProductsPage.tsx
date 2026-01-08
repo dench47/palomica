@@ -4,7 +4,6 @@ import FileUploadComponent from '../components/admin/FileUploadComponent';
 import Swal from 'sweetalert2';
 import { s3Service } from '../services/api';
 
-
 interface Product {
     id: number;
     name: string;
@@ -63,7 +62,6 @@ const AdminProductsPage = () => {
         }
     };
 
-// Обновляем handleDelete
     const handleDelete = async (id: number) => {
         try {
             const product = products.find(p => p.id === id);
@@ -360,6 +358,51 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
     // Фото для удаления (только при редактировании существующего товара)
     const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
+    // Переместить фото влево/вправо
+    const handleMoveImage = (index: number, direction: 'left' | 'right') => {
+        if ((direction === 'left' && index === 0) ||
+            (direction === 'right' && index === allImages.length - 1)) {
+            return;
+        }
+
+        const newImages = [...allImages];
+        const newIndex = direction === 'left' ? index - 1 : index + 1;
+
+        // Меняем местами
+        [newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]];
+        setAllImages(newImages);
+    };
+
+    // Сделать фото основным
+    const handleMakeMainImage = (index: number) => {
+        if (index === 0) return;
+
+        const newImages = [...allImages];
+        const [imageToMove] = newImages.splice(index, 1);
+        newImages.unshift(imageToMove);
+        setAllImages(newImages);
+    };
+
+    // Удалить фото - БЕЗ ДИАЛОГА
+    const handleRemoveImage = (index: number) => {
+        const imageToDelete = allImages[index];
+
+        // Если это временное фото (только что загруженное)
+        if (tempImages.includes(imageToDelete)) {
+            // Удаляем из временных и сразу из S3
+            setTempImages(prev => prev.filter(img => img !== imageToDelete));
+            s3Service.deleteFile(imageToDelete).catch(err => {
+                console.error('Failed to delete temp image:', err);
+            });
+        } else if (isEditing) {
+            // Если редактируем существующий товар - добавляем в список для удаления
+            setImagesToDelete(prev => [...prev, imageToDelete]);
+        }
+
+        // Убираем фото из массива
+        setAllImages(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -460,36 +503,6 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
             setAllImages(prev => [...prev, ...fileUrls]);
             setTempImages(prev => [...prev, ...fileUrls]);
         }
-    };
-
-    // Удалить фото - БЕЗ ДИАЛОГА
-    const handleRemoveImage = (index: number) => {
-        const imageToDelete = allImages[index];
-
-        // Если это временное фото (только что загруженное)
-        if (tempImages.includes(imageToDelete)) {
-            // Удаляем из временных и сразу из S3
-            setTempImages(prev => prev.filter(img => img !== imageToDelete));
-            s3Service.deleteFile(imageToDelete).catch(err => {
-                console.error('Failed to delete temp image:', err);
-            });
-        } else if (isEditing) {
-            // Если редактируем существующий товар - добавляем в список для удаления
-            setImagesToDelete(prev => [...prev, imageToDelete]);
-        }
-
-        // Убираем фото из массива
-        setAllImages(prev => prev.filter((_, i) => i !== index));
-    };
-
-    // Сделать фото основным
-    const handleMakeMainImage = (index: number) => {
-        if (index === 0) return;
-
-        const newImages = [...allImages];
-        const [imageToMove] = newImages.splice(index, 1);
-        newImages.unshift(imageToMove);
-        setAllImages(newImages);
     };
 
     // Обработка закрытия модального окна
@@ -653,62 +666,163 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                                 </div>
                             </div>
 
-                            {/* Галерея фотографий - ПРОСТАЯ ВЕРСИЯ */}
+                            {/* Галерея фотографий */}
                             {allImages.length > 0 && (
                                 <div className="mt-4 pt-3 border-top">
                                     <h6 className="mb-3">
                                         Фотографии товара ({allImages.length})
+                                        {allImages.length > 0 && (
+                                            <span className="ms-2 small text-muted">
+                                                • Первое фото — основное
+                                            </span>
+                                        )}
                                     </h6>
                                     <div className="row g-3">
                                         {allImages.map((img, index) => (
                                             <div key={index} className="col-4 col-md-3">
-                                                <div className="card border position-relative">
-                                                    <img
-                                                        src={img}
-                                                        alt={`Фото ${index + 1}`}
-                                                        className="card-img-top"
-                                                        style={{
-                                                            height: '150px',
-                                                            objectFit: 'cover'
-                                                        }}
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
-                                                        }}
-                                                    />
+                                                <div className="card border-0 position-relative shadow-sm">
+                                                    <div className="position-relative">
+                                                        <img
+                                                            src={img}
+                                                            alt={`Фото ${index + 1}`}
+                                                            className="card-img-top"
+                                                            style={{
+                                                                height: '150px',
+                                                                objectFit: 'cover',
+                                                                border: index === 0 ? '3px solid #28a745' : '1px solid #dee2e6'
+                                                            }}
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
+                                                            }}
+                                                        />
+
+                                                        {index !== 0 && (
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-success btn-sm position-absolute top-0 end-0 m-1"
+                                                                onClick={() => handleMakeMainImage(index)}
+                                                                title="Сделать основным"
+                                                                style={{
+                                                                    width: '30px',
+                                                                    height: '30px',
+                                                                    padding: '0',
+                                                                    borderRadius: '50%',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    zIndex: 10
+                                                                }}
+                                                            >
+                                                                <span style={{ fontSize: '16px', lineHeight: '1' }}>☆</span>
+                                                            </button>
+                                                        )}
+
+                                                        {index === 0 && (
+                                                            <div className="position-absolute top-0 start-0 m-1">
+                                                                <span className="badge bg-success">Основное</span>
+                                                            </div>
+                                                        )}
+
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-danger btn-sm position-absolute bottom-0 end-0 m-1"
+                                                            onClick={() => handleRemoveImage(index)}
+                                                            title="Удалить"
+                                                            style={{
+                                                                width: '30px',
+                                                                height: '30px',
+                                                                padding: '0',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                zIndex: 10
+                                                            }}
+                                                        >
+                                                            <span style={{ fontSize: '16px', lineHeight: '1' }}>✕</span>
+                                                        </button>
+                                                    </div>
+
                                                     <div className="card-body p-2">
-                                                        <div className="d-flex justify-content-between align-items-center">
-                                                            <small className="badge bg-secondary">
-                                                                {index === 0 ? 'Основное' : `Фото ${index + 1}`}
+                                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                                            <small className="text-muted">
+                                                                Фото {index + 1}
                                                             </small>
-                                                            <div className="btn-group btn-group-sm">
-                                                                {index !== 0 && (
+                                                            <small className="text-muted">
+                                                                {index === 0 ? 'Основное' : 'Дополнительное'}
+                                                            </small>
+                                                        </div>
+
+                                                        {index > 0 && (
+                                                            <div className="d-flex justify-content-center gap-1 mt-1">
+                                                                {index > 1 && (
                                                                     <button
                                                                         type="button"
                                                                         className="btn btn-outline-secondary btn-sm"
-                                                                        onClick={() => handleMakeMainImage(index)}
-                                                                        title="Сделать основным"
+                                                                        onClick={() => handleMoveImage(index, 'left')}
+                                                                        title="Сдвинуть влево"
+                                                                        style={{
+                                                                            width: '28px',
+                                                                            height: '28px',
+                                                                            padding: '0',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center'
+                                                                        }}
                                                                     >
-                                                                        ☆
+                                                                        <span style={{ fontSize: '12px' }}>←</span>
                                                                     </button>
                                                                 )}
-                                                                <button
-                                                                    type="button"
-                                                                    className="btn btn-outline-danger btn-sm"
-                                                                    onClick={() => handleRemoveImage(index)}
-                                                                    title="Удалить"
-                                                                >
-                                                                    ✕
-                                                                </button>
+
+                                                                {index < allImages.length - 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-outline-secondary btn-sm"
+                                                                        onClick={() => handleMoveImage(index, 'right')}
+                                                                        title="Сдвинуть вправо"
+                                                                        style={{
+                                                                            width: '28px',
+                                                                            height: '28px',
+                                                                            padding: '0',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center'
+                                                                        }}
+                                                                    >
+                                                                        <span style={{ fontSize: '12px' }}>→</span>
+                                                                    </button>
+                                                                )}
                                                             </div>
-                                                        </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="mt-2 text-muted small">
-                                        <div>• Первое фото - основное изображение товара</div>
-                                        <div>• Используйте ☆ чтобы сделать фото основным</div>
+
+                                    <div className="mt-3 pt-2 border-top">
+                                        <div className="row">
+                                            <div className="col-md-6">
+                                                <div className="d-flex align-items-center mb-2">
+                                                    <div className="me-2" style={{ width: '20px', height: '20px', border: '3px solid #28a745' }}></div>
+                                                    <small className="text-muted">Зелёная рамка — основное фото</small>
+                                                </div>
+                                                <div className="d-flex align-items-center mb-2">
+                                                    <button className="btn btn-success btn-sm me-2" disabled style={{ width: '24px', height: '24px', padding: '0' }}>☆</button>
+                                                    <small className="text-muted">Сделать фото основным</small>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="d-flex align-items-center mb-2">
+                                                    <button className="btn btn-outline-secondary btn-sm me-2" disabled style={{ width: '24px', height: '24px', padding: '0' }}>←</button>
+                                                    <small className="text-muted">Изменить порядок фото</small>
+                                                </div>
+                                                <div className="d-flex align-items-center">
+                                                    <button className="btn btn-danger btn-sm me-2" disabled style={{ width: '24px', height: '24px', padding: '0' }}>✕</button>
+                                                    <small className="text-muted">Удалить фото из товара</small>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
