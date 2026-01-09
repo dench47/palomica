@@ -3,6 +3,25 @@ import { Plus, Edit, Trash2, Search, Filter } from 'lucide-react';
 import FileUploadComponent from '../components/admin/FileUploadComponent';
 import Swal from 'sweetalert2';
 import { s3Service } from '../services/api';
+import CategoryManagerModal from '../components/admin/CategoryManagerModal';
+
+interface Category {
+    id: number;
+    name: string;
+    description?: string;
+    displayOrder: number;
+    isActive: boolean;
+    subcategories?: Subcategory[];
+}
+
+interface Subcategory {
+    id: number;
+    name: string;
+    categoryId: number;
+    categoryName?: string;
+    displayOrder: number;
+    isActive: boolean;
+}
 
 interface Product {
     id: number;
@@ -10,8 +29,10 @@ interface Product {
     description: string;
     price: number;
     imageUrl: string;
-    category: string;
-    subcategory?: string;
+    category: string;        // Название для отображения
+    subcategory?: string;    // Название для отображения
+    categoryId: number;      // ID для формы
+    subcategoryId?: number;  // ID для формы
     availableQuantity: number;
     reservedQuantity: number;
     color?: string;
@@ -27,6 +48,8 @@ const AdminProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [showCategoryManager, setShowCategoryManager] = useState(false);
+    const [refreshCategoriesTrigger, setRefreshCategoriesTrigger] = useState(0);
 
     useEffect(() => {
         fetchProducts();
@@ -310,6 +333,22 @@ const AdminProductsPage = () => {
                         setShowModal(false);
                         setEditingProduct(null);
                     }}
+                    showCategoryManager={showCategoryManager}
+                    setShowCategoryManager={setShowCategoryManager}
+                    refreshCategoriesTrigger={refreshCategoriesTrigger}
+                />
+            )}
+
+            {/* НОВАЯ МОДАЛКА ДЛЯ УПРАВЛЕНИЯ КАТЕГОРИЯМИ */}
+            {showCategoryManager && (
+                <CategoryManagerModal
+                    onClose={() => setShowCategoryManager(false)}
+                    onSave={() => {
+                        // Триггерим обновление категорий во всех открытых модалках товара
+                        setRefreshCategoriesTrigger(prev => prev + 1);
+                        setShowCategoryManager(false);
+                        fetchProducts(); // Обновляем товары после изменения категорий
+                    }}
                 />
             )}
         </div>
@@ -320,17 +359,20 @@ interface ProductModalProps {
     product: Product | null;
     onClose: () => void;
     onSave: () => void;
+    showCategoryManager: boolean;
+    setShowCategoryManager: (show: boolean) => void;
+    refreshCategoriesTrigger: number;
 }
 
-const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
+const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCategoryManager, refreshCategoriesTrigger }: ProductModalProps) => {
     const isEditing = !!product;
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
         price: product?.price || 0,
         imageUrl: product?.imageUrl || '',
-        category: product?.category || 'одежда',
-        subcategory: product?.subcategory || '',
+        categoryId: product?.categoryId || 0,        // ID категории
+        subcategoryId: product?.subcategoryId || 0,  // ID подкатегории
         availableQuantity: product?.availableQuantity || 0,
         reservedQuantity: product?.reservedQuantity || 0,
         color: product?.color || '',
@@ -339,6 +381,9 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
         careInstructions: product?.careInstructions || ''
     });
     const [saving, setSaving] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
 
     // Все текущие изображения товара
     const [allImages, setAllImages] = useState<string[]>(() => {
@@ -357,6 +402,70 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
 
     // Фото для удаления (только при редактировании существующего товара)
     const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+
+    // Загрузка категорий при монтировании и при изменении триггера
+    useEffect(() => {
+        fetchCategories();
+    }, [refreshCategoriesTrigger]); // <-- ОБНОВЛЯЕМ КАТЕГОРИИ ПРИ ИЗМЕНЕНИИ ТРИГГЕРА
+
+    // Загрузка подкатегорий при выборе категории
+    useEffect(() => {
+        if (formData.categoryId) {
+            fetchSubcategories(formData.categoryId);
+        } else {
+            setSubcategories([]);
+        }
+    }, [formData.categoryId]);
+
+    const fetchCategories = async () => {
+        try {
+            setLoadingCategories(true);
+            const token = localStorage.getItem('admin_token');
+            const response = await fetch('/api/admin/categories', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCategories(data);
+
+                // Если редактируем товар, устанавливаем выбранную категорию
+                if (product?.categoryId && !formData.categoryId) {
+                    setFormData(prev => ({ ...prev, categoryId: product.categoryId }));
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        } finally {
+            setLoadingCategories(false);
+        }
+    };
+
+    const fetchSubcategories = async (categoryId: number) => {
+        try {
+            const token = localStorage.getItem('admin_token');
+            const response = await fetch(`/api/admin/categories/${categoryId}/subcategories`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setSubcategories(data);
+
+                // Если редактируем товар и у него есть подкатегория
+                if (product?.subcategoryId && !formData.subcategoryId) {
+                    setFormData(prev => ({ ...prev, subcategoryId: product.subcategoryId || 0 }));
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching subcategories:', error);
+            setSubcategories([]);
+        }
+    };
 
     // Переместить фото влево/вправо
     const handleMoveImage = (index: number, direction: 'left' | 'right') => {
@@ -413,13 +522,20 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
             const additional = allImages.length > 1 ? allImages.slice(1) : [];
 
             const submitData = {
-                ...formData,
-                imageUrl: mainImage,
-                additionalImages: additional,
-                availableQuantity: formData.availableQuantity || 0,
+                name: formData.name,
+                description: formData.description,
                 price: formData.price || 0,
+                imageUrl: mainImage,
+                categoryId: formData.categoryId || 0,          // Отправляем ID
+                subcategoryId: formData.subcategoryId || 0,    // Отправляем ID
+                availableQuantity: formData.availableQuantity || 0,
                 reservedQuantity: formData.reservedQuantity || 0,
-                deletedImages: isEditing ? imagesToDelete : [] // Только при редактировании
+                color: formData.color || '',
+                size: formData.size || '',
+                material: formData.material || '',
+                careInstructions: formData.careInstructions || '',
+                additionalImages: additional,
+                deletedImages: isEditing ? imagesToDelete : []
             };
 
             const token = localStorage.getItem('admin_token');
@@ -583,31 +699,78 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                                 </div>
 
                                 <div className="col-md-6">
-                                    <div className="row">
-                                        <div className="col-6 mb-3">
+                                    {/* Категория */}
+                                    <div className="col-6 mb-3">
+                                        <div className="d-flex justify-content-between align-items-center mb-1">
                                             <label className="form-label small text-muted">Категория *</label>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() => setShowCategoryManager(true)}
+                                                title="Управление категориями"
+                                            >
+                                                <Edit size={12} />
+                                            </button>
+                                        </div>
+                                        {loadingCategories ? (
+                                            <div className="d-flex align-items-center">
+                                                <div className="spinner-border spinner-border-sm me-2"></div>
+                                                <small>Загрузка категорий...</small>
+                                            </div>
+                                        ) : (
                                             <select
                                                 className="form-select rounded-0"
-                                                value={formData.category}
-                                                onChange={(e) => handleChange('category', e.target.value)}
+                                                value={formData.categoryId || ''}
+                                                onChange={(e) => {
+                                                    const categoryId = parseInt(e.target.value);
+                                                    handleChange('categoryId', categoryId);
+                                                    // Сбрасываем подкатегорию при смене категории
+                                                    handleChange('subcategoryId', 0);
+                                                }}
                                                 required
                                             >
-                                                <option value="одежда">Одежда</option>
-                                                <option value="сумки">Сумки</option>
-                                                <option value="аксессуары">Аксессуары</option>
-                                                <option value="обувь">Обувь</option>
+                                                <option value="">Выберите категорию</option>
+                                                {categories.map(category => (
+                                                    <option key={category.id} value={category.id}>
+                                                        {category.name}
+                                                    </option>
+                                                ))}
                                             </select>
-                                        </div>
+                                        )}
+                                    </div>
 
-                                        <div className="col-6 mb-3">
+                                    {/* Подкатегория */}
+                                    <div className="col-6 mb-3">
+                                        <div className="d-flex justify-content-between align-items-center mb-1">
                                             <label className="form-label small text-muted">Подкатегория</label>
-                                            <input
-                                                type="text"
-                                                className="form-control rounded-0"
-                                                value={formData.subcategory}
-                                                onChange={(e) => handleChange('subcategory', e.target.value)}
-                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() => setShowCategoryManager(true)}
+                                                title="Управление подкатегориями"
+                                            >
+                                                <Edit size={12} />
+                                            </button>
                                         </div>
+                                        <select
+                                            className="form-select rounded-0"
+                                            value={formData.subcategoryId || ''}
+                                            onChange={(e) => handleChange('subcategoryId', parseInt(e.target.value))}
+                                            disabled={!formData.categoryId || subcategories.length === 0}
+                                        >
+                                            <option value="">
+                                                {!formData.categoryId
+                                                    ? 'Сначала выберите категорию'
+                                                    : subcategories.length === 0
+                                                        ? 'Нет подкатегорий'
+                                                        : 'Выберите подкатегорию'}
+                                            </option>
+                                            {subcategories.map(subcat => (
+                                                <option key={subcat.id} value={subcat.id}>
+                                                    {subcat.name}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     <div className="row">
@@ -840,8 +1003,8 @@ const ProductModal = ({ product, onClose, onSave }: ProductModalProps) => {
                             <button
                                 type="submit"
                                 className="btn btn-dark rounded-0"
-                                disabled={saving || allImages.length === 0}
-                                title={allImages.length === 0 ? "Добавьте хотя бы одно фото" : ""}
+                                disabled={saving || allImages.length === 0 || !formData.categoryId}
+                                title={allImages.length === 0 ? "Добавьте хотя бы одно фото" : !formData.categoryId ? "Выберите категорию" : ""}
                             >
                                 {saving ? (
                                     <>

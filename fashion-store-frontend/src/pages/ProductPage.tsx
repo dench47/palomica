@@ -7,7 +7,6 @@ import ProductCard from '../components/ProductCard';
 import {Package, Ruler, Palette, Check} from 'lucide-react';
 import toast from "react-hot-toast";
 
-
 interface ProductVariant {
     size?: string;
     color?: string;
@@ -48,41 +47,31 @@ const ProductPage = () => {
         }
     }, [product]);
 
-    // Проверяем, находится ли текущий товар в корзине
     const isProductInCart = (productId: number) => {
         return items.some(item => item.product.id === productId);
     };
 
     const isCurrentProductInCart = items.some(item => item.product.id === product?.id);
 
-
     const getCartQuantity = (productId: number) => {
         const item = items.find(item => item.product.id === productId);
         return item ? item.quantity : 0;
     };
 
-    // ЗАМЕНИТЕ функцию getAvailableQuantity() на:
     const getAvailableQuantity = (): number => {
         if (!product) return 0;
-
-        // Просто возвращаем количество из БД (product.availableQuantity)
-        // Не вычитаем товары из корзины!
         return product.availableQuantity || 0;
     };
 
-// ДОБАВЬТЕ новую функцию для проверки лимита добавления:
     const getRemainingToAdd = (): number => {
         if (!product) return 0;
 
         const baseQuantity = product.availableQuantity || 0;
-
-        // Сколько уже в корзине для этого товара (все варианты)
         const cartItemsForThisProduct = items.filter(item =>
             item.product.id === product.id
         );
         const inCartQuantity = cartItemsForThisProduct.reduce((sum, item) => sum + item.quantity, 0);
 
-        // Сколько еще можно добавить
         return Math.max(0, baseQuantity - inCartQuantity);
     };
 
@@ -124,7 +113,7 @@ const ProductPage = () => {
             }
         } catch (err) {
             setError('Ошибка при загрузке товара');
-            console.error(err);
+            console.error('Error loading product:', err);
         } finally {
             setLoading(false);
         }
@@ -139,20 +128,18 @@ const ProductPage = () => {
                 return;
             }
 
-            // Фильтруем ТОЛЬКО товары из той же подкатегории
+            // Фильтруем товары из той же подкатегории
             const sameSubcategoryProducts = data.filter(p =>
                 p.id !== product.id &&
                 p.subcategory &&
                 p.subcategory === product.subcategory
             );
 
-            // Если меньше 1 товара в подкатегории - не показываем ничего
             if (sameSubcategoryProducts.length < 1) {
                 setRelatedProducts([]);
                 return;
             }
 
-            // Показываем максимум 4 товара из той же подкатегории
             const shuffled = [...sameSubcategoryProducts]
                 .sort(() => 0.5 - Math.random())
                 .slice(0, 4);
@@ -164,7 +151,6 @@ const ProductPage = () => {
         }
     };
 
-    // ЗАМЕНИТЕ функцию handleAddToCart():
     const handleAddToCart = () => {
         if (product) {
             const remainingToAdd = getRemainingToAdd();
@@ -174,8 +160,8 @@ const ProductPage = () => {
                     <div className="d-flex align-items-center">
                         <span className="me-2" style={{color: '#dc3545'}}>😔</span>
                         <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                        <strong>"${product.name}"</strong> закончился на складе
-                    </span>
+                            <strong>"{product.name}"</strong> закончился на складе
+                        </span>
                     </div>,
                     {
                         duration: 4000,
@@ -199,8 +185,8 @@ const ProductPage = () => {
                     <div className="d-flex align-items-center">
                         <span className="me-2" style={{color: '#ffc107'}}>⚠️</span>
                         <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-            <strong>"${product.name}"</strong> доступно только {remainingToAdd} шт.
-        </span>
+                            <strong>"{product.name}"</strong> доступно только {remainingToAdd} шт.
+                        </span>
                     </div>,
                     {
                         duration: 4000,
@@ -217,7 +203,6 @@ const ProductPage = () => {
                 );
             }
 
-            // Добавляем товар
             for (let i = 0; i < maxToAdd; i++) {
                 addToCart(product, selectedVariant);
             }
@@ -530,13 +515,13 @@ const ProductPage = () => {
                                     </h3>
 
                                     <span className="small" style={{color: 'var(--text-medium)'}}>
-    В наличии: <strong style={{color: 'var(--text-dark)'}}>{getAvailableQuantity()} шт.</strong>
+                                        В наличии: <strong style={{color: 'var(--text-dark)'}}>{getAvailableQuantity()} шт.</strong>
                                         {getCartQuantity(product.id) > 0 && (
                                             <span style={{marginLeft: '8px', color: 'var(--accent-brown)'}}>
-            (в корзине: {getCartQuantity(product.id)} шт.)
-        </span>
+                                                (в корзине: {getCartQuantity(product.id)} шт.)
+                                            </span>
                                         )}
-</span>
+                                    </span>
                                 </div>
 
                                 <div className="d-flex align-items-center justify-content-between">
@@ -564,17 +549,15 @@ const ProductPage = () => {
                                                 const remainingToAdd = getRemainingToAdd();
                                                 const currentInCart = getCartQuantity(product.id);
 
-                                                // Проверяем, можно ли добавить еще quantity+1
                                                 if (currentInCart + quantity + 1 <= getAvailableQuantity()) {
                                                     setQuantity(prev => prev + 1);
                                                 } else {
-                                                    // Если нельзя, показываем toast вместо alert
                                                     toast(
                                                         <div className="d-flex align-items-center">
                                                             <span className="me-2" style={{ color: '#ffc107' }}>⚠️</span>
                                                             <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                        <strong>"{product.name}"</strong> доступно только {remainingToAdd} шт.
-                    </span>
+                                                                <strong>"{product.name}"</strong> доступно только {remainingToAdd} шт.
+                                                            </span>
                                                         </div>,
                                                         {
                                                             duration: 3000,
@@ -612,11 +595,10 @@ const ProductPage = () => {
                             </div>
 
                             <div className="mt-auto pt-4">
-
                                 <button
                                     className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
-                                    disabled={!product || getRemainingToAdd() === 0} // Используем getRemainingToAdd()!
+                                    disabled={!product || getRemainingToAdd() === 0}
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
@@ -642,7 +624,6 @@ const ProductPage = () => {
                                     {getRemainingToAdd() === 0 ? 'ТОВАР ЗАКОНЧИЛСЯ' : (isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
                                 </button>
 
-                                {/* КНОПКА "ПЕРЕЙТИ В КОРЗИНУ" С ПЛАВНОЙ АНИМАЦИЕЙ */}
                                 {isCurrentProductInCart && (
                                     <div style={{
                                         overflow: 'hidden',
@@ -696,7 +677,6 @@ const ProductPage = () => {
                 </div>
             </div>
 
-
             {relatedProducts.filter(p => p.availableQuantity > 0).length > 0 && (
                 <div className="px-4 px-md-5 py-5" style={{backgroundColor: 'var(--cream-bg)'}}>
                     <h3 className="fw-light text-center mb-5" style={{
@@ -712,8 +692,8 @@ const ProductPage = () => {
 
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
                         {relatedProducts
-                            .filter(p => p.availableQuantity > 0) // ← ТОЛЬКО ТОВАРЫ В НАЛИЧИИ
-                            .slice(0, 4) // максимум 4 товара
+                            .filter(p => p.availableQuantity > 0)
+                            .slice(0, 4)
                             .map((product) => (
                                 <div className="col" key={product.id}>
                                     <ProductCard product={product}/>

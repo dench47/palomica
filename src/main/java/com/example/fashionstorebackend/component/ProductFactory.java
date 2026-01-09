@@ -20,10 +20,8 @@ public class ProductFactory {
                 "Чёрный с цветочным принтом",  // color
                 "XS,S,M,L",  // size
                 "Шифон 100%",  // material
-                "Стирка при 30°C, не отжимать, сушить в расправленном виде",  // careInstructions
-                "одежда",  // category
-                "платья",   // subcategory
-                null  // availableQuantity
+                "Стирка при 30°C, не отжимать, сушить в расправленном виде"  // careInstructions
+                // Category и Subcategory будут установлены в DataInitializer
         );
         dress.setAvailableQuantity(3);
         dress.setAdditionalImages(Arrays.asList(
@@ -42,10 +40,7 @@ public class ProductFactory {
                 "Белый",  // color
                 "S,M,L",  // size
                 "Хлопок 100%",  // material
-                "Стирка при 40°C, гладить при средней температуре",  // careInstructions
-                "одежда",  // category
-                "платья",   // subcategory
-                null  // availableQuantity
+                "Стирка при 40°C, гладить при средней температуре"  // careInstructions
         );
         dress.setAvailableQuantity(3);
         dress.setAdditionalImages(Arrays.asList(
@@ -64,10 +59,7 @@ public class ProductFactory {
                 "Бежевый",  // color
                 "XS,S,M,L",  // size
                 "Хлопок 100%",  // material
-                "Стирка при 30°C, не отбеливать, гладить на низкой температуре",  // careInstructions
-                "одежда",  // category
-                "блузки и рубашки",   // subcategory
-                null  // availableQuantity
+                "Стирка при 30°C, не отбеливать, гладить на низкой температуре"  // careInstructions
         );
         shirt.setAvailableQuantity(3);
         shirt.setAdditionalImages(Arrays.asList(
@@ -86,10 +78,7 @@ public class ProductFactory {
                 "Чёрный",  // color
                 "XS,S,M",  // size
                 "Атлас 100%",  // material
-                "Химчистка, не стирать",  // careInstructions
-                "одежда",  // category
-                "топы",   // subcategory
-                null  // availableQuantity
+                "Химчистка, не стирать"  // careInstructions
         );
         top.setAvailableQuantity(3);
         top.setAdditionalImages(Arrays.asList(
@@ -108,10 +97,7 @@ public class ProductFactory {
                 "Бордовый",  // color
                 "S,M,L",  // size
                 "Бархат 100%",  // material
-                "Химчистка, хранить на вешалке",  // careInstructions
-                "одежда",  // category
-                "жакеты",   // subcategory
-                null  // availableQuantity
+                "Химчистка, хранить на вешалке"  // careInstructions
         );
         vest.setAvailableQuantity(3);
         vest.setAdditionalImages(Arrays.asList(
@@ -130,15 +116,12 @@ public class ProductFactory {
                 "Коричневый",  // color
                 "36,38,40,42",  // size
                 "Натуральная кожа",  // material
-                "Протирать влажной тканью, использовать средства для ухода за кожей",  // careInstructions
-                "одежда",  // category
-                "юбки",   // subcategory
-                null  // availableQuantity
+                "Протирать влажной тканью, использовать средства для ухода за кожей"  // careInstructions
         );
         skirt.setAvailableQuantity(3);
         skirt.setAdditionalImages(Arrays.asList(
-                IMAGE_BASE_PATH + "clothing/skirt_1.jpg",
-                IMAGE_BASE_PATH + "clothing/skirt_1.jpg"
+                IMAGE_BASE_PATH + "clothing/skirt_1.2.jpg",
+                IMAGE_BASE_PATH + "clothing/skirt_1.3.jpg"
         ));
         return skirt;
     }
@@ -152,15 +135,12 @@ public class ProductFactory {
                 "Серый",  // color
                 "S,M,L",  // size
                 "Шерсть 80%, Полиэстер 20%",  // material
-                "Химчистка, не гладить",  // careInstructions
-                "одежда",  // category
-                "юбки",   // subcategory
-                null  // availableQuantity
+                "Химчистка, не гладить"  // careInstructions
         );
         skirt.setAvailableQuantity(3);
         skirt.setAdditionalImages(Arrays.asList(
-                IMAGE_BASE_PATH + "clothing/skirt_2.jpg",
-                IMAGE_BASE_PATH + "clothing/skirt_2.jpg"
+                IMAGE_BASE_PATH + "clothing/skirt_2.2.jpg",
+                IMAGE_BASE_PATH + "clothing/skirt_2.3.jpg"
         ));
         return skirt;
     }
@@ -174,15 +154,12 @@ public class ProductFactory {
                 "Голубой деним",  // color
                 "36,38,40,42",  // size
                 "Хлопок 98%, Эластан 2%",  // material
-                "Стирка при 40°C, не отбеливать",  // careInstructions
-                "одежда",  // category
-                "юбки",   // subcategory
-                null  // availableQuantity
+                "Стирка при 40°C, не отбеливать"  // careInstructions
         );
         skirt.setAvailableQuantity(3);
         skirt.setAdditionalImages(Arrays.asList(
-                IMAGE_BASE_PATH + "clothing/skirt_3.jpg",
-                IMAGE_BASE_PATH + "clothing/skirt_3.jpg"
+                IMAGE_BASE_PATH + "clothing/skirt_3.2.jpg",
+                IMAGE_BASE_PATH + "clothing/skirt_3.3.jpg"
         ));
         return skirt;
     }
@@ -196,15 +173,12 @@ public class ProductFactory {
                 "Белый",  // color
                 "XS,S,M,L",  // size
                 "Хлопок 100%",  // material
-                "Ручная стирка, сушить в тени",  // careInstructions
-                "одежда",  // category
-                "блузки и рубашки",   // subcategory
-                null  // availableQuantity
+                "Ручная стирка, сушить в тени"  // careInstructions
         );
         blouse.setAvailableQuantity(3);
         blouse.setAdditionalImages(Arrays.asList(
-                IMAGE_BASE_PATH + "clothing/air_1.jpg",
-                IMAGE_BASE_PATH + "clothing/air_1.jpg"
+                IMAGE_BASE_PATH + "clothing/air_1.2.jpg",
+                IMAGE_BASE_PATH + "clothing/air_1.3.jpg"
         ));
         return blouse;
     }
@@ -218,15 +192,12 @@ public class ProductFactory {
                 "Бежевый",  // color
                 "S,M,L",  // size
                 "Шёлк 70%, Вискоза 30%",  // material
-                "Химчистка",  // careInstructions
-                "одежда",  // category
-                "блузки и рубашки",   // subcategory
-                null  // availableQuantity
+                "Химчистка"  // careInstructions
         );
         blouse.setAvailableQuantity(3);
         blouse.setAdditionalImages(Arrays.asList(
-                IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22 (2).jpg",
-                IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22 (3).jpg"
+                IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22_2.jpg",
+                IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22_3.jpg"
         ));
         return blouse;
     }
@@ -242,10 +213,7 @@ public class ProductFactory {
                 "Коричневый",  // color
                 "75-85 см, 85-95 см, 95-105 см",  // size
                 "Натуральная кожа, металлическая фурнитура",  // material
-                "Протирать влажной тканью, использовать крем для кожи",  // careInstructions
-                "аксессуары",  // category
-                "пояса",   // subcategory
-                null  // availableQuantity
+                "Протирать влажной тканью, использовать крем для кожи"  // careInstructions
         );
         belt.setAvailableQuantity(3);
         belt.setAdditionalImages(Arrays.asList(
@@ -264,10 +232,7 @@ public class ProductFactory {
                 "Чёрный",  // color
                 "Универсальный",  // size
                 "Полиэстер 100%",  // material
-                "Стирка при 30°C, не отжимать",  // careInstructions
-                "аксессуары",  // category
-                "баски",   // subcategory
-                null  // availableQuantity
+                "Стирка при 30°C, не отжимать"  // careInstructions
         );
         peplum.setAvailableQuantity(3);
         peplum.setAdditionalImages(Arrays.asList(
@@ -288,10 +253,7 @@ public class ProductFactory {
                 "Чёрный",  // color
                 null,  // size
                 "Экокожа 100%, металлическая фурнитура",  // material
-                "Протирать влажной тканью, избегать контакта с химическими веществами",  // careInstructions
-                "сумки",  // category
-                "шопперы",   // subcategory
-                null  // availableQuantity
+                "Протирать влажной тканью, избегать контакта с химическими веществами"  // careInstructions
         );
         bag.setAvailableQuantity(3);
         bag.setAdditionalImages(Arrays.asList(
