@@ -16,7 +16,9 @@ public class SpaController {
             "/catalog",
             "/cart",
             "/checkout",
-            "/account"
+            "/account",
+            "/admin",
+            "/admin/**"
     })
     public ResponseEntity<Resource> serveIndex(HttpServletRequest request) throws IOException {
         Resource resource = new ClassPathResource("/static/index.html");
