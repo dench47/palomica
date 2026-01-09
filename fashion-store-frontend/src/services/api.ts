@@ -1,3 +1,6 @@
+// ========== ТИПЫ ДАННЫХ ==========
+
+// Продукт
 export type Product = {
     id: number;
     name: string;
@@ -9,9 +12,30 @@ export type Product = {
     material?: string;
     careInstructions?: string;
     additionalImages?: string[];
-    category: string;
-    subcategory?: string;
+    category: string;        // Название категории (строка)
+    subcategory?: string;    // Название подкатегории (строка)
     availableQuantity: number;
+}
+
+// Категория (соответствует CategoryDTO.java)
+export interface Category {
+    id: number;
+    name: string;
+    description?: string;
+    displayOrder: number;
+    isActive: boolean;
+    subcategories?: Subcategory[];  // Может быть пустым или отсутствовать
+}
+
+// Подкатегория (соответствует SubcategoryDTO.java)
+export interface Subcategory {
+    id: number;
+    name: string;
+    description?: string;
+    categoryId: number;
+    categoryName?: string;
+    displayOrder: number;
+    isActive: boolean;
 }
 
 // Типы для заказа
@@ -32,11 +56,6 @@ export interface OrderRequest {
     comment?: string;
     items: OrderItemRequest[];
 }
-
-// АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
-const API_BASE_URL = import.meta.env.DEV
-    ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
-    : '';  // В продакшене: пустая строка (относительный путь)
 
 // Типы для синхронизации корзины
 export interface CartSyncItemRequest {
@@ -64,6 +83,13 @@ export interface CartSyncResponse {
     message: string;
 }
 
+// ========== КОНФИГУРАЦИЯ API ==========
+
+// АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
+const API_BASE_URL = import.meta.env.DEV
+    ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
+    : '';  // В продакшене: пустая строка (относительный путь)
+
 // Генерируем уникальный sessionId для пользователя
 const getSessionId = (): string => {
     let sessionId = localStorage.getItem('cart_session_id');
@@ -74,6 +100,72 @@ const getSessionId = (): string => {
     return sessionId;
 };
 
+// ========== СЕРВИСЫ ==========
+
+// Сервис категорий
+export const categoryService = {
+    // Получить все активные категории с подкатегориями
+    getAllCategories: async (): Promise<Category[]> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch categories: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            throw error;
+        }
+    },
+
+
+    getSubcategoriesByCategoryId: async (categoryId: number): Promise<Subcategory[]> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories/${categoryId}/subcategories`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch subcategories: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching subcategories:', error);
+            throw error;
+        }
+    }
+};
+
+// Сервис товаров
+export const productService = {
+    async getAllProducts(): Promise<Product[]> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/products`);
+
+            if (!response.ok) {
+                console.error(`HTTP error! status: ${response.status}`);
+                return [];
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            return [];
+        }
+    },
+
+    async getProductById(id: number): Promise<Product | null> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
+            if (!response.ok) {
+                console.error(`HTTP error! status: ${response.status}`);
+                return null;
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching product:', error);
+            return null;
+        }
+    }
+};
+
+// Сервис корзины
 export const cartService = {
     // Синхронизация корзины с сервером
     async syncCart(items: CartSyncItemRequest[]): Promise<CartSyncResponse> {
@@ -143,38 +235,7 @@ export const cartService = {
     },
 };
 
-export const productService = {
-    async getAllProducts(): Promise<Product[]> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/products`);
-
-            if (!response.ok) {
-                console.error(`HTTP error! status: ${response.status}`);
-                return [];
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching products:', error);
-            return [];
-        }
-    },
-
-    async getProductById(id: number): Promise<Product | null> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
-            if (!response.ok) {
-                console.error(`HTTP error! status: ${response.status}`);
-                return null;
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching product:', error);
-            return null;
-        }
-    }
-};
-
-// ========== S3 Service ==========
+// Сервис S3
 export const s3Service = {
     async deleteFile(fileUrl: string): Promise<boolean> {
         try {
@@ -184,7 +245,7 @@ export const s3Service = {
                 return false;
             }
 
-            const response = await fetch(`/api/admin/s3/files/delete?url=${encodeURIComponent(fileUrl)}`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/s3/files/delete?url=${encodeURIComponent(fileUrl)}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -208,7 +269,7 @@ export const s3Service = {
                 return false;
             }
 
-            const response = await fetch(`/api/admin/s3/files/delete-multiple`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/s3/files/delete-multiple`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

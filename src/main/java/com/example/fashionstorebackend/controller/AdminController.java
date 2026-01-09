@@ -1,9 +1,14 @@
 package com.example.fashionstorebackend.controller;
 
+import com.example.fashionstorebackend.dto.ProductDTO;
 import com.example.fashionstorebackend.model.Product;
 import com.example.fashionstorebackend.model.Order;
+import com.example.fashionstorebackend.model.Category;
+import com.example.fashionstorebackend.model.Subcategory;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import com.example.fashionstorebackend.repository.OrderRepository;
+import com.example.fashionstorebackend.repository.CategoryRepository;
+import com.example.fashionstorebackend.repository.SubcategoryRepository;
 import com.example.fashionstorebackend.service.JwtService;
 import com.example.fashionstorebackend.service.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,10 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,6 +36,12 @@ public class AdminController {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private SubcategoryRepository subcategoryRepository;
 
     @Autowired
     private S3Service s3Service;
@@ -61,8 +69,16 @@ public class AdminController {
 
         try {
             List<Product> products = productRepository.findAll();
-            return ResponseEntity.ok(products);
+
+            // Преобразуем Entity в DTO
+            List<ProductDTO> productDTOs = products.stream()
+                    .map(ProductDTO::new)
+                    .collect(Collectors.toList());
+
+            log.info("Found {} products", productDTOs.size());
+            return ResponseEntity.ok(productDTOs);
         } catch (Exception e) {
+            log.error("Error fetching products: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Ошибка загрузки товаров: " + e.getMessage()
@@ -73,35 +89,142 @@ public class AdminController {
     @GetMapping("/products/{id}")
     public ResponseEntity<?> getProductById(@PathVariable Long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
-        }
-
-        Optional<Product> product = productRepository.findById(id);
-        return product.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/products")
-    public ResponseEntity<?> createProduct(@RequestBody Product product, HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {
-            // Устанавливаем дефолтные значения
-            if (product.getAvailableQuantity() == null) {
-                product.setAvailableQuantity(0);
-            }
-            if (product.getReservedQuantity() == null) {
-                product.setReservedQuantity(0);
-            }
-            if (product.getCategory() == null || product.getCategory().isEmpty()) {
-                product.setCategory("одежда");
+            Optional<Product> productOpt = productRepository.findById(id);
+            if (productOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
             }
 
-            Product savedProduct = productRepository.save(product);
-            return ResponseEntity.ok(savedProduct);
+            ProductDTO dto = new ProductDTO(productOpt.get());
+            return ResponseEntity.ok(dto);
         } catch (Exception e) {
+            log.error("Error fetching product ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Ошибка загрузки товара: " + e.getMessage()
+            ));
+        }
+    }
+
+
+    @PostMapping("/products")
+    public ResponseEntity<?> createProduct(@RequestBody Map<String, Object> productData, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
+        }
+
+        try {
+            Product product = new Product();
+
+            // Основные поля
+            product.setName((String) productData.get("name"));
+            product.setDescription((String) productData.get("description"));
+
+            if (productData.get("price") != null) {
+                product.setPrice(((Number) productData.get("price")).doubleValue());
+            }
+
+            product.setImageUrl((String) productData.get("imageUrl"));
+            product.setColor((String) productData.get("color"));
+            product.setSize((String) productData.get("size"));
+            product.setMaterial((String) productData.get("material"));
+            product.setCareInstructions((String) productData.get("careInstructions"));
+
+            // Обработка категории - ПО ID
+            Long categoryId = null;
+            if (productData.get("categoryId") != null) {
+                categoryId = ((Number) productData.get("categoryId")).longValue();
+            }
+
+            if (categoryId != null) {
+                Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+                if (categoryOpt.isPresent()) {
+                    product.setCategoryEntity(categoryOpt.get());
+                    log.info("Set category for product: ID {}", categoryId);
+                } else {
+                    // Категория по умолчанию
+                    Optional<Category> defaultCategory = categoryRepository.findByName("одежда");
+                    if (defaultCategory.isPresent()) {
+                        product.setCategoryEntity(defaultCategory.get());
+                        log.warn("Category ID {} not found, using default category 'одежда'", categoryId);
+                    }
+                }
+            } else {
+                // Категория по умолчанию
+                Optional<Category> defaultCategory = categoryRepository.findByName("одежда");
+                if (defaultCategory.isPresent()) {
+                    product.setCategoryEntity(defaultCategory.get());
+                    log.warn("No category specified, using default category 'одежда'");
+                }
+            }
+
+            // Обработка подкатегории - ПО ID
+            Long subcategoryId = null;
+            if (productData.get("subcategoryId") != null) {
+                subcategoryId = ((Number) productData.get("subcategoryId")).longValue();
+            }
+
+            if (subcategoryId != null) {
+                Optional<Subcategory> subcategoryOpt = subcategoryRepository.findById(subcategoryId);
+                if (subcategoryOpt.isPresent()) {
+                    // Проверяем, что подкатегория принадлежит правильной категории
+                    Subcategory subcategory = subcategoryOpt.get();
+                    if (product.getCategoryEntity() != null &&
+                            subcategory.getCategory().getId().equals(product.getCategoryEntity().getId())) {
+                        product.setSubcategoryEntity(subcategory);
+                        log.info("Set subcategory for product: ID {}", subcategoryId);
+                    } else {
+                        log.warn("Subcategory ID {} doesn't belong to category ID {}, ignoring",
+                                subcategoryId, product.getCategoryEntity().getId());
+                    }
+                }
+            }
+
+            // Количества
+            if (productData.get("availableQuantity") != null) {
+                product.setAvailableQuantity(((Number) productData.get("availableQuantity")).intValue());
+            } else {
+                product.setAvailableQuantity(0);
+            }
+
+            if (productData.get("reservedQuantity") != null) {
+                product.setReservedQuantity(((Number) productData.get("reservedQuantity")).intValue());
+            } else {
+                product.setReservedQuantity(0);
+            }
+
+            // Дополнительные изображения
+            if (productData.get("additionalImages") != null) {
+                @SuppressWarnings("unchecked")
+                List<String> additionalImages = (List<String>) productData.get("additionalImages");
+                product.setAdditionalImages(additionalImages);
+            } else {
+                product.setAdditionalImages(new ArrayList<>());
+            }
+
+            // Сохраняем
+            Product savedProduct = productRepository.save(product);
+
+            log.info("Product created: ID {}, name: {}, categoryId: {}, subcategoryId: {}",
+                    savedProduct.getId(),
+                    savedProduct.getName(),
+                    savedProduct.getCategoryEntity() != null ? savedProduct.getCategoryEntity().getId() : "null",
+                    savedProduct.getSubcategoryEntity() != null ? savedProduct.getSubcategoryEntity().getId() : "null");
+
+            // Возвращаем DTO
+            ProductDTO responseDTO = new ProductDTO(savedProduct);
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error creating product: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Ошибка создания товара: " + e.getMessage()
@@ -114,7 +237,10 @@ public class AdminController {
                                            @RequestBody Map<String, Object> productDetails,
                                            HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {
@@ -135,7 +261,7 @@ public class AdminController {
                 oldImages.addAll(product.getAdditionalImages());
             }
 
-            // Обновляем только переданные поля
+            // Обновляем основные поля
             if (productDetails.get("name") != null) {
                 product.setName((String) productDetails.get("name"));
             }
@@ -160,20 +286,54 @@ public class AdminController {
             if (productDetails.get("careInstructions") != null) {
                 product.setCareInstructions((String) productDetails.get("careInstructions"));
             }
-            if (productDetails.get("category") != null) {
-                product.setCategory((String) productDetails.get("category"));
+
+            // Обновление категории - ПО ID
+            if (productDetails.get("categoryId") != null) {
+                Long categoryId = ((Number) productDetails.get("categoryId")).longValue();
+                Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+                if (categoryOpt.isPresent()) {
+                    product.setCategoryEntity(categoryOpt.get());
+                    log.info("Updated category to ID {}", categoryId);
+
+                    // Если изменилась категория, возможно нужно сбросить подкатегорию
+                    if (product.getSubcategoryEntity() != null &&
+                            !product.getSubcategoryEntity().getCategory().getId().equals(categoryId)) {
+                        product.setSubcategoryEntity(null);
+                        log.info("Reset subcategory because category changed");
+                    }
+                }
             }
-            if (productDetails.get("subcategory") != null) {
-                product.setSubcategory((String) productDetails.get("subcategory"));
+
+            // Обновление подкатегории - ПО ID
+            if (productDetails.get("subcategoryId") != null) {
+                Long subcategoryId = ((Number) productDetails.get("subcategoryId")).longValue();
+                Optional<Subcategory> subcategoryOpt = subcategoryRepository.findById(subcategoryId);
+                if (subcategoryOpt.isPresent()) {
+                    Subcategory subcategory = subcategoryOpt.get();
+                    // Проверяем, что подкатегория принадлежит текущей категории товара
+                    if (product.getCategoryEntity() != null &&
+                            subcategory.getCategory().getId().equals(product.getCategoryEntity().getId())) {
+                        product.setSubcategoryEntity(subcategory);
+                        log.info("Updated subcategory to ID {}", subcategoryId);
+                    } else {
+                        log.warn("Subcategory ID {} doesn't belong to category ID {}, ignoring",
+                                subcategoryId, product.getCategoryEntity().getId());
+                    }
+                }
             }
+
             if (productDetails.get("availableQuantity") != null) {
                 product.setAvailableQuantity(((Number) productDetails.get("availableQuantity")).intValue());
             }
             if (productDetails.get("reservedQuantity") != null) {
                 product.setReservedQuantity(((Number) productDetails.get("reservedQuantity")).intValue());
             }
+
+            // Дополнительные изображения
             if (productDetails.get("additionalImages") != null) {
-                product.setAdditionalImages((List<String>) productDetails.get("additionalImages"));
+                @SuppressWarnings("unchecked")
+                List<String> additionalImages = (List<String>) productDetails.get("additionalImages");
+                product.setAdditionalImages(additionalImages);
             } else {
                 product.setAdditionalImages(new ArrayList<>());
             }
@@ -192,37 +352,42 @@ public class AdminController {
                     .filter(oldImg -> !newImages.contains(oldImg))
                     .collect(Collectors.toList());
 
-            // Также проверяем переданный список удаленных фото от фронтенда
+            // Также получаем список удаленных фото от фронтенда
             if (productDetails.get("deletedImages") != null) {
+                @SuppressWarnings("unchecked")
                 List<String> frontendDeletedImages = (List<String>) productDetails.get("deletedImages");
-                // Объединяем оба списка, убирая дубликаты
-                deletedImages.addAll(frontendDeletedImages.stream()
-                        .filter(img -> !deletedImages.contains(img))
-                        .collect(Collectors.toList()));
+                deletedImages.addAll(frontendDeletedImages);
             }
+
+            // Убираем дубликаты
+            deletedImages = deletedImages.stream().distinct().collect(Collectors.toList());
 
             // Сохраняем обновленный товар
             Product updatedProduct = productRepository.save(product);
 
             // Удаляем удаленные фото из S3 в фоне
             if (!deletedImages.isEmpty()) {
+                final List<String> imagesForDeletion = deletedImages;
                 new Thread(() -> {
                     try {
-                        s3Service.deleteMultipleFiles(deletedImages);
-                        log.info("Deleted {} images for product ID {}: {}",
-                                deletedImages.size(), id, deletedImages);
+                        s3Service.deleteMultipleFiles(imagesForDeletion);
+                        log.info("Deleted {} images for product ID {}", imagesForDeletion.size(), id);
                     } catch (Exception e) {
                         log.error("Failed to delete images for product ID {}: {}", id, e.getMessage());
                     }
                 }).start();
             }
 
-            log.info("Product updated: ID {}, images deleted: {}, images total: {}",
-                    id, deletedImages.size(), newImages.size());
+            log.info("Product updated: ID {}, categoryId: {}, subcategoryId: {}",
+                    id,
+                    product.getCategoryEntity() != null ? product.getCategoryEntity().getId() : "null",
+                    product.getSubcategoryEntity() != null ? product.getSubcategoryEntity().getId() : "null");
 
-            return ResponseEntity.ok(updatedProduct);
+            // Возвращаем DTO
+            ProductDTO responseDTO = new ProductDTO(updatedProduct);
+            return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error updating product ID {}: {}", id, e.getMessage());
+            log.error("Error updating product ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Ошибка обновления товара: " + e.getMessage()
@@ -230,7 +395,9 @@ public class AdminController {
         }
     }
 
-    // ProductController.java - обновляем метод deleteProduct
+
+
+
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
@@ -267,10 +434,11 @@ public class AdminController {
 
             // Удаляем фото из S3 (в фоновом режиме, чтобы не блокировать ответ)
             if (!imageUrls.isEmpty()) {
+                final List<String> imagesToDelete = imageUrls;
                 new Thread(() -> {
                     try {
-                        s3Service.deleteMultipleFiles(imageUrls);
-                        log.info("Deleted {} images for product ID {}", imageUrls.size(), id);
+                        s3Service.deleteMultipleFiles(imagesToDelete);
+                        log.info("Deleted {} images for product ID {}", imagesToDelete.size(), id);
                     } catch (Exception e) {
                         log.error("Failed to delete images for product ID {}: {}", id, e.getMessage());
                     }
@@ -286,7 +454,7 @@ public class AdminController {
             ));
 
         } catch (Exception e) {
-            log.error("Error deleting product: {}", e.getMessage());
+            log.error("Error deleting product: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Ошибка удаления товара"
@@ -306,6 +474,7 @@ public class AdminController {
             List<Order> orders = orderRepository.findAll();
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
+            log.error("Error fetching orders: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Ошибка загрузки заказов: " + e.getMessage()
@@ -319,9 +488,17 @@ public class AdminController {
             return ResponseEntity.status(403).body("Доступ запрещен");
         }
 
-        Optional<Order> order = orderRepository.findById(id);
-        return order.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            Optional<Order> order = orderRepository.findById(id);
+            return order.map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error fetching order ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Ошибка загрузки заказа: " + e.getMessage()
+            ));
+        }
     }
 
     @PutMapping("/orders/{id}/status")
@@ -334,7 +511,6 @@ public class AdminController {
 
         try {
             Optional<Order> orderOptional = orderRepository.findById(id);
-
             if (orderOptional.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
@@ -342,45 +518,22 @@ public class AdminController {
             Order order = orderOptional.get();
             String newStatus = statusUpdate.get("status");
 
-            // Валидация статуса
-            if (isValidStatus(newStatus)) {
-                order.setStatus(newStatus);
-                Order updatedOrder = orderRepository.save(order);
-                return ResponseEntity.ok(updatedOrder);
-            } else {
+            if (!isValidStatus(newStatus)) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
                         "message", "Неверный статус заказа"
                 ));
             }
+
+            order.setStatus(newStatus);
+            Order updatedOrder = orderRepository.save(order);
+
+            return ResponseEntity.ok(updatedOrder);
         } catch (Exception e) {
+            log.error("Error updating order status ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
-                    "message", "Ошибка обновления статуса: " + e.getMessage()
-            ));
-        }
-    }
-
-    @DeleteMapping("/orders/{id}")
-    public ResponseEntity<?> deleteOrder(@PathVariable Long id, HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
-        }
-
-        try {
-            if (!orderRepository.existsById(id)) {
-                return ResponseEntity.notFound().build();
-            }
-
-            orderRepository.deleteById(id);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Заказ удален"
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "success", false,
-                    "message", "Ошибка удаления заказа: " + e.getMessage()
+                    "message", "Ошибка обновления статуса заказа: " + e.getMessage()
             ));
         }
     }
@@ -390,20 +543,26 @@ public class AdminController {
     @GetMapping("/stats")
     public ResponseEntity<?> getStats(HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {
             long totalProducts = productRepository.count();
             long totalOrders = orderRepository.count();
-
-            // Можно добавить более сложную статистику
+            long totalCategories = categoryRepository.count();
+            long totalSubcategories = subcategoryRepository.count();
 
             return ResponseEntity.ok(Map.of(
                     "totalProducts", totalProducts,
-                    "totalOrders", totalOrders
+                    "totalOrders", totalOrders,
+                    "totalCategories", totalCategories,
+                    "totalSubcategories", totalSubcategories
             ));
         } catch (Exception e) {
+            log.error("Error fetching stats: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Ошибка загрузки статистики: " + e.getMessage()

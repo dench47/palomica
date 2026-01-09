@@ -37,10 +37,14 @@ public class Product {
     @Column(name = "care_instructions", length = 500)
     private String careInstructions;
 
-    @Column(nullable = false)
-    private String category = "одежда"; // Значение по умолчанию
+    // Используем ТОЛЬКО связи с сущностями
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category categoryEntity;
 
-    private String subcategory;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "subcategory_id")
+    private Subcategory subcategoryEntity;
 
     @Column(name = "available_quantity")
     private Integer availableQuantity;
@@ -48,7 +52,6 @@ public class Product {
     @Column(name = "reserved_quantity")
     private Integer reservedQuantity = 0;
 
-    // Для галереи изображений
     @ElementCollection
     @CollectionTable(
             name = "product_images",
@@ -67,7 +70,6 @@ public class Product {
         this.imageUrl = imageUrl;
     }
 
-    // Конструктор для ProductFactory
     public Product(String name, String description, Double price, String imageUrl,
                    String color, String size, String material, String careInstructions) {
         this.name = name;
@@ -80,10 +82,10 @@ public class Product {
         this.careInstructions = careInstructions;
     }
 
-    // Полный конструктор со всеми полями
+    // Полный конструктор с сущностями категорий
     public Product(String name, String description, Double price, String imageUrl,
                    String color, String size, String material, String careInstructions,
-                   String category, String subcategory, Integer availableQuantity) {
+                   Category categoryEntity, Subcategory subcategoryEntity, Integer availableQuantity) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -92,9 +94,27 @@ public class Product {
         this.size = size;
         this.material = material;
         this.careInstructions = careInstructions;
-        this.category = category;
-        this.subcategory = subcategory;
+        this.categoryEntity = categoryEntity;
+        this.subcategoryEntity = subcategoryEntity;
         this.availableQuantity = availableQuantity;
+    }
+
+    // Геттеры для совместимости с фронтендом
+    public String getCategory() {
+        return categoryEntity != null ? categoryEntity.getName() : "одежда";
+    }
+
+    public String getSubcategory() {
+        return subcategoryEntity != null ? subcategoryEntity.getName() : null;
+    }
+
+    // Геттеры для ID категорий
+    public Long getCategoryId() {
+        return categoryEntity != null ? categoryEntity.getId() : null;
+    }
+
+    public Long getSubcategoryId() {
+        return subcategoryEntity != null ? subcategoryEntity.getId() : null;
     }
 
     // toString для удобства
@@ -103,8 +123,8 @@ public class Product {
         return "Product{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", category='" + category + '\'' +
-                ", subcategory='" + subcategory + '\'' +
+                ", category='" + getCategory() + '\'' +
+                ", subcategory='" + getSubcategory() + '\'' +
                 ", availableQuantity=" + getAvailableQuantity() +
                 ", price=" + price +
                 '}';
