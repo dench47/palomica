@@ -35,7 +35,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
 
-    // Новые элементы
+    // Новые элементы (ВРЕМЕННЫЕ - не сохраняются пока не нажмёшь "Сохранить изменения")
     const [newCategory, setNewCategory] = useState({ name: '', description: '', displayOrder: 0 });
     const [newSubcategory, setNewSubcategory] = useState({
         name: '',
@@ -93,7 +93,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
 
     // ========== ОБРАБОТКА КАТЕГОРИЙ ==========
 
-    const handleCreateCategory = async () => {
+    const handleCreateCategory = () => {
         if (!newCategory.name.trim()) {
             Swal.fire({
                 title: 'Ошибка',
@@ -103,101 +103,51 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
             return;
         }
 
-        try {
-            const token = localStorage.getItem('admin_token');
-            const response = await fetch('/api/admin/categories', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newCategory)
-            });
+        // Добавляем временную категорию в состояние
+        const tempCategory: Category = {
+            id: -Date.now(), // Временный отрицательный ID
+            name: newCategory.name,
+            description: newCategory.description,
+            displayOrder: newCategory.displayOrder,
+            isActive: true,
+            subcategories: []
+        };
 
-            if (response.ok) {
-                const createdCategory = await response.json();
-                setCategories(prev => [...prev, createdCategory]);
-                setNewCategory({ name: '', description: '', displayOrder: 0 });
+        setCategories(prev => [...prev, tempCategory]);
+        setNewCategory({ name: '', description: '', displayOrder: 0 });
 
-                Swal.fire({
-                    title: 'Успешно!',
-                    text: 'Категория создана',
-                    icon: 'success',
-                    timer: 1500
-                });
-            } else {
-                const error = await response.json();
-                Swal.fire({
-                    title: 'Ошибка',
-                    text: error.message || 'Не удалось создать категорию',
-                    icon: 'error'
-                });
-            }
-        } catch (error) {
-            console.error('Error creating category:', error);
-            Swal.fire({
-                title: 'Ошибка',
-                text: 'Не удалось создать категорию',
-                icon: 'error'
-            });
-        }
+        Swal.fire({
+            title: 'Добавлено',
+            text: 'Категория будет создана после сохранения',
+            icon: 'info',
+            timer: 1500
+        });
     };
 
-    const handleUpdateCategory = async () => {
+    const handleUpdateCategory = () => {
         if (!editingCategory) return;
 
-        try {
-            const token = localStorage.getItem('admin_token');
-            const response = await fetch(`/api/admin/categories/${editingCategory.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(editingCategory)
-            });
+        // Обновляем категорию в состоянии
+        setCategories(prev => prev.map(c =>
+            c.id === editingCategory.id ? { ...editingCategory } : c
+        ));
+        setEditingCategory(null);
 
-            if (response.ok) {
-                const updatedCategory = await response.json();
-                setCategories(prev => prev.map(c =>
-                    c.id === updatedCategory.id ? updatedCategory : c
-                ));
-                setEditingCategory(null);
-
-                Swal.fire({
-                    title: 'Успешно!',
-                    text: 'Категория обновлена',
-                    icon: 'success',
-                    timer: 1500
-                });
-            } else {
-                const error = await response.json();
-                Swal.fire({
-                    title: 'Ошибка',
-                    text: error.message || 'Не удалось обновить категорию',
-                    icon: 'error'
-                });
-            }
-        } catch (error) {
-            console.error('Error updating category:', error);
-            Swal.fire({
-                title: 'Ошибка',
-                text: 'Не удалось обновить категорию',
-                icon: 'error'
-            });
-        }
+        Swal.fire({
+            title: 'Обновлено',
+            text: 'Изменения будут сохранены',
+            icon: 'info',
+            timer: 1500
+        });
     };
 
     const handleDeleteCategory = async (id: number) => {
         const category = categories.find(c => c.id === id);
-        const hasSubcategories = category?.subcategories && category.subcategories.length > 0;
 
         const result = await Swal.fire({
             title: 'Удалить категорию?',
-            html: hasSubcategories
-                ? `Внимание! Категория содержит подкатегории. При удалении категории все её подкатегории также будут удалены.<br><br>
-               Вы уверены, что хотите удалить категорию "<strong>${category?.name}</strong>"?`
-                : `Вы уверены, что хотите удалить категорию "<strong>${category?.name}</strong>"?`,
+            html: `Вы уверены, что хотите удалить категорию "<strong>${category?.name}</strong>"?<br>
+              Все подкатегории также будут удалены.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Да, удалить',
@@ -215,12 +165,12 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                 });
 
                 if (response.ok) {
-                    // Полное удаление из состояния
+                    // Удаляем из состояния фронтенда
                     setCategories(prev => prev.filter(c => c.id !== id));
 
                     Swal.fire({
                         title: 'Удалено!',
-                        text: 'Категория удалена',
+                        text: 'Категория полностью удалена',
                         icon: 'success',
                         timer: 1500
                     });
@@ -244,7 +194,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
     };
     // ========== ОБРАБОТКА ПОДКАТЕГОРИЙ ==========
 
-    const handleCreateSubcategory = async () => {
+    const handleCreateSubcategory = () => {
         if (!newSubcategory.name.trim() || !newSubcategory.categoryId) {
             Swal.fire({
                 title: 'Ошибка',
@@ -254,110 +204,60 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
             return;
         }
 
-        try {
-            const token = localStorage.getItem('admin_token');
-            const response = await fetch('/api/admin/categories/subcategories', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newSubcategory)
-            });
+        // Добавляем временную подкатегорию в состояние
+        const tempSubcategory: Subcategory = {
+            id: -Date.now(), // Временный отрицательный ID
+            name: newSubcategory.name,
+            description: newSubcategory.description,
+            categoryId: newSubcategory.categoryId,
+            displayOrder: newSubcategory.displayOrder,
+            isActive: true
+        };
 
-            if (response.ok) {
-                const createdSubcategory = await response.json();
-
-                // Обновляем категорию с новой подкатегорией
-                setCategories(prev => prev.map(category => {
-                    if (category.id === createdSubcategory.categoryId) {
-                        const updatedSubcategories = [
-                            ...(category.subcategories || []),
-                            createdSubcategory
-                        ];
-                        return { ...category, subcategories: updatedSubcategories };
-                    }
-                    return category;
-                }));
-
-                setNewSubcategory({ name: '', description: '', categoryId: selectedCategoryId || 0, displayOrder: 0 });
-
-                Swal.fire({
-                    title: 'Успешно!',
-                    text: 'Подкатегория создана',
-                    icon: 'success',
-                    timer: 1500
-                });
-            } else {
-                const error = await response.json();
-                Swal.fire({
-                    title: 'Ошибка',
-                    text: error.message || 'Не удалось создать подкатегорию',
-                    icon: 'error'
-                });
+        // Обновляем категорию с новой подкатегорией
+        setCategories(prev => prev.map(category => {
+            if (category.id === newSubcategory.categoryId) {
+                const updatedSubcategories = [
+                    ...(category.subcategories || []),
+                    tempSubcategory
+                ];
+                return { ...category, subcategories: updatedSubcategories };
             }
-        } catch (error) {
-            console.error('Error creating subcategory:', error);
-            Swal.fire({
-                title: 'Ошибка',
-                text: 'Не удалось создать подкатегорию',
-                icon: 'error'
-            });
-        }
+            return category;
+        }));
+
+        setNewSubcategory({ name: '', description: '', categoryId: selectedCategoryId || 0, displayOrder: 0 });
+
+        Swal.fire({
+            title: 'Добавлено',
+            text: 'Подкатегория будет создана после сохранения',
+            icon: 'info',
+            timer: 1500
+        });
     };
 
-    const handleUpdateSubcategory = async () => {
+    const handleUpdateSubcategory = () => {
         if (!editingSubcategory) return;
 
-        try {
-            const token = localStorage.getItem('admin_token');
-            const response = await fetch(`/api/admin/categories/subcategories/${editingSubcategory.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(editingSubcategory)
-            });
-
-            if (response.ok) {
-                const updatedSubcategory = await response.json();
-
-                // Обновляем подкатегорию в списке
-                setCategories(prev => prev.map(category => {
-                    if (category.id === updatedSubcategory.categoryId) {
-                        const updatedSubcategories = (category.subcategories || []).map(sc =>
-                            sc.id === updatedSubcategory.id ? updatedSubcategory : sc
-                        );
-                        return { ...category, subcategories: updatedSubcategories };
-                    }
-                    return category;
-                }));
-
-                setEditingSubcategory(null);
-
-                Swal.fire({
-                    title: 'Успешно!',
-                    text: 'Подкатегория обновлена',
-                    icon: 'success',
-                    timer: 1500
-                });
-            } else {
-                const error = await response.json();
-                Swal.fire({
-                    title: 'Ошибка',
-                    text: error.message || 'Не удалось обновить подкатегорию',
-                    icon: 'error'
-                });
+        // Обновляем подкатегорию в состоянии
+        setCategories(prev => prev.map(category => {
+            if (category.subcategories) {
+                const updatedSubcategories = category.subcategories.map(sc =>
+                    sc.id === editingSubcategory.id ? editingSubcategory : sc
+                );
+                return { ...category, subcategories: updatedSubcategories };
             }
-        } catch (error) {
-            console.error('Error updating subcategory:', error);
-            Swal.fire({
-                title: 'Ошибка',
-                text: 'Не удалось обновить подкатегорию',
-                icon: 'error'
-            });
-        }
+            return category;
+        }));
+
+        setEditingSubcategory(null);
+
+        Swal.fire({
+            title: 'Обновлено',
+            text: 'Изменения будут сохранены',
+            icon: 'info',
+            timer: 1500
+        });
     };
 
     const handleDeleteSubcategory = async (id: number) => {
@@ -383,7 +283,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                 });
 
                 if (response.ok) {
-                    // Полное удаление подкатегории из состояния
+                    // Удаляем подкатегорию из состояния
                     setCategories(prev => prev.map(category => {
                         if (category.subcategories) {
                             const updatedSubcategories = category.subcategories.filter(sc => sc.id !== id);
@@ -394,7 +294,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
 
                     Swal.fire({
                         title: 'Удалено!',
-                        text: 'Подкатегория удалена',
+                        text: 'Подкатегория полностью удалена',
                         icon: 'success',
                         timer: 1500
                     });
@@ -416,6 +316,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
             }
         }
     };
+
     // Изменить порядок категорий
     const handleMoveCategoryOrder = (id: number, direction: 'up' | 'down') => {
         setCategories(prev => {
@@ -438,36 +339,184 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
         });
     };
 
-    // Сохранить изменения порядка
-    const saveCategoryOrder = async () => {
+    // ========== СОХРАНЕНИЕ ВСЕХ ИЗМЕНЕНИЙ ==========
+
+    const saveAllChanges = async () => {
         try {
             const token = localStorage.getItem('admin_token');
-            const updatePromises = categories.map(category =>
-                fetch(`/api/admin/categories/${category.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        ...category,
-                        displayOrder: category.displayOrder
-                    })
-                })
-            );
+            let hasError = false;
 
-            await Promise.all(updatePromises);
-            Swal.fire({
-                title: 'Успешно!',
-                text: 'Порядок категорий сохранен',
-                icon: 'success',
-                timer: 1500
-            });
+            // Копируем категории для работы
+            let updatedCategories = [...categories];
+
+            // 1. Создаём новые категории (с отрицательными ID) и получаем их настоящие ID
+            for (const category of updatedCategories.filter(c => c.id < 0)) {
+                try {
+                    const response = await fetch('/api/admin/categories', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: category.name,
+                            description: category.description,
+                            displayOrder: category.displayOrder,
+                            isActive: category.isActive
+                        })
+                    });
+
+                    if (response.ok) {
+                        const createdCategory = await response.json();
+
+                        // НАЙДИ старый ID категории
+                        const oldCategoryId = category.id;
+                        const newCategoryId = createdCategory.id;
+
+                        // ОБНОВИ категорию в updatedCategories с новым ID
+                        updatedCategories = updatedCategories.map(c =>
+                            c.id === oldCategoryId ? { ...createdCategory, subcategories: c.subcategories } : c
+                        );
+
+                        // ОБНОВИ ВСЕ подкатегории, которые ссылались на старый ID
+                        updatedCategories = updatedCategories.map(cat => {
+                            if (cat.subcategories) {
+                                const updatedSubcategories = cat.subcategories.map(sub => {
+                                    if (sub.categoryId === oldCategoryId) {
+                                        return { ...sub, categoryId: newCategoryId };
+                                    }
+                                    return sub;
+                                });
+                                return { ...cat, subcategories: updatedSubcategories };
+                            }
+                            return cat;
+                        });
+
+                    } else {
+                        hasError = true;
+                        const error = await response.json();
+                        console.error(`Error creating category ${category.name}:`, error);
+                    }
+                } catch (error) {
+                    hasError = true;
+                    console.error(`Error creating category ${category.name}:`, error);
+                }
+            }
+
+            // 2. Обновляем состояние с новыми ID категорий
+            setCategories(updatedCategories);
+
+            // 3. Обновляем существующие категории (с положительными ID)
+            for (const category of updatedCategories.filter(c => c.id > 0)) {
+                try {
+                    const response = await fetch(`/api/admin/categories/${category.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: category.name,
+                            description: category.description,
+                            displayOrder: category.displayOrder,
+                            isActive: category.isActive
+                        })
+                    });
+
+                    if (!response.ok) {
+                        hasError = true;
+                        const error = await response.json();
+                        console.error(`Error updating category ${category.id}:`, error);
+                    }
+                } catch (error) {
+                    hasError = true;
+                    console.error(`Error updating category ${category.id}:`, error);
+                }
+            }
+
+            // 4. Теперь сохраняем подкатегории с ПРАВИЛЬНЫМИ categoryId
+            for (const category of updatedCategories) {
+                if (category.subcategories && category.subcategories.length > 0) {
+                    for (const subcategory of category.subcategories) {
+                        try {
+                            // Если это новая подкатегория (отрицательный ID)
+                            if (subcategory.id < 0) {
+                                const response = await fetch('/api/admin/categories/subcategories', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({
+                                        name: subcategory.name,
+                                        description: subcategory.description,
+                                        categoryId: category.id, // ТЕПЕРЬ ПРАВИЛЬНЫЙ ID!
+                                        displayOrder: subcategory.displayOrder,
+                                        isActive: subcategory.isActive
+                                    })
+                                });
+
+                                if (!response.ok) {
+                                    hasError = true;
+                                    const error = await response.json();
+                                    console.error(`Error creating subcategory ${subcategory.name}:`, error);
+                                }
+                            } else {
+                                // Если это существующая подкатегория
+                                const response = await fetch(`/api/admin/categories/subcategories/${subcategory.id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({
+                                        name: subcategory.name,
+                                        description: subcategory.description,
+                                        categoryId: subcategory.categoryId,
+                                        displayOrder: subcategory.displayOrder,
+                                        isActive: subcategory.isActive
+                                    })
+                                });
+
+                                if (!response.ok) {
+                                    hasError = true;
+                                    const error = await response.json();
+                                    console.error(`Error updating subcategory ${subcategory.id}:`, error);
+                                }
+                            }
+                        } catch (error) {
+                            hasError = true;
+                            console.error(`Error processing subcategory ${subcategory.name}:`, error);
+                        }
+                    }
+                }
+            }
+
+            // 5. Удаляем подкатегории, которые были удалены
+            // (Для этого нужно отслеживать, какие подкатегории были удалены)
+
+            if (hasError) {
+                Swal.fire({
+                    title: 'Частичная ошибка',
+                    text: 'Не все изменения удалось сохранить',
+                    icon: 'warning'
+                });
+                // Всё равно вызываем onSave, чтобы обновить список в родительском компоненте
+                onSave();
+            } else {
+                Swal.fire({
+                    title: 'Успешно!',
+                    text: 'Все изменения сохранены',
+                    icon: 'success',
+                    timer: 1500
+                });
+                onSave();
+            }
         } catch (error) {
-            console.error('Error saving order:', error);
+            console.error('Error saving all changes:', error);
             Swal.fire({
                 title: 'Ошибка',
-                text: 'Не удалось сохранить порядок',
+                text: 'Не удалось сохранить изменения',
                 icon: 'error'
             });
         }
@@ -530,7 +579,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                     </div>
                                     <div className="card-body">
                                         <div className="row g-3">
-                                            <div className="col-md-4">
+                                            <div className="col-md-5">
                                                 <input
                                                     type="text"
                                                     className="form-control"
@@ -543,21 +592,12 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Описание (необязательно)"
+                                                    placeholder="Описание"
                                                     value={newCategory.description}
                                                     onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
                                                 />
                                             </div>
                                             <div className="col-md-2">
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    placeholder="Порядок"
-                                                    value={newCategory.displayOrder}
-                                                    onChange={(e) => setNewCategory({...newCategory, displayOrder: parseInt(e.target.value) || 0})}
-                                                />
-                                            </div>
-                                            <div className="col-md-1">
                                                 <button
                                                     className="btn btn-dark w-100"
                                                     onClick={handleCreateCategory}
@@ -571,14 +611,8 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
 
                                 {/* Список категорий */}
                                 <div className="card">
-                                    <div className="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <div className="card-header bg-light">
                                         <h6 className="mb-0">Все категории</h6>
-                                        <button
-                                            className="btn btn-sm btn-outline-dark"
-                                            onClick={saveCategoryOrder}
-                                        >
-                                            Сохранить порядок
-                                        </button>
                                     </div>
                                     <div className="card-body p-0">
                                         <div className="list-group list-group-flush">
@@ -634,15 +668,9 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                                                         <span className="fw-medium me-2">
                                                                             {category.name}
                                                                         </span>
-                                                                        <span className="badge bg-secondary me-2">
-                                                                            Порядок: {category.displayOrder}
-                                                                        </span>
-                                                                        <span className={`badge ${category.isActive ? 'bg-success' : 'bg-danger'}`}>
-                                                                            {category.isActive ? 'Активна' : 'Неактивна'}
-                                                                        </span>
                                                                         {category.description && (
-                                                                            <small className="text-muted d-block mt-1">
-                                                                                {category.description}
+                                                                            <small className="text-muted">
+                                                                                ({category.description})
                                                                             </small>
                                                                         )}
                                                                     </div>
@@ -702,7 +730,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                         </div>
 
                                         <div className="row g-3">
-                                            <div className="col-md-4">
+                                            <div className="col-md-5">
                                                 <input
                                                     type="text"
                                                     className="form-control"
@@ -720,7 +748,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Описание (необязательно)"
+                                                    placeholder="Описание"
                                                     value={newSubcategory.description}
                                                     onChange={(e) => setNewSubcategory({
                                                         ...newSubcategory,
@@ -731,20 +759,6 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                                 />
                                             </div>
                                             <div className="col-md-2">
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    placeholder="Порядок"
-                                                    value={newSubcategory.displayOrder}
-                                                    onChange={(e) => setNewSubcategory({
-                                                        ...newSubcategory,
-                                                        displayOrder: parseInt(e.target.value) || 0,
-                                                        categoryId: selectedCategoryId || 0
-                                                    })}
-                                                    disabled={!selectedCategoryId}
-                                                />
-                                            </div>
-                                            <div className="col-md-1">
                                                 <button
                                                     className="btn btn-dark w-100"
                                                     onClick={handleCreateSubcategory}
@@ -816,12 +830,9 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                                                                             <span className="fw-medium me-2">
                                                                                 {subcategory.name}
                                                                             </span>
-                                                                            <span className={`badge ${subcategory.isActive ? 'bg-success' : 'bg-danger'}`}>
-                                                                                {subcategory.isActive ? 'Активна' : 'Неактивна'}
-                                                                            </span>
                                                                             {subcategory.description && (
-                                                                                <small className="text-muted d-block mt-1">
-                                                                                    {subcategory.description}
+                                                                                <small className="text-muted">
+                                                                                    ({subcategory.description})
                                                                                 </small>
                                                                             )}
                                                                         </div>
@@ -876,10 +887,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onClose, on
                         <button
                             type="button"
                             className="btn btn-dark rounded-0"
-                            onClick={() => {
-                                onSave();
-                                onClose();
-                            }}
+                            onClick={saveAllChanges}
                         >
                             Сохранить изменения
                         </button>

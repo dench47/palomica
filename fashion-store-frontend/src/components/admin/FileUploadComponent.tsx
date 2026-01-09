@@ -1,36 +1,20 @@
-// FileUploadComponent.tsx - упрощенная версия
 import React, { useState, useRef } from 'react';
+import { Upload } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 interface FileUploadProps {
     folder: string;
-    onFilesUploaded: (fileUrls: string[]) => void;
+    onFilesSelected: (files: File[]) => void; // Изменил на onFilesSelected
     multiple?: boolean;
     maxFiles?: number;
 }
 
-interface UploadedFile {
-    originalName: string;
-    url: string;
-    size: number;
-}
-
-interface UploadResponse {
-    success: boolean;
-    uploadedFiles: UploadedFile[];
-    totalUploaded: number;
-    totalFailed: number;
-    errors: string[];
-    message?: string;
-}
-
 const FileUploadComponent: React.FC<FileUploadProps> = ({
                                                             folder,
-                                                            onFilesUploaded,
+                                                            onFilesSelected,
                                                             multiple = true,
                                                             maxFiles = 10
                                                         }) => {
-    const [uploading, setUploading] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,91 +48,15 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             return true;
         });
 
-        setSelectedFiles(prev => [...prev, ...validFiles]);
-    };
-
-    const handleUpload = async () => {
-        if (selectedFiles.length === 0) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Нет файлов для загрузки'
-            });
-            return;
-        }
-
-        setUploading(true);
-        const formData = new FormData();
-
-        // Добавляем файлы
-        selectedFiles.forEach(file => {
-            formData.append('files', file);
-        });
-
-        // Добавляем папку
-        formData.append('folder', folder);
-
-        try {
-            const token = localStorage.getItem('admin_token');
-            const response = await fetch('/api/admin/s3/files/upload-multiple', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: formData
-            });
-
-            const data: UploadResponse = await response.json();
-
-            if (response.ok && data.success) {
-                const urls = data.uploadedFiles.map((file: UploadedFile) => file.url);
-
-                // Передаем URLs родительскому компоненту
-                onFilesUploaded(urls);
-
-                // Оповещение об успехе
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Файлы загружены',
-                    text: `Успешно загружено ${data.uploadedFiles.length} файлов`,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-
-                // Очищаем выбранные файлы
-                setSelectedFiles([]);
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                }
-
-                // Если были ошибки
-                if (data.errors && data.errors.length > 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Некоторые файлы не загружены',
-                        html: data.errors.join('<br>')
-                    });
-                }
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Ошибка загрузки',
-                    text: data.message || 'Не удалось загрузить файлы'
-                });
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Ошибка',
-                text: 'Не удалось загрузить файлы'
-            });
-        } finally {
-            setUploading(false);
-        }
+        const newFiles = [...selectedFiles, ...validFiles];
+        setSelectedFiles(newFiles);
+        onFilesSelected(newFiles); // Передаём файлы родителю
     };
 
     const handleRemoveSelectedFile = (index: number) => {
-        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        const newFiles = selectedFiles.filter((_, i) => i !== index);
+        setSelectedFiles(newFiles);
+        onFilesSelected(newFiles); // Обновляем в родителе
     };
 
     const formatFileSize = (bytes: number) => {
@@ -159,34 +67,35 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
 
     return (
         <div className="file-upload-component">
-            {/* Поле выбора файлов */}
-            <div className="mb-3">
-                <label className="form-label">Загрузка фотографий в папку: <strong>{folder}</strong></label>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="form-control rounded-0"
-                    onChange={handleFileSelect}
-                    accept="image/*"
-                    multiple={multiple}
-                    disabled={uploading}
-                />
-                <div className="form-text">
-                    Поддерживаемые форматы: JPG, JPEG, PNG, GIF, WebP. Максимальный размер: 10MB
-                </div>
-            </div>
+            {/* Скрытый input */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                className="d-none"
+                onChange={handleFileSelect}
+                accept="image/*"
+                multiple={multiple}
+                id={`file-upload-${folder}`}
+            />
 
-            {/* Выбранные файлы (только список, без превью) */}
+            {/* Кнопка для выбора файлов */}
+            <label
+                htmlFor={`file-upload-${folder}`}
+                className="btn btn-outline-dark rounded-0 w-100"
+            >
+                <div className="d-flex align-items-center justify-content-center">
+                    <Upload size={18} className="me-2" />
+                    <span>Выбрать файлы</span>
+                </div>
+            </label>
+
+            {/* Список выбранных файлов */}
             {selectedFiles.length > 0 && (
-                <div className="mb-3">
-                    <div className="alert alert-info py-2 mb-2 rounded-0">
-                        <small>Выбрано файлов: {selectedFiles.length}</small>
-                    </div>
+                <div className="mt-3">
                     <div className="list-group">
                         {selectedFiles.map((file, index) => (
                             <div key={index} className="list-group-item d-flex justify-content-between align-items-center py-2">
                                 <div>
-                                    <span className="badge bg-secondary me-2">{index + 1}</span>
                                     <small>{file.name}</small>
                                     <small className="text-muted ms-2">
                                         ({formatFileSize(file.size)})
@@ -196,7 +105,6 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                                     type="button"
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleRemoveSelectedFile(index)}
-                                    disabled={uploading}
                                     title="Убрать из списка"
                                 >
                                     ✕
@@ -206,29 +114,6 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                     </div>
                 </div>
             )}
-
-            {/* Кнопка загрузки */}
-            <button
-                type="button"
-                className="btn btn-dark rounded-0"
-                onClick={handleUpload}
-                disabled={uploading || selectedFiles.length === 0}
-            >
-                {uploading ? (
-                    <>
-                        <span className="spinner-border spinner-border-sm me-2"></span>
-                        Загрузка...
-                    </>
-                ) : (
-                    `Загрузить ${selectedFiles.length} файл(ов)`
-                )}
-            </button>
-
-            <div className="mt-2">
-                <small className="text-muted">
-                    Файлы будут сохранены в: /images/products/{folder}/
-                </small>
-            </div>
         </div>
     );
 };

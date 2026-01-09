@@ -1,9 +1,23 @@
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Filter } from 'lucide-react';
+import {useState, useEffect} from 'react';
+import {Plus, Edit, Trash2, Search, Filter, List} from 'lucide-react'; // Добавил List
 import FileUploadComponent from '../components/admin/FileUploadComponent';
 import Swal from 'sweetalert2';
-import { s3Service } from '../services/api';
 import CategoryManagerModal from '../components/admin/CategoryManagerModal';
+
+interface S3UploadedFile {
+    originalName: string;
+    url: string;
+    size: number;
+}
+
+interface S3UploadResponse {
+    success: boolean;
+    uploadedFiles: S3UploadedFile[];
+    totalUploaded: number;
+    totalFailed: number;
+    errors: string[];
+    message?: string;
+}
 
 interface Category {
     id: number;
@@ -149,7 +163,7 @@ const AdminProductsPage = () => {
 
     if (loading) {
         return (
-            <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+            <div className="d-flex justify-content-center align-items-center" style={{minHeight: '300px'}}>
                 <div className="spinner-border text-dark" role="status">
                     <span className="visually-hidden">Загрузка...</span>
                 </div>
@@ -161,7 +175,7 @@ const AdminProductsPage = () => {
         <div>
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 className="fw-light mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    <h2 className="fw-light mb-1" style={{fontFamily: "'Playfair Display', serif"}}>
                         Управление товарами
                     </h2>
                     <p className="text-muted small mb-0">
@@ -169,18 +183,33 @@ const AdminProductsPage = () => {
                     </p>
                 </div>
 
-                <button
-                    className="btn btn-dark rounded-0 d-flex align-items-center"
-                    onClick={() => setShowModal(true)}
-                    style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: '0.9rem',
-                        letterSpacing: '0.05em'
-                    }}
-                >
-                    <Plus size={18} className="me-2" />
-                    ДОБАВИТЬ ТОВАР
-                </button>
+                <div className="d-flex gap-2">
+                    <button
+                        className="btn btn-outline-dark rounded-0 d-flex align-items-center"
+                        onClick={() => setShowCategoryManager(true)}
+                        style={{
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: '0.9rem',
+                            letterSpacing: '0.05em'
+                        }}
+                    >
+                        <List size={18} className="me-2"/>
+                        КАТЕГОРИИ
+                    </button>
+
+                    <button
+                        className="btn btn-dark rounded-0 d-flex align-items-center"
+                        onClick={() => setShowModal(true)}
+                        style={{
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: '0.9rem',
+                            letterSpacing: '0.05em'
+                        }}
+                    >
+                        <Plus size={18} className="me-2"/>
+                        ДОБАВИТЬ ТОВАР
+                    </button>
+                </div>
             </div>
 
             <div className="card rounded-0 border-1 mb-4">
@@ -189,7 +218,7 @@ const AdminProductsPage = () => {
                         <div className="col-md-6 mb-3 mb-md-0">
                             <div className="input-group">
                                 <span className="input-group-text bg-transparent border-end-0 rounded-0">
-                                    <Search size={18} />
+                                    <Search size={18}/>
                                 </span>
                                 <input
                                     type="text"
@@ -204,7 +233,7 @@ const AdminProductsPage = () => {
                         <div className="col-md-6">
                             <div className="d-flex gap-2">
                                 <button className="btn btn-outline-dark rounded-0 d-flex align-items-center">
-                                    <Filter size={16} className="me-2" />
+                                    <Filter size={16} className="me-2"/>
                                     Фильтры
                                 </button>
                                 <button
@@ -224,7 +253,7 @@ const AdminProductsPage = () => {
                     <table className="table table-hover mb-0">
                         <thead>
                         <tr>
-                            <th className="border-0 small text-muted fw-normal" style={{ width: '50px' }}>ID</th>
+                            <th className="border-0 small text-muted fw-normal" style={{width: '50px'}}>ID</th>
                             <th className="border-0 small text-muted fw-normal">Товар</th>
                             <th className="border-0 small text-muted fw-normal">Категория</th>
                             <th className="border-0 small text-muted fw-normal text-end">Цена</th>
@@ -250,7 +279,8 @@ const AdminProductsPage = () => {
                                             }}
                                         ></div>
                                         <div>
-                                            <div className="fw-medium" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                            <div className="fw-medium"
+                                                 style={{fontFamily: "'Cormorant Garamond', serif"}}>
                                                 {product.name}
                                             </div>
                                             <div className="small text-muted">
@@ -276,7 +306,8 @@ const AdminProductsPage = () => {
                                 </td>
                                 <td className="text-center">
                                     <div>
-                                            <span className={`badge rounded-0 ${product.availableQuantity > 0 ? 'bg-success' : 'bg-danger'}`}>
+                                            <span
+                                                className={`badge rounded-0 ${product.availableQuantity > 0 ? 'bg-success' : 'bg-danger'}`}>
                                                 {product.availableQuantity} шт.
                                             </span>
                                         {product.reservedQuantity > 0 && (
@@ -296,14 +327,14 @@ const AdminProductsPage = () => {
                                             }}
                                             title="Редактировать"
                                         >
-                                            <Edit size={14} />
+                                            <Edit size={14}/>
                                         </button>
                                         <button
                                             className="btn btn-outline-danger btn-sm rounded-0"
                                             onClick={() => handleDelete(product.id)}
                                             title="Удалить"
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={14}/>
                                         </button>
                                     </div>
                                 </td>
@@ -314,7 +345,7 @@ const AdminProductsPage = () => {
 
                     {filteredProducts.length === 0 && (
                         <div className="text-center py-5">
-                            <div className="mb-3" style={{ fontSize: '2rem', opacity: 0.1 }}>📦</div>
+                            <div className="mb-3" style={{fontSize: '2rem', opacity: 0.1}}>📦</div>
                             <p className="text-muted">Товары не найдены</p>
                         </div>
                     )}
@@ -333,13 +364,11 @@ const AdminProductsPage = () => {
                         setShowModal(false);
                         setEditingProduct(null);
                     }}
-                    showCategoryManager={showCategoryManager}
-                    setShowCategoryManager={setShowCategoryManager}
                     refreshCategoriesTrigger={refreshCategoriesTrigger}
                 />
             )}
 
-            {/* НОВАЯ МОДАЛКА ДЛЯ УПРАВЛЕНИЯ КАТЕГОРИЯМИ */}
+            {/* МОДАЛКА ДЛЯ УПРАВЛЕНИЯ КАТЕГОРИЯМИ */}
             {showCategoryManager && (
                 <CategoryManagerModal
                     onClose={() => setShowCategoryManager(false)}
@@ -359,20 +388,18 @@ interface ProductModalProps {
     product: Product | null;
     onClose: () => void;
     onSave: () => void;
-    showCategoryManager: boolean;
-    setShowCategoryManager: (show: boolean) => void;
     refreshCategoriesTrigger: number;
 }
 
-const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCategoryManager, refreshCategoriesTrigger }: ProductModalProps) => {
+const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: ProductModalProps) => {
     const isEditing = !!product;
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
         price: product?.price || 0,
         imageUrl: product?.imageUrl || '',
-        categoryId: product?.categoryId || 0,        // ID категории
-        subcategoryId: product?.subcategoryId || 0,  // ID подкатегории
+        categoryId: product?.categoryId || 0,
+        subcategoryId: product?.subcategoryId || 0,
         availableQuantity: product?.availableQuantity || 0,
         reservedQuantity: product?.reservedQuantity || 0,
         color: product?.color || '',
@@ -385,7 +412,7 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
     const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
 
-    // Все текущие изображения товара
+    // ВСЕ изображения товара (старые + новые превью)
     const [allImages, setAllImages] = useState<string[]>(() => {
         if (product) {
             const images = [product.imageUrl];
@@ -397,8 +424,9 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
         return [];
     });
 
-    // Временные фото (загружены в текущей сессии)
-    const [tempImages, setTempImages] = useState<string[]>([]);
+    // Временные файлы (выбраны, но ещё не загружены на S3)
+    const [tempFiles, setTempFiles] = useState<File[]>([]);
+    const [tempFilePreviews, setTempFilePreviews] = useState<string[]>([]);
 
     // Фото для удаления (только при редактировании существующего товара)
     const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
@@ -406,7 +434,7 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
     // Загрузка категорий при монтировании и при изменении триггера
     useEffect(() => {
         fetchCategories();
-    }, [refreshCategoriesTrigger]); // <-- ОБНОВЛЯЕМ КАТЕГОРИИ ПРИ ИЗМЕНЕНИИ ТРИГГЕРА
+    }, [refreshCategoriesTrigger]);
 
     // Загрузка подкатегорий при выборе категории
     useEffect(() => {
@@ -416,6 +444,15 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
             setSubcategories([]);
         }
     }, [formData.categoryId]);
+
+    // Очистка превью при размонтировании
+    useEffect(() => {
+        return () => {
+            tempFilePreviews.forEach(preview => {
+                URL.revokeObjectURL(preview);
+            });
+        };
+    }, [tempFilePreviews]);
 
     const fetchCategories = async () => {
         try {
@@ -431,9 +468,8 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                 const data = await response.json();
                 setCategories(data);
 
-                // Если редактируем товар, устанавливаем выбранную категорию
                 if (product?.categoryId && !formData.categoryId) {
-                    setFormData(prev => ({ ...prev, categoryId: product.categoryId }));
+                    setFormData(prev => ({...prev, categoryId: product.categoryId}));
                 }
             }
         } catch (error) {
@@ -456,15 +492,26 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                 const data = await response.json();
                 setSubcategories(data);
 
-                // Если редактируем товар и у него есть подкатегория
                 if (product?.subcategoryId && !formData.subcategoryId) {
-                    setFormData(prev => ({ ...prev, subcategoryId: product.subcategoryId || 0 }));
+                    setFormData(prev => ({...prev, subcategoryId: product.subcategoryId || 0}));
                 }
             }
         } catch (error) {
             console.error('Error fetching subcategories:', error);
             setSubcategories([]);
         }
+    };
+
+    // Обработка выбора файлов
+    const handleFilesSelected = (files: File[]) => {
+        setTempFiles(files);
+
+        // Создаем превью для новых файлов
+        const newPreviews = files.map(file => URL.createObjectURL(file));
+        setTempFilePreviews(newPreviews);
+
+        // Добавляем превью в общий список изображений (в конце)
+        setAllImages(prev => [...prev, ...newPreviews]);
     };
 
     // Переместить фото влево/вправо
@@ -476,8 +523,6 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
 
         const newImages = [...allImages];
         const newIndex = direction === 'left' ? index - 1 : index + 1;
-
-        // Меняем местами
         [newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]];
         setAllImages(newImages);
     };
@@ -492,19 +537,26 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
         setAllImages(newImages);
     };
 
-    // Удалить фото - БЕЗ ДИАЛОГА
+    // Удалить фото
     const handleRemoveImage = (index: number) => {
         const imageToDelete = allImages[index];
 
-        // Если это временное фото (только что загруженное)
-        if (tempImages.includes(imageToDelete)) {
-            // Удаляем из временных и сразу из S3
-            setTempImages(prev => prev.filter(img => img !== imageToDelete));
-            s3Service.deleteFile(imageToDelete).catch(err => {
-                console.error('Failed to delete temp image:', err);
-            });
+        // Проверяем, является ли это превью временного файла
+        const tempFileIndex = tempFilePreviews.indexOf(imageToDelete);
+        if (tempFileIndex !== -1) {
+            // Это превью временного файла
+            URL.revokeObjectURL(imageToDelete);
+
+            const newTempFiles = [...tempFiles];
+            const newTempPreviews = [...tempFilePreviews];
+
+            newTempFiles.splice(tempFileIndex, 1);
+            newTempPreviews.splice(tempFileIndex, 1);
+
+            setTempFiles(newTempFiles);
+            setTempFilePreviews(newTempPreviews);
         } else if (isEditing) {
-            // Если редактируем существующий товар - добавляем в список для удаления
+            // Это существующее фото товара - добавляем в список для удаления
             setImagesToDelete(prev => [...prev, imageToDelete]);
         }
 
@@ -512,22 +564,74 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
         setAllImages(prev => prev.filter((_, i) => i !== index));
     };
 
+    // Загрузка файлов на S3
+    const uploadFilesToS3 = async (files: File[]): Promise<string[]> => {
+        if (files.length === 0) return [];
+
+        const formData = new FormData();
+        files.forEach(file => {
+            formData.append('files', file);
+        });
+        formData.append('folder', 'products');
+
+        try {
+            const token = localStorage.getItem('admin_token');
+            const response = await fetch('/api/admin/s3/files/upload-multiple', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData
+            });
+
+            const data: S3UploadResponse = await response.json();
+            if (response.ok && data.success) {
+                return data.uploadedFiles.map(file => file.url);
+            } else {
+                throw new Error(data.message || 'Ошибка загрузки файлов');
+            }
+        } catch (error) {
+            console.error('Error uploading files:', error);
+            throw error;
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
 
         try {
-            // Основное изображение
-            const mainImage = allImages.length > 0 ? allImages[0] : '';
-            const additional = allImages.length > 1 ? allImages.slice(1) : [];
+            // 1. Загружаем временные файлы на S3
+            let uploadedUrls: string[] = [];
+            if (tempFiles.length > 0) {
+                uploadedUrls = await uploadFilesToS3(tempFiles);
+            }
+
+            // 2. Собираем все URL изображений
+            // Заменяем превью на реальные URL из S3
+            const allImageUrls: string[] = [];
+            allImages.forEach(img => {
+                const tempIndex = tempFilePreviews.indexOf(img);
+                if (tempIndex !== -1 && uploadedUrls[tempIndex]) {
+                    // Заменяем превью на реальный URL
+                    allImageUrls.push(uploadedUrls[tempIndex]);
+                } else {
+                    // Это уже существующий URL
+                    allImageUrls.push(img);
+                }
+            });
+
+            // 3. Формируем данные для сохранения
+            const mainImage = allImageUrls.length > 0 ? allImageUrls[0] : '';
+            const additional = allImageUrls.length > 1 ? allImageUrls.slice(1) : [];
 
             const submitData = {
                 name: formData.name,
                 description: formData.description,
                 price: formData.price || 0,
                 imageUrl: mainImage,
-                categoryId: formData.categoryId || 0,          // Отправляем ID
-                subcategoryId: formData.subcategoryId || 0,    // Отправляем ID
+                categoryId: formData.categoryId || 0,
+                subcategoryId: formData.subcategoryId || 0,
                 availableQuantity: formData.availableQuantity || 0,
                 reservedQuantity: formData.reservedQuantity || 0,
                 color: formData.color || '',
@@ -538,6 +642,7 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                 deletedImages: isEditing ? imagesToDelete : []
             };
 
+            // 4. Сохраняем товар
             const token = localStorage.getItem('admin_token');
             const url = isEditing
                 ? `/api/admin/products/${product.id}`
@@ -613,33 +718,23 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
         }));
     };
 
-    // Функция загрузки новых фото
-    const handleFilesUploaded = (fileUrls: string[]) => {
-        if (fileUrls.length > 0) {
-            setAllImages(prev => [...prev, ...fileUrls]);
-            setTempImages(prev => [...prev, ...fileUrls]);
-        }
-    };
-
     // Обработка закрытия модального окна
     const handleClose = () => {
-        // Если есть незакрепленные временные фото - удаляем их из S3 молча
-        if (tempImages.length > 0) {
-            tempImages.forEach(imgUrl => {
-                s3Service.deleteFile(imgUrl).catch(err => {
-                    console.error('Failed to delete temp image on cancel:', err);
-                });
-            });
-        }
+        // Очищаем превью временных файлов (освобождаем память)
+        tempFilePreviews.forEach(preview => {
+            URL.revokeObjectURL(preview);
+        });
+
+        // Временные файлы НЕ загружаются на S3 при отмене
         onClose();
     };
 
     return (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal fade show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog modal-lg modal-dialog-centered">
                 <div className="modal-content rounded-0 border-1">
                     <div className="modal-header border-0 pb-0">
-                        <h5 className="modal-title fw-light" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        <h5 className="modal-title fw-light" style={{fontFamily: "'Playfair Display', serif"}}>
                             {isEditing ? 'Редактировать товар' : 'Добавить товар'}
                         </h5>
                         <button type="button" className="btn-close" onClick={handleClose}></button>
@@ -691,7 +786,7 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
 
                                         <FileUploadComponent
                                             folder="products"
-                                            onFilesUploaded={handleFilesUploaded}
+                                            onFilesSelected={handleFilesSelected}
                                             multiple={true}
                                             maxFiles={10}
                                         />
@@ -700,18 +795,8 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
 
                                 <div className="col-md-6">
                                     {/* Категория */}
-                                    <div className="col-6 mb-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-1">
-                                            <label className="form-label small text-muted">Категория *</label>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => setShowCategoryManager(true)}
-                                                title="Управление категориями"
-                                            >
-                                                <Edit size={12} />
-                                            </button>
-                                        </div>
+                                    <div className="mb-3">
+                                        <label className="form-label small text-muted">Категория *</label>
                                         {loadingCategories ? (
                                             <div className="d-flex align-items-center">
                                                 <div className="spinner-border spinner-border-sm me-2"></div>
@@ -724,7 +809,6 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                                 onChange={(e) => {
                                                     const categoryId = parseInt(e.target.value);
                                                     handleChange('categoryId', categoryId);
-                                                    // Сбрасываем подкатегорию при смене категории
                                                     handleChange('subcategoryId', 0);
                                                 }}
                                                 required
@@ -740,18 +824,8 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                     </div>
 
                                     {/* Подкатегория */}
-                                    <div className="col-6 mb-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-1">
-                                            <label className="form-label small text-muted">Подкатегория</label>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => setShowCategoryManager(true)}
-                                                title="Управление подкатегориями"
-                                            >
-                                                <Edit size={12} />
-                                            </button>
-                                        </div>
+                                    <div className="mb-3">
+                                        <label className="form-label small text-muted">Подкатегория</label>
                                         <select
                                             className="form-select rounded-0"
                                             value={formData.subcategoryId || ''}
@@ -802,6 +876,17 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                             className="form-control rounded-0"
                                             value={formData.material}
                                             onChange={(e) => handleChange('material', e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label small text-muted">Уход</label>
+                                        <input
+                                            type="text"
+                                            className="form-control rounded-0"
+                                            value={formData.careInstructions}
+                                            onChange={(e) => handleChange('careInstructions', e.target.value)}
+                                            placeholder="Рекомендации по уходу"
                                         />
                                     </div>
 
@@ -876,7 +961,8 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                                                     zIndex: 10
                                                                 }}
                                                             >
-                                                                <span style={{ fontSize: '16px', lineHeight: '1' }}>☆</span>
+                                                                <span
+                                                                    style={{fontSize: '16px', lineHeight: '1'}}>☆</span>
                                                             </button>
                                                         )}
 
@@ -902,12 +988,13 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                                                 zIndex: 10
                                                             }}
                                                         >
-                                                            <span style={{ fontSize: '16px', lineHeight: '1' }}>✕</span>
+                                                            <span style={{fontSize: '16px', lineHeight: '1'}}>✕</span>
                                                         </button>
                                                     </div>
 
                                                     <div className="card-body p-2">
-                                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                                        <div
+                                                            className="d-flex justify-content-between align-items-center mb-1">
                                                             <small className="text-muted">
                                                                 Фото {index + 1}
                                                             </small>
@@ -933,7 +1020,7 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                                                             justifyContent: 'center'
                                                                         }}
                                                                     >
-                                                                        <span style={{ fontSize: '12px' }}>←</span>
+                                                                        <span style={{fontSize: '12px'}}>←</span>
                                                                     </button>
                                                                 )}
 
@@ -952,7 +1039,7 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                                                             justifyContent: 'center'
                                                                         }}
                                                                     >
-                                                                        <span style={{ fontSize: '12px' }}>→</span>
+                                                                        <span style={{fontSize: '12px'}}>→</span>
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -967,21 +1054,31 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <div className="me-2" style={{ width: '20px', height: '20px', border: '3px solid #28a745' }}></div>
+                                                    <div className="me-2" style={{
+                                                        width: '20px',
+                                                        height: '20px',
+                                                        border: '3px solid #28a745'
+                                                    }}></div>
                                                     <small className="text-muted">Зелёная рамка — основное фото</small>
                                                 </div>
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <button className="btn btn-success btn-sm me-2" disabled style={{ width: '24px', height: '24px', padding: '0' }}>☆</button>
+                                                    <button className="btn btn-success btn-sm me-2" disabled
+                                                            style={{width: '24px', height: '24px', padding: '0'}}>☆
+                                                    </button>
                                                     <small className="text-muted">Сделать фото основным</small>
                                                 </div>
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <button className="btn btn-outline-secondary btn-sm me-2" disabled style={{ width: '24px', height: '24px', padding: '0' }}>←</button>
+                                                    <button className="btn btn-outline-secondary btn-sm me-2" disabled
+                                                            style={{width: '24px', height: '24px', padding: '0'}}>←
+                                                    </button>
                                                     <small className="text-muted">Изменить порядок фото</small>
                                                 </div>
                                                 <div className="d-flex align-items-center">
-                                                    <button className="btn btn-danger btn-sm me-2" disabled style={{ width: '24px', height: '24px', padding: '0' }}>✕</button>
+                                                    <button className="btn btn-danger btn-sm me-2" disabled
+                                                            style={{width: '24px', height: '24px', padding: '0'}}>✕
+                                                    </button>
                                                     <small className="text-muted">Удалить фото из товара</small>
                                                 </div>
                                             </div>
@@ -1022,5 +1119,4 @@ const ProductModal = ({ product, onClose, onSave, showCategoryManager, setShowCa
         </div>
     );
 };
-
 export default AdminProductsPage;
