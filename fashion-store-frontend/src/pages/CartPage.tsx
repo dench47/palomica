@@ -252,10 +252,7 @@ const CartPage = () => {
                                     className="text-muted small">Товары ({items.reduce((sum, item) => sum + item.quantity, 0)} шт.)</span>
                                 <span>{formatPrice(totalPrice)}</span>
                             </div>
-                            <div className="d-flex justify-content-between mb-2">
-                                <span className="text-muted small">Доставка</span>
-                                <span className="text-success small">Бесплатно</span>
-                            </div>
+
                             <div className="d-flex justify-content-between mt-3 pt-3 border-top">
                                 <strong className="fw-normal">Общая сумма</strong>
                                 <strong className="fs-5">{formatPrice(totalPrice)}</strong>

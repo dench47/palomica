@@ -374,11 +374,7 @@ const ProductPage = () => {
                                     }}>
                                         {formatPrice(product.price)}
                                     </span>
-                                    {product.price > 10000 && (
-                                        <span className="ms-3 small" style={{color: 'var(--text-medium)'}}>
-                                            (бесплатная доставка)
-                                        </span>
-                                    )}
+
                                 </div>
                             </div>
 

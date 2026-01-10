@@ -531,27 +531,14 @@ const CheckoutPage = () => {
                                 <span className="small text-muted">Сумма товаров</span>
                                 <span>{formatPrice(totalPrice)}</span>
                             </div>
-                            <div className="d-flex justify-content-between mb-2">
-                                <span className="small text-muted">Доставка</span>
-                                <span className="text-success small">Бесплатно</span>
-                            </div>
+
                             <div className="d-flex justify-content-between mt-3 pt-3 border-top">
                                 <strong className="fw-normal">Итого к оплате</strong>
                                 <strong className="fs-5">{formatPrice(totalPrice)}</strong>
                             </div>
                         </div>
 
-                        <div className="mt-4 pt-3 border-top">
-                            <p className="small text-muted">
-                                <span className="text-success">✓</span> Бесплатная доставка от 3000 ₽
-                            </p>
-                            <p className="small text-muted">
-                                <span className="text-success">✓</span> Возврат в течение 14 дней
-                            </p>
-                            <p className="small text-muted">
-                                <span className="text-success">✓</span> Конфиденциальность данных
-                            </p>
-                        </div>
+
                     </div>
                 </div>
             </div>
