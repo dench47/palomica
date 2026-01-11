@@ -9,6 +9,22 @@ public class ProductFactory {
     // Путь к изображениям в статических ресурсах
     private static final String IMAGE_BASE_PATH = "/images/products/";
 
+    // Вспомогательный метод для создания вариантов
+    private static void createVariantsForProduct(Product product, String sizeString, int quantityPerSize) {
+        if (sizeString != null && !sizeString.trim().isEmpty()) {
+            String[] sizes = sizeString.split(",");
+            for (String size : sizes) {
+                String trimmedSize = size.trim();
+                if (!trimmedSize.isEmpty()) {
+                    product.addVariant(trimmedSize, quantityPerSize);
+                }
+            }
+        } else {
+            // Если размеров нет, создаем один вариант без размера
+            product.addVariant("ONE SIZE", quantityPerSize);
+        }
+    }
+
     // ========== ОДЕЖДА (CLOTHING) ==========
 
     public static Product createDress1() {
@@ -18,12 +34,12 @@ public class ProductFactory {
                 25900.0,
                 IMAGE_BASE_PATH + "clothing/dress_1.jpg",
                 "Чёрный с цветочным принтом",  // color
-                "XS,S,M,L",  // size
                 "Шифон 100%",  // material
                 "Стирка при 30°C, не отжимать, сушить в расправленном виде"  // careInstructions
-                // Category и Subcategory будут установлены в DataInitializer
         );
-        dress.setAvailableQuantity(3);
+        // Создаем варианты по размерам
+        createVariantsForProduct(dress, "XS,S,M,L", 3);
+
         dress.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/dress_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/dress_1.3.jpg"
@@ -38,11 +54,11 @@ public class ProductFactory {
                 18900.0,
                 IMAGE_BASE_PATH + "clothing/dress_2.jpg",
                 "Белый",  // color
-                "S,M,L",  // size
                 "Хлопок 100%",  // material
                 "Стирка при 40°C, гладить при средней температуре"  // careInstructions
         );
-        dress.setAvailableQuantity(3);
+        createVariantsForProduct(dress, "S,M,L", 3);
+
         dress.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/dress_2.2.jpg",
                 IMAGE_BASE_PATH + "clothing/dress_2.3.jpg"
@@ -57,11 +73,11 @@ public class ProductFactory {
                 14900.0,
                 IMAGE_BASE_PATH + "clothing/shirt_1.jpg",
                 "Бежевый",  // color
-                "XS,S,M,L",  // size
                 "Хлопок 100%",  // material
                 "Стирка при 30°C, не отбеливать, гладить на низкой температуре"  // careInstructions
         );
-        shirt.setAvailableQuantity(3);
+        createVariantsForProduct(shirt, "XS,S,M,L", 3);
+
         shirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/shirt_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/shirt_1.3.jpg"
@@ -76,11 +92,11 @@ public class ProductFactory {
                 8900.0,
                 IMAGE_BASE_PATH + "clothing/top_1.jpg",
                 "Чёрный",  // color
-                "XS,S,M",  // size
                 "Атлас 100%",  // material
                 "Химчистка, не стирать"  // careInstructions
         );
-        top.setAvailableQuantity(3);
+        createVariantsForProduct(top, "XS,S,M", 3);
+
         top.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/top_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/top_1.3.jpg"
@@ -95,11 +111,11 @@ public class ProductFactory {
                 12700.0,
                 IMAGE_BASE_PATH + "clothing/vest_1.jpg",
                 "Бордовый",  // color
-                "S,M,L",  // size
                 "Бархат 100%",  // material
                 "Химчистка, хранить на вешалке"  // careInstructions
         );
-        vest.setAvailableQuantity(3);
+        createVariantsForProduct(vest, "S,M,L", 3);
+
         vest.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/vest_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/vest_1.3.jpg"
@@ -114,11 +130,11 @@ public class ProductFactory {
                 21800.0,
                 IMAGE_BASE_PATH + "clothing/skirt_1.jpg",
                 "Коричневый",  // color
-                "36,38,40,42",  // size
                 "Натуральная кожа",  // material
                 "Протирать влажной тканью, использовать средства для ухода за кожей"  // careInstructions
         );
-        skirt.setAvailableQuantity(3);
+        createVariantsForProduct(skirt, "36,38,40,42", 3);
+
         skirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/skirt_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/skirt_1.3.jpg"
@@ -133,11 +149,11 @@ public class ProductFactory {
                 15600.0,
                 IMAGE_BASE_PATH + "clothing/skirt_2.jpg",
                 "Серый",  // color
-                "S,M,L",  // size
                 "Шерсть 80%, Полиэстер 20%",  // material
                 "Химчистка, не гладить"  // careInstructions
         );
-        skirt.setAvailableQuantity(3);
+        createVariantsForProduct(skirt, "S,M,L", 3);
+
         skirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/skirt_2.2.jpg",
                 IMAGE_BASE_PATH + "clothing/skirt_2.3.jpg"
@@ -152,11 +168,11 @@ public class ProductFactory {
                 9900.0,
                 IMAGE_BASE_PATH + "clothing/skirt_3.jpg",
                 "Голубой деним",  // color
-                "36,38,40,42",  // size
                 "Хлопок 98%, Эластан 2%",  // material
                 "Стирка при 40°C, не отбеливать"  // careInstructions
         );
-        skirt.setAvailableQuantity(3);
+        createVariantsForProduct(skirt, "36,38,40,42", 3);
+
         skirt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/skirt_3.2.jpg",
                 IMAGE_BASE_PATH + "clothing/skirt_3.3.jpg"
@@ -171,11 +187,11 @@ public class ProductFactory {
                 11200.0,
                 IMAGE_BASE_PATH + "clothing/air_1.jpg",
                 "Белый",  // color
-                "XS,S,M,L",  // size
                 "Хлопок 100%",  // material
                 "Ручная стирка, сушить в тени"  // careInstructions
         );
-        blouse.setAvailableQuantity(3);
+        createVariantsForProduct(blouse, "XS,S,M,L", 3);
+
         blouse.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/air_1.2.jpg",
                 IMAGE_BASE_PATH + "clothing/air_1.3.jpg"
@@ -190,11 +206,11 @@ public class ProductFactory {
                 13400.0,
                 IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22.jpg",
                 "Бежевый",  // color
-                "S,M,L",  // size
                 "Шёлк 70%, Вискоза 30%",  // material
                 "Химчистка"  // careInstructions
         );
-        blouse.setAvailableQuantity(3);
+        createVariantsForProduct(blouse, "S,M,L", 3);
+
         blouse.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22_2.jpg",
                 IMAGE_BASE_PATH + "clothing/photo_2025-12-26_22-55-22_3.jpg"
@@ -211,11 +227,11 @@ public class ProductFactory {
                 4500.0,
                 IMAGE_BASE_PATH + "accessories/belt_1.jpg",
                 "Коричневый",  // color
-                "75-85 см, 85-95 см, 95-105 см",  // size
                 "Натуральная кожа, металлическая фурнитура",  // material
                 "Протирать влажной тканью, использовать крем для кожи"  // careInstructions
         );
-        belt.setAvailableQuantity(3);
+        createVariantsForProduct(belt, "75-85 см, 85-95 см, 95-105 см", 3);
+
         belt.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "accessories/belt_2.jpg",
                 IMAGE_BASE_PATH + "accessories/belt_3.jpg"
@@ -230,11 +246,11 @@ public class ProductFactory {
                 3200.0,
                 IMAGE_BASE_PATH + "accessories/peplum_1.jpg",
                 "Чёрный",  // color
-                "Универсальный",  // size
                 "Полиэстер 100%",  // material
                 "Стирка при 30°C, не отжимать"  // careInstructions
         );
-        peplum.setAvailableQuantity(3);
+        createVariantsForProduct(peplum, "Универсальный", 3);
+
         peplum.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "accessories/peplum_2.jpg",
                 IMAGE_BASE_PATH + "accessories/peplum_3.jpg"
@@ -251,11 +267,12 @@ public class ProductFactory {
                 18900.0,
                 IMAGE_BASE_PATH + "bags/bag_1.jpg",
                 "Чёрный",  // color
-                null,  // size
                 "Экокожа 100%, металлическая фурнитура",  // material
                 "Протирать влажной тканью, избегать контакта с химическими веществами"  // careInstructions
         );
-        bag.setAvailableQuantity(3);
+        // У сумки нет размеров, создаем один вариант
+        createVariantsForProduct(bag, null, 3);
+
         bag.setAdditionalImages(Arrays.asList(
                 IMAGE_BASE_PATH + "bags/bag_1.2.jpg",
                 IMAGE_BASE_PATH + "bags/bag_1.3.jpg"

@@ -1,39 +1,39 @@
-// CartContext.tsx - ИСПРАВЛЕННЫЙ ФАЙЛ
+// CartContext.tsx - ОБНОВЛЕННЫЙ ДЛЯ РАБОТЫ С РАЗМЕРАМИ
 import type {ReactNode} from 'react';
 import {createContext, useContext, useEffect, useState, useCallback} from 'react';
-import type {Product} from '../services/api';
-import { cartService, type CartSyncItemRequest } from '../services/api';
+import type {Product, CartSyncItemRequest} from '../services/api';
+import { cartService } from '../services/api';
 import MySwal from '../utils/swalConfig';
 import toast from 'react-hot-toast';
 import { RefreshCw, Check, AlertTriangle, AlertCircle, ShoppingBag, XCircle } from 'lucide-react';
 
-// Тип для варианта товара
+// Тип для варианта товара (теперь обязателен размер)
 export interface ProductVariant {
-    size?: string;
+    size: string;  // Размер теперь обязателен
     color?: string;
 }
 
-// Товар в корзине теперь включает вариант
+// Товар в корзине теперь включает вариант с размером
 export interface CartItem {
     product: Product;
     quantity: number;
-    selectedVariant?: ProductVariant;
-    // Уникальный ID для комбинации товар+вариант
+    selectedVariant: ProductVariant;  // Теперь обязателен
     variantId: string;
 }
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: Product, variant?: ProductVariant) => Promise<void>;
+    addToCart: (product: Product, variant: ProductVariant) => Promise<void>;
     removeFromCart: (variantId: string) => Promise<void>;
     updateQuantity: (variantId: string, quantity: number) => Promise<void>;
     clearCart: () => Promise<void>;
     totalItems: number;
     totalPrice: number;
-    getVariantId: (productId: number, variant?: ProductVariant) => string;
+    getVariantId: (productId: number, variant: ProductVariant) => string;
     syncWithServer: () => Promise<void>;
     isSyncing: boolean;
     lastSyncError?: string;
+    getItemByVariantId: (variantId: string) => CartItem | undefined;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -53,14 +53,17 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
         localStorage.setItem('fashionstore_cart', JSON.stringify(items));
     }, [items]);
 
-    // Генерация уникального ID для варианта
-    const getVariantId = (productId: number, variant?: ProductVariant): string => {
-        if (!variant || (!variant.size && !variant.color)) {
-            return `${productId}-base`;
-        }
-        const sizePart = variant.size ? `-size-${variant.size.trim().toLowerCase()}` : '';
+    // Генерация уникального ID для варианта (теперь размер обязателен)
+    const getVariantId = (productId: number, variant: ProductVariant): string => {
+        // Размер теперь обязателен
+        const size = variant.size || 'ONE SIZE';
         const colorPart = variant.color ? `-color-${variant.color.trim().toLowerCase()}` : '';
-        return `${productId}${sizePart}${colorPart}`;
+        return `${productId}-size-${size.trim().toLowerCase()}${colorPart}`;
+    };
+
+    // Получить элемент по variantId
+    const getItemByVariantId = (variantId: string): CartItem | undefined => {
+        return items.find(item => item.variantId === variantId);
     };
 
     // Преобразование CartItem в CartSyncItemRequest для API
@@ -68,8 +71,8 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
         return cartItems.map(item => ({
             productId: item.product.id,
             quantity: item.quantity,
-            size: item.selectedVariant?.size,
-            color: item.selectedVariant?.color
+            size: item.selectedVariant.size,  // Размер теперь обязателен
+            color: item.selectedVariant.color
         }));
     }, []);
 
@@ -86,16 +89,24 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
 
             if (result.updates && result.updates.length > 0) {
                 const updates = result.updates;
-                const removedProducts: string[] = [];
-                const updatedProducts: Array<{name: string, oldQty: number, newQty: number}> = [];
+                const removedProducts: Array<{name: string, size: string}> = [];
+                const updatedProducts: Array<{name: string, size: string, oldQty: number, newQty: number}> = [];
 
                 const newItems = items.map(item => {
-                    const update = updates.find(u => u.productId === item.product.id);
+                    // Находим обновление по productId и size
+                    const update = updates.find(u =>
+                        u.productId === item.product.id &&
+                        u.size === item.selectedVariant.size
+                    );
+
                     if (!update) return item;
 
                     // Товар полностью удален (куплен другим клиентом)
                     if (update.removed) {
-                        removedProducts.push(item.product.name);
+                        removedProducts.push({
+                            name: item.product.name,
+                            size: item.selectedVariant.size
+                        });
                         return null;
                     }
 
@@ -103,6 +114,7 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                     if (update.availableQuantity < item.quantity) {
                         updatedProducts.push({
                             name: item.product.name,
+                            size: item.selectedVariant.size,
                             oldQty: item.quantity,
                             newQty: update.availableQuantity
                         });
@@ -118,7 +130,6 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
 
                 // Показываем уведомления о изменениях
                 if (removedProducts.length > 0 || updatedProducts.length > 0) {
-                    // Для важных изменений показываем SweetAlert2
                     let notificationTitle = '';
                     let notificationHtml = '';
                     let notificationIcon: 'warning' | 'error' = 'warning';
@@ -131,7 +142,9 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                             <div style="font-family: 'Cormorant Garamond', serif; color: #666; line-height: 1.6">
                                 <p>Следующие товары были куплены другими клиентами и удалены из вашей корзины:</p>
                                 <ul style="padding-left: 20px; margin-top: 10px">
-                                    ${removedProducts.map(name => `<li><strong>"${name}"</strong></li>`).join('')}
+                                    ${removedProducts.map(({name, size}) =>
+                            `<li><strong>"${name}"</strong> (Размер: ${size})</li>`
+                        ).join('')}
                                 </ul>
                             </div>
                         `;
@@ -144,8 +157,8 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                             <div style="font-family: 'Cormorant Garamond', serif; color: #666; line-height: 1.6">
                                 <p>Доступные количества товаров изменились:</p>
                                 <ul style="padding-left: 20px; margin-top: 10px">
-                                    ${updatedProducts.map(p =>
-                            `<li><strong>"${p.name}"</strong>: ${p.oldQty} → ${p.newQty} шт.</li>`
+                                    ${updatedProducts.map(({name, size, oldQty, newQty}) =>
+                            `<li><strong>"${name}"</strong> (Размер: ${size}): ${oldQty} → ${newQty} шт.</li>`
                         ).join('')}
                                 </ul>
                                 <p class="mt-3 small text-muted">Другие клиенты зарезервировали часть товаров.</p>
@@ -163,15 +176,17 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                                 ${removedProducts.length > 0 ? `
                                 <p class="mt-2"><strong>Удалены (куплены другими):</strong></p>
                                 <ul style="padding-left: 20px">
-                                    ${removedProducts.map(name => `<li>"${name}"</li>`).join('')}
+                                    ${removedProducts.map(({name, size}) =>
+                            `<li>"${name}" (Размер: ${size})</li>`
+                        ).join('')}
                                 </ul>
                                 ` : ''}
                                 
                                 ${updatedProducts.length > 0 ? `
                                 <p class="mt-2"><strong>Изменены количества:</strong></p>
                                 <ul style="padding-left: 20px">
-                                    ${updatedProducts.map(p =>
-                            `<li>"${p.name}": ${p.oldQty} → ${p.newQty} шт.</li>`
+                                    ${updatedProducts.map(({name, size, oldQty, newQty}) =>
+                            `<li>"${name}" (Размер: ${size}): ${oldQty} → ${newQty} шт.</li>`
                         ).join('')}
                                 </ul>
                                 ` : ''}
@@ -347,7 +362,30 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
     };
 
     // Добавление товара с учётом варианта и резервированием
-    const addToCart = async (product: Product, variant?: ProductVariant) => {
+    const addToCart = async (product: Product, variant: ProductVariant) => {
+        // Размер теперь обязателен
+        if (!variant.size) {
+            toast.error(
+                <div className="d-flex align-items-center">
+                    <AlertCircle size={18} className="me-2" />
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                        Пожалуйста, выберите размер
+                    </span>
+                </div>,
+                {
+                    duration: 3000,
+                    position: 'bottom-right',
+                    style: {
+                        background: '#f8f9fa',
+                        border: '1px solid #dc3545',
+                        borderRadius: '0',
+                        padding: '12px 16px'
+                    }
+                }
+            );
+            return;
+        }
+
         const variantId = getVariantId(product.id, variant);
 
         const newItem: CartItem = {
@@ -376,16 +414,14 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             await reserveItems([{
                 productId: product.id,
                 quantity: 1,
-                size: variant?.size,
-                color: variant?.color
+                size: variant.size,
+                color: variant.color
             }]);
 
             // Показываем уведомление об успешном добавлении через toast
             const itemName = product.name;
-            const variantText = variant ?
-                (variant.size ? ` (Размер: ${variant.size})` : '') +
-                (variant.color ? ` (Цвет: ${variant.color})` : '')
-                : '';
+            const sizeText = ` (Размер: ${variant.size})`;
+            const colorText = variant.color ? ` (Цвет: ${variant.color})` : '';
 
             toast.success(
                 <div className="d-flex align-items-center">
@@ -404,7 +440,7 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                             color: '#666',
                             marginTop: '2px'
                         }}>
-                            <strong>"{itemName}"</strong>{variantText}
+                            <strong>"{itemName}"</strong>{sizeText}{colorText}
                         </div>
                     </div>
                 </div>,
@@ -434,8 +470,8 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             await releaseItems([{
                 productId: itemToRemove.product.id,
                 quantity: itemToRemove.quantity,
-                size: itemToRemove.selectedVariant?.size,
-                color: itemToRemove.selectedVariant?.color
+                size: itemToRemove.selectedVariant.size,
+                color: itemToRemove.selectedVariant.color
             }]);
 
             // Показываем уведомление об удалении через toast
@@ -456,7 +492,7 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                             color: '#666',
                             marginTop: '2px'
                         }}>
-                            <strong>"{itemToRemove.product.name}"</strong> удален из корзины
+                            <strong>"{itemToRemove.product.name}"</strong> (Размер: {itemToRemove.selectedVariant.size}) удален из корзины
                         </div>
                     </div>
                 </div>,
@@ -504,16 +540,16 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             await reserveItems([{
                 productId: oldItem.product.id,
                 quantity: quantityDiff,
-                size: oldItem.selectedVariant?.size,
-                color: oldItem.selectedVariant?.color
+                size: oldItem.selectedVariant.size,
+                color: oldItem.selectedVariant.color
             }]);
         } else if (quantityDiff < 0) {
             // Уменьшили количество - освобождаем разницу
             await releaseItems([{
                 productId: oldItem.product.id,
                 quantity: -quantityDiff, // положительное число
-                size: oldItem.selectedVariant?.size,
-                color: oldItem.selectedVariant?.color
+                size: oldItem.selectedVariant.size,
+                color: oldItem.selectedVariant.color
             }]);
         }
     };
@@ -577,7 +613,8 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             getVariantId,
             syncWithServer,
             isSyncing,
-            lastSyncError
+            lastSyncError,
+            getItemByVariantId
         }}>
             {children}
         </CartContext.Provider>

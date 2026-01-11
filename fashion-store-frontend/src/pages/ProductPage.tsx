@@ -2,19 +2,16 @@ import {useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {useCart} from '../context/CartContext';
 import {productService} from '../services/api';
-import type {Product} from '../services/api';
+import type {Product, ProductVariant} from '../services/api';
 import ProductCard from '../components/ProductCard';
 import {Package, Ruler, Palette, Check} from 'lucide-react';
 import toast from "react-hot-toast";
 
-interface ProductVariant {
-    size?: string;
-    color?: string;
-    sku?: string;
-}
-
 interface CartProduct extends Product {
-    selectedVariant?: ProductVariant;
+    selectedVariant?: {
+        size?: string;
+        color?: string;
+    };
     quantity: number;
 }
 
@@ -27,7 +24,7 @@ const ProductPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedImage, setSelectedImage] = useState(0);
-    const [selectedVariant, setSelectedVariant] = useState<ProductVariant>({});
+    const [selectedSize, setSelectedSize] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
@@ -58,21 +55,46 @@ const ProductPage = () => {
         return item ? item.quantity : 0;
     };
 
-    const getAvailableQuantity = (): number => {
+    // Получить доступное количество для выбранного размера
+    const getAvailableQuantityForSelectedSize = (): number => {
+        if (!product || !selectedSize) return 0;
+
+        if (product.getAvailableQuantityForSize) {
+            return product.getAvailableQuantityForSize(selectedSize);
+        }
+
+        // Fallback для обратной совместимости
+        const variant = product.variants?.find(v => v.size === selectedSize);
+        return variant ? variant.actuallyAvailable : 0;
+    };
+
+    // Получить общее доступное количество (всех размеров)
+    const getTotalAvailableQuantity = (): number => {
         if (!product) return 0;
-        return product.availableQuantity || 0;
+
+        if (product.getTotalAvailableQuantity) {
+            return product.getTotalAvailableQuantity();
+        }
+
+        // Fallback для обратной совместимости
+        return product.variants?.reduce((sum, v) => sum + v.availableQuantity, 0) || 0;
     };
 
     const getRemainingToAdd = (): number => {
-        if (!product) return 0;
+        if (!product || !selectedSize) return 0;
 
-        const baseQuantity = product.availableQuantity || 0;
-        const cartItemsForThisProduct = items.filter(item =>
-            item.product.id === product.id
+        const availableForSize = getAvailableQuantityForSelectedSize();
+        if (availableForSize === 0) return 0;
+
+        // Ищем товары в корзине с таким же размером
+        const cartItemsForThisProductAndSize = items.filter(item =>
+            item.product.id === product.id &&
+            item.selectedVariant?.size === selectedSize
         );
-        const inCartQuantity = cartItemsForThisProduct.reduce((sum, item) => sum + item.quantity, 0);
 
-        return Math.max(0, baseQuantity - inCartQuantity);
+        const inCartQuantity = cartItemsForThisProductAndSize.reduce((sum, item) => sum + item.quantity, 0);
+
+        return Math.max(0, availableForSize - inCartQuantity);
     };
 
     const loadProduct = async () => {
@@ -89,24 +111,12 @@ const ProductPage = () => {
                 };
                 setProduct(cartProduct);
 
-                if (data.size) {
-                    const sizes = data.size.split(',');
-                    if (sizes.length > 0) {
-                        setSelectedVariant(prev => ({
-                            ...prev,
-                            size: sizes[0].trim()
-                        }));
-                    }
-                }
+                // Устанавливаем первый доступный размер
+                const sizes = data.getSizes ? data.getSizes() :
+                    (data.variants?.map((v: ProductVariant) => v.size) || []);
 
-                if (data.color) {
-                    const colors = data.color.split(',');
-                    if (colors.length > 0) {
-                        setSelectedVariant(prev => ({
-                            ...prev,
-                            color: colors[0].trim()
-                        }));
-                    }
+                if (sizes.length > 0) {
+                    setSelectedSize(sizes[0]);
                 }
             } else {
                 setError('Товар не найден');
@@ -152,7 +162,7 @@ const ProductPage = () => {
     };
 
     const handleAddToCart = () => {
-        if (product) {
+        if (product && selectedSize) {
             const remainingToAdd = getRemainingToAdd();
 
             if (remainingToAdd === 0) {
@@ -160,7 +170,7 @@ const ProductPage = () => {
                     <div className="d-flex align-items-center">
                         <span className="me-2" style={{color: '#dc3545'}}>😔</span>
                         <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                            <strong>"{product.name}"</strong> закончился на складе
+                            <strong>"{product.name}"</strong> (Размер: {selectedSize}) закончился на складе
                         </span>
                     </div>,
                     {
@@ -185,7 +195,7 @@ const ProductPage = () => {
                     <div className="d-flex align-items-center">
                         <span className="me-2" style={{color: '#ffc107'}}>⚠️</span>
                         <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                            <strong>"{product.name}"</strong> доступно только {remainingToAdd} шт.
+                            <strong>"{product.name}"</strong> (Размер: {selectedSize}) доступно только {remainingToAdd} шт.
                         </span>
                     </div>,
                     {
@@ -204,7 +214,7 @@ const ProductPage = () => {
             }
 
             for (let i = 0; i < maxToAdd; i++) {
-                addToCart(product, selectedVariant);
+                addToCart(product, { size: selectedSize });
             }
 
             setQuantity(1);
@@ -220,7 +230,7 @@ const ProductPage = () => {
     };
 
     const handleSizeSelect = (size: string) => {
-        setSelectedVariant(prev => ({...prev, size}));
+        setSelectedSize(size);
     };
 
     if (loading) {
@@ -279,10 +289,25 @@ const ProductPage = () => {
         ...(product.additionalImages || [])
     ].filter(Boolean);
 
-    const sizes = product.size ? product.size.split(',').map(s => s.trim()) : [];
+    const sizes = product.getSizes ? product.getSizes() :
+        (product.variants?.map(v => v.size) || []);
     const totalPrice = product.price * quantity;
     const isInCart = isProductInCart(product.id);
     const cartQuantity = getCartQuantity(product.id);
+
+    // Количество в корзине для выбранного размера
+    const getCartQuantityForSelectedSize = (): number => {
+        if (!product || !selectedSize) return 0;
+
+        const itemsForSize = items.filter(item =>
+            item.product.id === product.id &&
+            item.selectedVariant?.size === selectedSize
+        );
+
+        return itemsForSize.reduce((sum, item) => sum + item.quantity, 0);
+    };
+
+    const cartQuantityForSelectedSize = getCartQuantityForSelectedSize();
 
     return (
         <div className="container-fluid px-0" style={{backgroundColor: 'var(--cream-bg)'}}>
@@ -402,7 +427,7 @@ const ProductPage = () => {
                                         </div>
                                     )}
 
-                                    {product.size && (
+                                    {sizes.length > 0 && (
                                         <div className="col-12 col-sm-6 d-flex align-items-start">
                                             <Ruler size={18} className="me-2 flex-shrink-0" style={{
                                                 color: 'var(--accent-brown)',
@@ -410,9 +435,9 @@ const ProductPage = () => {
                                             }}/>
                                             <div>
                                                 <div className="small"
-                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Размеры
+                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Доступные размеры
                                                 </div>
-                                                <div style={{color: 'var(--text-dark)'}}>{product.size}</div>
+                                                <div style={{color: 'var(--text-dark)'}}>{sizes.join(', ')}</div>
                                             </div>
                                         </div>
                                     )}
@@ -456,27 +481,40 @@ const ProductPage = () => {
                                         fontFamily: "'Cormorant Garamond', serif",
                                         color: 'var(--text-dark)'
                                     }}>
-                                        Размер
+                                        Выберите размер
                                     </h3>
                                     <div className="d-flex flex-wrap gap-2">
                                         {sizes.map(size => (
                                             <button
                                                 key={size}
-                                                className={`btn ${selectedVariant.size === size ? '' : 'btn-outline-dark'} rounded-0 border-1`}
+                                                className={`btn ${selectedSize === size ? '' : 'btn-outline-dark'} rounded-0 border-1`}
                                                 onClick={() => handleSizeSelect(size)}
                                                 style={{
                                                     padding: '0.5rem 1.5rem',
                                                     fontSize: '0.85rem',
                                                     letterSpacing: '0.05em',
-                                                    backgroundColor: selectedVariant.size === size ? 'var(--text-dark)' : 'transparent',
+                                                    backgroundColor: selectedSize === size ? 'var(--text-dark)' : 'transparent',
                                                     borderColor: 'var(--text-dark)',
-                                                    color: selectedVariant.size === size ? 'var(--cream-light)' : 'var(--text-dark)'
+                                                    color: selectedSize === size ? 'var(--cream-light)' : 'var(--text-dark)'
                                                 }}
                                             >
                                                 {size}
                                             </button>
                                         ))}
                                     </div>
+
+                                    {selectedSize && (
+                                        <div className="mt-2 small" style={{color: 'var(--text-medium)'}}>
+                                            Доступно: <strong style={{color: 'var(--text-dark)'}}>
+                                            {getAvailableQuantityForSelectedSize()} шт.
+                                        </strong>
+                                            {cartQuantityForSelectedSize > 0 && (
+                                                <span style={{marginLeft: '8px', color: 'var(--accent-brown)'}}>
+                                                    (в корзине: {cartQuantityForSelectedSize} шт.)
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -510,14 +548,20 @@ const ProductPage = () => {
                                         Количество
                                     </h3>
 
-                                    <span className="small" style={{color: 'var(--text-medium)'}}>
-                                        В наличии: <strong style={{color: 'var(--text-dark)'}}>{getAvailableQuantity()} шт.</strong>
-                                        {getCartQuantity(product.id) > 0 && (
-                                            <span style={{marginLeft: '8px', color: 'var(--accent-brown)'}}>
-                                                (в корзине: {getCartQuantity(product.id)} шт.)
-                                            </span>
-                                        )}
-                                    </span>
+                                    {selectedSize ? (
+                                        <span className="small" style={{color: 'var(--text-medium)'}}>
+                                            Размер <strong style={{color: 'var(--text-dark)'}}>{selectedSize}</strong>:
+                                            {' '}в наличии <strong style={{color: 'var(--text-dark)'}}>
+                                                {getAvailableQuantityForSelectedSize()} шт.
+                                            </strong>
+                                        </span>
+                                    ) : (
+                                        <span className="small" style={{color: 'var(--text-medium)'}}>
+                                            Всего в наличии: <strong style={{color: 'var(--text-dark)'}}>
+                                                {getTotalAvailableQuantity()} шт.
+                                            </strong>
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="d-flex align-items-center justify-content-between">
@@ -529,6 +573,7 @@ const ProductPage = () => {
                                                 borderColor: 'var(--text-dark)',
                                                 color: 'var(--text-dark)'
                                             }}
+                                            disabled={!selectedSize && sizes.length > 0}
                                         >
                                             –
                                         </button>
@@ -542,17 +587,38 @@ const ProductPage = () => {
                                         <button
                                             className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
                                             onClick={() => {
-                                                const remainingToAdd = getRemainingToAdd();
-                                                const currentInCart = getCartQuantity(product.id);
+                                                if (!selectedSize && sizes.length > 0) {
+                                                    toast.error(
+                                                        <div className="d-flex align-items-center">
+                                                            <span className="me-2" style={{color: '#dc3545'}}>⚠️</span>
+                                                            <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                                                Сначала выберите размер
+                                                            </span>
+                                                        </div>,
+                                                        {
+                                                            duration: 3000,
+                                                            style: {
+                                                                background: '#f8f9fa',
+                                                                border: '1px solid #dc3545',
+                                                                borderRadius: '0',
+                                                                padding: '12px 16px'
+                                                            }
+                                                        }
+                                                    );
+                                                    return;
+                                                }
 
-                                                if (currentInCart + quantity + 1 <= getAvailableQuantity()) {
+                                                const remainingToAdd = getRemainingToAdd();
+                                                const currentInCart = cartQuantityForSelectedSize;
+
+                                                if (currentInCart + quantity + 1 <= getAvailableQuantityForSelectedSize()) {
                                                     setQuantity(prev => prev + 1);
                                                 } else {
                                                     toast(
                                                         <div className="d-flex align-items-center">
                                                             <span className="me-2" style={{ color: '#ffc107' }}>⚠️</span>
                                                             <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                                                                <strong>"{product.name}"</strong> доступно только {remainingToAdd} шт.
+                                                                <strong>"{product.name}"</strong> (Размер: {selectedSize}) доступно только {remainingToAdd} шт.
                                                             </span>
                                                         </div>,
                                                         {
@@ -573,6 +639,7 @@ const ProductPage = () => {
                                                 borderColor: 'var(--text-dark)',
                                                 color: 'var(--text-dark)'
                                             }}
+                                            disabled={!selectedSize && sizes.length > 0}
                                         >
                                             +
                                         </button>
@@ -594,30 +661,32 @@ const ProductPage = () => {
                                 <button
                                     className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
-                                    disabled={!product || getRemainingToAdd() === 0}
+                                    disabled={!product || !selectedSize || getRemainingToAdd() === 0}
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
                                         transition: 'all 0.3s ease',
-                                        backgroundColor: getRemainingToAdd() === 0 ? 'var(--text-medium)' : 'var(--text-dark)',
+                                        backgroundColor: (!selectedSize || getRemainingToAdd() === 0) ? 'var(--text-medium)' : 'var(--text-dark)',
                                         color: 'var(--cream-light)',
-                                        border: `1px solid ${getRemainingToAdd() === 0 ? 'var(--text-medium)' : 'var(--text-dark)'}`,
-                                        cursor: getRemainingToAdd() === 0 ? 'not-allowed' : 'pointer'
+                                        border: `1px solid ${(!selectedSize || getRemainingToAdd() === 0) ? 'var(--text-medium)' : 'var(--text-dark)'}`,
+                                        cursor: (!selectedSize || getRemainingToAdd() === 0) ? 'not-allowed' : 'pointer'
                                     }}
                                     onMouseOver={(e) => {
-                                        if (getRemainingToAdd() > 0) {
+                                        if (selectedSize && getRemainingToAdd() > 0) {
                                             e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
                                             e.currentTarget.style.borderColor = 'var(--accent-brown)';
                                         }
                                     }}
                                     onMouseOut={(e) => {
-                                        if (getRemainingToAdd() > 0) {
+                                        if (selectedSize && getRemainingToAdd() > 0) {
                                             e.currentTarget.style.backgroundColor = 'var(--text-dark)';
                                             e.currentTarget.style.borderColor = 'var(--text-dark)';
                                         }
                                     }}
                                 >
-                                    {getRemainingToAdd() === 0 ? 'ТОВАР ЗАКОНЧИЛСЯ' : (isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
+                                    {!selectedSize && sizes.length > 0 ? 'ВЫБЕРИТЕ РАЗМЕР' :
+                                        getRemainingToAdd() === 0 ? 'ТОВАР ЗАКОНЧИЛСЯ' :
+                                            (isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
                                 </button>
 
                                 {isCurrentProductInCart && (
@@ -673,7 +742,12 @@ const ProductPage = () => {
                 </div>
             </div>
 
-            {relatedProducts.filter(p => p.availableQuantity > 0).length > 0 && (
+            {relatedProducts.filter(p => {
+                if (p.getTotalAvailableQuantity) {
+                    return p.getTotalAvailableQuantity() > 0;
+                }
+                return (p.variants?.reduce((sum, v) => sum + v.availableQuantity, 0) || 0) > 0;
+            }).length > 0 && (
                 <div className="px-4 px-md-5 py-5" style={{backgroundColor: 'var(--cream-bg)'}}>
                     <h3 className="fw-light text-center mb-5" style={{
                         fontFamily: "'Playfair Display', serif",
@@ -688,7 +762,12 @@ const ProductPage = () => {
 
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
                         {relatedProducts
-                            .filter(p => p.availableQuantity > 0)
+                            .filter(p => {
+                                if (p.getTotalAvailableQuantity) {
+                                    return p.getTotalAvailableQuantity() > 0;
+                                }
+                                return (p.variants?.reduce((sum, v) => sum + v.availableQuantity, 0) || 0) > 0;
+                            })
                             .slice(0, 4)
                             .map((product) => (
                                 <div className="col" key={product.id}>

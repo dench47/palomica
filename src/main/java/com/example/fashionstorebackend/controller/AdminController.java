@@ -1,11 +1,14 @@
 package com.example.fashionstorebackend.controller;
 
 import com.example.fashionstorebackend.dto.ProductDTO;
+import com.example.fashionstorebackend.dto.ProductVariantDTO;
 import com.example.fashionstorebackend.model.Product;
+import com.example.fashionstorebackend.model.ProductVariant;
 import com.example.fashionstorebackend.model.Order;
 import com.example.fashionstorebackend.model.Category;
 import com.example.fashionstorebackend.model.Subcategory;
 import com.example.fashionstorebackend.repository.ProductRepository;
+import com.example.fashionstorebackend.repository.ProductVariantRepository;
 import com.example.fashionstorebackend.repository.OrderRepository;
 import com.example.fashionstorebackend.repository.CategoryRepository;
 import com.example.fashionstorebackend.repository.SubcategoryRepository;
@@ -16,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -33,6 +37,9 @@ public class AdminController {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -112,8 +119,8 @@ public class AdminController {
         }
     }
 
-
     @PostMapping("/products")
+    @Transactional
     public ResponseEntity<?> createProduct(@RequestBody Map<String, Object> productData, HttpServletRequest request) {
         if (!isAdmin(request)) {
             return ResponseEntity.status(403).body(Map.of(
@@ -135,7 +142,6 @@ public class AdminController {
 
             product.setImageUrl((String) productData.get("imageUrl"));
             product.setColor((String) productData.get("color"));
-            product.setSize((String) productData.get("size"));
             product.setMaterial((String) productData.get("material"));
             product.setCareInstructions((String) productData.get("careInstructions"));
 
@@ -189,19 +195,6 @@ public class AdminController {
                 }
             }
 
-            // Количества
-            if (productData.get("availableQuantity") != null) {
-                product.setAvailableQuantity(((Number) productData.get("availableQuantity")).intValue());
-            } else {
-                product.setAvailableQuantity(0);
-            }
-
-            if (productData.get("reservedQuantity") != null) {
-                product.setReservedQuantity(((Number) productData.get("reservedQuantity")).intValue());
-            } else {
-                product.setReservedQuantity(0);
-            }
-
             // Дополнительные изображения
             if (productData.get("additionalImages") != null) {
                 @SuppressWarnings("unchecked")
@@ -211,14 +204,50 @@ public class AdminController {
                 product.setAdditionalImages(new ArrayList<>());
             }
 
-            // Сохраняем
+            // Создаем варианты товара
+            if (productData.get("variants") != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> variantsData = (List<Map<String, Object>>) productData.get("variants");
+
+                for (Map<String, Object> variantData : variantsData) {
+                    String size = (String) variantData.get("size");
+                    Integer availableQuantity = variantData.get("availableQuantity") != null ?
+                            ((Number) variantData.get("availableQuantity")).intValue() : 0;
+                    Integer reservedQuantity = variantData.get("reservedQuantity") != null ?
+                            ((Number) variantData.get("reservedQuantity")).intValue() : 0;
+
+                    if (size != null && !size.trim().isEmpty()) {
+                        ProductVariant variant = new ProductVariant();
+                        variant.setSize(size.trim());
+                        variant.setAvailableQuantity(availableQuantity);
+                        variant.setReservedQuantity(reservedQuantity);
+                        variant.setProduct(product);
+                        product.getVariants().add(variant);
+                    }
+                }
+            } else {
+                // Если варианты не указаны, создаем один вариант по умолчанию
+                String defaultSize = productData.get("size") != null ?
+                        (String) productData.get("size") : "ONE SIZE";
+                Integer availableQuantity = productData.get("availableQuantity") != null ?
+                        ((Number) productData.get("availableQuantity")).intValue() : 0;
+
+                ProductVariant defaultVariant = new ProductVariant();
+                defaultVariant.setSize(defaultSize);
+                defaultVariant.setAvailableQuantity(availableQuantity);
+                defaultVariant.setProduct(product);
+                product.getVariants().add(defaultVariant);
+            }
+
+            // Сохраняем товар (варианты сохранятся каскадно)
             Product savedProduct = productRepository.save(product);
 
-            log.info("Product created: ID {}, name: {}, categoryId: {}, subcategoryId: {}",
+            log.info("Product created: ID {}, name: {}, categoryId: {}, subcategoryId: {}, variants: {}",
                     savedProduct.getId(),
                     savedProduct.getName(),
                     savedProduct.getCategoryEntity() != null ? savedProduct.getCategoryEntity().getId() : "null",
-                    savedProduct.getSubcategoryEntity() != null ? savedProduct.getSubcategoryEntity().getId() : "null");
+                    savedProduct.getSubcategoryEntity() != null ? savedProduct.getSubcategoryEntity().getId() : "null",
+                    savedProduct.getVariants().size());
 
             // Возвращаем DTO
             ProductDTO responseDTO = new ProductDTO(savedProduct);
@@ -233,6 +262,7 @@ public class AdminController {
     }
 
     @PutMapping("/products/{id}")
+    @Transactional
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
                                            @RequestBody Map<String, Object> productDetails,
                                            HttpServletRequest request) {
@@ -277,9 +307,6 @@ public class AdminController {
             if (productDetails.get("color") != null) {
                 product.setColor((String) productDetails.get("color"));
             }
-            if (productDetails.get("size") != null) {
-                product.setSize((String) productDetails.get("size"));
-            }
             if (productDetails.get("material") != null) {
                 product.setMaterial((String) productDetails.get("material"));
             }
@@ -322,11 +349,31 @@ public class AdminController {
                 }
             }
 
-            if (productDetails.get("availableQuantity") != null) {
-                product.setAvailableQuantity(((Number) productDetails.get("availableQuantity")).intValue());
-            }
-            if (productDetails.get("reservedQuantity") != null) {
-                product.setReservedQuantity(((Number) productDetails.get("reservedQuantity")).intValue());
+            // Обновление вариантов товара
+            if (productDetails.get("variants") != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> variantsData = (List<Map<String, Object>>) productDetails.get("variants");
+
+                // Очищаем старые варианты
+                product.getVariants().clear();
+
+                // Добавляем новые варианты
+                for (Map<String, Object> variantData : variantsData) {
+                    String size = (String) variantData.get("size");
+                    Integer availableQuantity = variantData.get("availableQuantity") != null ?
+                            ((Number) variantData.get("availableQuantity")).intValue() : 0;
+                    Integer reservedQuantity = variantData.get("reservedQuantity") != null ?
+                            ((Number) variantData.get("reservedQuantity")).intValue() : 0;
+
+                    if (size != null && !size.trim().isEmpty()) {
+                        ProductVariant variant = new ProductVariant();
+                        variant.setSize(size.trim());
+                        variant.setAvailableQuantity(availableQuantity);
+                        variant.setReservedQuantity(reservedQuantity);
+                        variant.setProduct(product);
+                        product.getVariants().add(variant);
+                    }
+                }
             }
 
             // Дополнительные изображения
@@ -362,7 +409,7 @@ public class AdminController {
             // Убираем дубликаты
             deletedImages = deletedImages.stream().distinct().collect(Collectors.toList());
 
-            // Сохраняем обновленный товар
+            // Сохраняем обновленный товар (варианты сохранятся каскадно)
             Product updatedProduct = productRepository.save(product);
 
             // Удаляем удаленные фото из S3 в фоне
@@ -378,10 +425,11 @@ public class AdminController {
                 }).start();
             }
 
-            log.info("Product updated: ID {}, categoryId: {}, subcategoryId: {}",
+            log.info("Product updated: ID {}, categoryId: {}, subcategoryId: {}, variants: {}",
                     id,
                     product.getCategoryEntity() != null ? product.getCategoryEntity().getId() : "null",
-                    product.getSubcategoryEntity() != null ? product.getSubcategoryEntity().getId() : "null");
+                    product.getSubcategoryEntity() != null ? product.getSubcategoryEntity().getId() : "null",
+                    product.getVariants().size());
 
             // Возвращаем DTO
             ProductDTO responseDTO = new ProductDTO(updatedProduct);
@@ -395,10 +443,8 @@ public class AdminController {
         }
     }
 
-
-
-
     @DeleteMapping("/products/{id}")
+    @Transactional
     public ResponseEntity<?> deleteProduct(@PathVariable Long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
             return ResponseEntity.status(403).body(Map.of(
@@ -429,7 +475,7 @@ public class AdminController {
                 imageUrls.addAll(product.getAdditionalImages());
             }
 
-            // Удаляем товар из БД
+            // Удаляем товар из БД (варианты удалятся каскадно)
             productRepository.deleteById(id);
 
             // Удаляем фото из S3 (в фоновом режиме, чтобы не блокировать ответ)
@@ -467,7 +513,10 @@ public class AdminController {
     @GetMapping("/orders")
     public ResponseEntity<?> getAllOrders(HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {
@@ -485,7 +534,10 @@ public class AdminController {
     @GetMapping("/orders/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable Long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {
@@ -506,7 +558,10 @@ public class AdminController {
                                                @RequestBody Map<String, String> statusUpdate,
                                                HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(403).body("Доступ запрещен");
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
         }
 
         try {

@@ -2,18 +2,21 @@ package com.example.fashionstorebackend.component;
 
 import com.example.fashionstorebackend.model.AdminUser;
 import com.example.fashionstorebackend.model.Product;
+import com.example.fashionstorebackend.model.ProductVariant;
 import com.example.fashionstorebackend.model.Category;
 import com.example.fashionstorebackend.model.Subcategory;
 import com.example.fashionstorebackend.repository.AdminUserRepository;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import com.example.fashionstorebackend.repository.CategoryRepository;
 import com.example.fashionstorebackend.repository.SubcategoryRepository;
+import com.example.fashionstorebackend.repository.ProductVariantRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +32,9 @@ public class DataInitializer {
 
     @Autowired
     private SubcategoryRepository subcategoryRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     @Autowired
     public DataInitializer(ProductRepository productRepository) {
@@ -107,11 +113,12 @@ public class DataInitializer {
     }
 
     @PostConstruct
+    @Transactional
     public void initSomeData() {
         // Сначала инициализируем категории (если еще не сделано)
         initCategories();
 
-        // Теперь создаем товары с правильными связями
+        // Теперь создаем товары с правильными связями категорий
         createProductsWithCategoryEntities();
 
         long totalCount = productRepository.count();
@@ -134,6 +141,23 @@ public class DataInitializer {
                     System.out.println(">>>   " + subcategory + ": " + count + " товаров"));
         }
 
+        // Выводим информацию о вариантах
+        System.out.println(">>> Варианты товаров:");
+        List<Product> allProducts = productRepository.findAll();
+        for (Product product : allProducts) {
+            System.out.println(">>>   " + product.getName() + ":");
+            // Используем метод, который не вызывает lazy loading
+            if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+                for (ProductVariant variant : product.getVariants()) {
+                    System.out.println(">>>     Размер: " + variant.getSize() +
+                            ", Доступно: " + variant.getAvailableQuantity() +
+                            ", Зарезервировано: " + variant.getReservedQuantity());
+                }
+            } else {
+                System.out.println(">>>     Нет вариантов");
+            }
+        }
+
         System.out.println(">>> Изображения товаров размещены в: src/main/resources/static/images/products/");
     }
 
@@ -151,14 +175,15 @@ public class DataInitializer {
         return subcategory;
     }
 
-    private void createProductsWithCategoryEntities() {
+    @Transactional
+    protected void createProductsWithCategoryEntities() {
         // Проверяем, есть ли уже товары в базе
         if (productRepository.count() > 0) {
             log.info("Товары уже существуют, пропускаем создание");
             return;
         }
 
-        log.info("Создание товаров с правильными связями категорий...");
+        log.info("Создание товаров с правильными связями категорий и вариантами...");
 
         // Получаем все категории и подкатегории
         List<Category> categories = categoryRepository.findAll();
@@ -252,49 +277,50 @@ public class DataInitializer {
         bag.setSubcategoryEntity(subcategoryMap.get("шопперы"));
         products.add(bag);
 
-        // Сохраняем все товары
+        // Сохраняем все товары (варианты сохранятся каскадно)
         productRepository.saveAll(products);
 
-        log.info("Создано {} товаров с правильными связями категорий", products.size());
+        log.info("Создано {} товаров с вариантами", products.size());
 
         // Логируем для проверки
         for (Product product : products) {
-            log.info("Создан товар: ID={}, название='{}', категория='{}' (ID={}), подкатегория='{}' (ID={})",
+            log.info("Создан товар: ID={}, название='{}', категория='{}', вариантов={}",
                     product.getId(),
                     product.getName(),
                     product.getCategory(),
-                    product.getCategoryEntity() != null ? product.getCategoryEntity().getId() : "null",
-                    product.getSubcategory(),
-                    product.getSubcategoryEntity() != null ? product.getSubcategoryEntity().getId() : "null");
+                    product.getVariants().size());
+
+            if (!product.getVariants().isEmpty()) {
+                for (var variant : product.getVariants()) {
+                    log.info("  Вариант: размер='{}', доступно={}, зарезервировано={}",
+                            variant.getSize(),
+                            variant.getAvailableQuantity(),
+                            variant.getReservedQuantity());
+                }
+            }
         }
     }
 
-    // Метод для обновления старых товаров (если нужно)
-    private void updateExistingProducts() {
+    // Метод для обновления старых товаров (миграция) - можно использовать если нужно
+    @Transactional
+    protected void migrateExistingProductsToVariants() {
         List<Product> existingProducts = productRepository.findAll();
         boolean updated = false;
 
         for (Product product : existingProducts) {
-            boolean needsUpdate = false;
+            // Если у товара нет вариантов
+            if (product.getVariants() == null || product.getVariants().isEmpty()) {
+                log.info("Миграция товара ID={} на варианты", product.getId());
 
-            // Если у товара нет категории, устанавливаем по умолчанию
-            if (product.getCategoryEntity() == null) {
-                Category defaultCategory = categoryRepository.findByName("одежда").orElse(null);
-                if (defaultCategory != null) {
-                    product.setCategoryEntity(defaultCategory);
-                    needsUpdate = true;
-                    log.info("Установлена категория по умолчанию для товара {}", product.getId());
-                }
-            }
-
-            if (needsUpdate) {
+                // Создаем вариант по умолчанию
+                product.addVariant("ONE SIZE", 0);
                 updated = true;
             }
         }
 
         if (updated) {
             productRepository.saveAll(existingProducts);
-            log.info("Обновлены данные у существующих товаров.");
+            log.info("Миграция товаров на варианты завершена.");
         }
     }
 }

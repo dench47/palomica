@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {Plus, Edit, Trash2, Search, Filter, List} from 'lucide-react'; // Добавил List
+import {Plus, Edit, Trash2, Search, Filter, List} from 'lucide-react';
 import FileUploadComponent from '../components/admin/FileUploadComponent';
 import Swal from 'sweetalert2';
 import CategoryManagerModal from '../components/admin/CategoryManagerModal';
@@ -37,6 +37,7 @@ interface Subcategory {
     isActive: boolean;
 }
 
+// Обновленный интерфейс Product с вариантами
 interface Product {
     id: number;
     name: string;
@@ -47,13 +48,18 @@ interface Product {
     subcategory?: string;    // Название для отображения
     categoryId: number;      // ID для формы
     subcategoryId?: number;  // ID для формы
-    availableQuantity: number;
-    reservedQuantity: number;
     color?: string;
-    size?: string;
     material?: string;
     careInstructions?: string;
     additionalImages?: string[];
+    variants: ProductVariant[]; // Варианты товара (размеры с количеством)
+}
+
+interface ProductVariant {
+    id?: number;
+    size: string;
+    availableQuantity: number;
+    reservedQuantity?: number;
 }
 
 const AdminProductsPage = () => {
@@ -161,6 +167,16 @@ const AdminProductsPage = () => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
     };
 
+    // Вычисляем общее количество товара по всем вариантам
+    const getTotalAvailableQuantity = (variants: ProductVariant[]): number => {
+        return variants.reduce((sum, variant) => sum + variant.availableQuantity, 0);
+    };
+
+    // Вычисляем общее зарезервированное количество
+    const getTotalReservedQuantity = (variants: ProductVariant[]): number => {
+        return variants.reduce((sum, variant) => sum + (variant.reservedQuantity || 0), 0);
+    };
+
     if (loading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{minHeight: '300px'}}>
@@ -262,84 +278,98 @@ const AdminProductsPage = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {filteredProducts.map((product) => (
-                            <tr key={product.id} className="align-middle">
-                                <td className="small text-muted">#{product.id}</td>
-                                <td>
-                                    <div className="d-flex align-items-center">
-                                        <div
-                                            className="me-3 flex-shrink-0"
-                                            style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                backgroundImage: `url(${product.imageUrl})`,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                                backgroundColor: '#f8f9fa'
-                                            }}
-                                        ></div>
-                                        <div>
-                                            <div className="fw-medium"
-                                                 style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                                                {product.name}
-                                            </div>
-                                            <div className="small text-muted">
-                                                {product.description.substring(0, 50)}...
+                        {filteredProducts.map((product) => {
+                            const totalAvailable = getTotalAvailableQuantity(product.variants);
+                            const totalReserved = getTotalReservedQuantity(product.variants);
+                            const variantsCount = product.variants.length;
+
+                            return (
+                                <tr key={product.id} className="align-middle">
+                                    <td className="small text-muted">#{product.id}</td>
+                                    <td>
+                                        <div className="d-flex align-items-center">
+                                            <div
+                                                className="me-3 flex-shrink-0"
+                                                style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    backgroundImage: `url(${product.imageUrl})`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                    backgroundColor: '#f8f9fa'
+                                                }}
+                                            ></div>
+                                            <div>
+                                                <div className="fw-medium"
+                                                     style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                                    {product.name}
+                                                </div>
+                                                <div className="small text-muted">
+                                                    {product.description.substring(0, 50)}...
+                                                </div>
+                                                <div className="small text-muted mt-1">
+                                                    Вариантов: {variantsCount}
+                                                    {product.variants.length > 0 && (
+                                                        <span className="ms-2">
+                                                        ({product.variants.map(v => v.size).join(', ')})
+                                                    </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
+                                    </td>
+                                    <td>
+                                        <div>
                                             <span className="badge bg-light text-dark rounded-0 me-1">
                                                 {product.category}
                                             </span>
-                                        {product.subcategory && (
-                                            <span className="badge bg-light text-dark rounded-0">
+                                            {product.subcategory && (
+                                                <span className="badge bg-light text-dark rounded-0">
                                                     {product.subcategory}
                                                 </span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="text-end">
-                                    {formatPrice(product.price)}
-                                </td>
-                                <td className="text-center">
-                                    <div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="text-end">
+                                        {formatPrice(product.price)}
+                                    </td>
+                                    <td className="text-center">
+                                        <div>
                                             <span
-                                                className={`badge rounded-0 ${product.availableQuantity > 0 ? 'bg-success' : 'bg-danger'}`}>
-                                                {product.availableQuantity} шт.
+                                                className={`badge rounded-0 ${totalAvailable > 0 ? 'bg-success' : 'bg-danger'}`}>
+                                                {totalAvailable} шт.
                                             </span>
-                                        {product.reservedQuantity > 0 && (
-                                            <div className="small text-muted mt-1">
-                                                Резерв: {product.reservedQuantity}
-                                            </div>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="text-end">
-                                    <div className="d-flex justify-content-end gap-2">
-                                        <button
-                                            className="btn btn-outline-dark btn-sm rounded-0"
-                                            onClick={() => {
-                                                setEditingProduct(product);
-                                                setShowModal(true);
-                                            }}
-                                            title="Редактировать"
-                                        >
-                                            <Edit size={14}/>
-                                        </button>
-                                        <button
-                                            className="btn btn-outline-danger btn-sm rounded-0"
-                                            onClick={() => handleDelete(product.id)}
-                                            title="Удалить"
-                                        >
-                                            <Trash2 size={14}/>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                                            {totalReserved > 0 && (
+                                                <div className="small text-muted mt-1">
+                                                    Резерв: {totalReserved}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="text-end">
+                                        <div className="d-flex justify-content-end gap-2">
+                                            <button
+                                                className="btn btn-outline-dark btn-sm rounded-0"
+                                                onClick={() => {
+                                                    setEditingProduct(product);
+                                                    setShowModal(true);
+                                                }}
+                                                title="Редактировать"
+                                            >
+                                                <Edit size={14}/>
+                                            </button>
+                                            <button
+                                                className="btn btn-outline-danger btn-sm rounded-0"
+                                                onClick={() => handleDelete(product.id)}
+                                                title="Удалить"
+                                            >
+                                                <Trash2 size={14}/>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
 
@@ -373,10 +403,9 @@ const AdminProductsPage = () => {
                 <CategoryManagerModal
                     onClose={() => setShowCategoryManager(false)}
                     onSave={() => {
-                        // Триггерим обновление категорий во всех открытых модалках товара
                         setRefreshCategoriesTrigger(prev => prev + 1);
                         setShowCategoryManager(false);
-                        fetchProducts(); // Обновляем товары после изменения категорий
+                        fetchProducts();
                     }}
                 />
             )}
@@ -400,13 +429,26 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
         imageUrl: product?.imageUrl || '',
         categoryId: product?.categoryId || 0,
         subcategoryId: product?.subcategoryId || 0,
-        availableQuantity: product?.availableQuantity || 0,
-        reservedQuantity: product?.reservedQuantity || 0,
         color: product?.color || '',
-        size: product?.size || '',
         material: product?.material || '',
         careInstructions: product?.careInstructions || ''
     });
+
+    // Варианты товара
+    const [variants, setVariants] = useState<ProductVariant[]>(() => {
+        if (product?.variants && product.variants.length > 0) {
+            return product.variants;
+        }
+        // По умолчанию один вариант "ONE SIZE" с количеством 0
+        return [{ size: 'ONE SIZE', availableQuantity: 0 }];
+    });
+
+    // Временное поле для добавления нового варианта
+    const [newVariant, setNewVariant] = useState({
+        size: '',
+        availableQuantity: 0
+    });
+
     const [saving, setSaving] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
     const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -596,6 +638,52 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
         }
     };
 
+    // Управление вариантами
+    const handleAddVariant = () => {
+        if (!newVariant.size.trim()) {
+            Swal.fire({
+                title: 'Ошибка',
+                text: 'Введите размер варианта',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        // Проверяем, нет ли уже такого размера
+        if (variants.some(v => v.size.toLowerCase() === newVariant.size.toLowerCase())) {
+            Swal.fire({
+                title: 'Ошибка',
+                text: 'Вариант с таким размером уже существует',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        setVariants(prev => [...prev, { ...newVariant }]);
+        setNewVariant({ size: '', availableQuantity: 0 });
+    };
+
+    const handleRemoveVariant = (index: number) => {
+        setVariants(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleVariantChange = (index: number, field: keyof ProductVariant, value: string | number) => {
+        if (field === 'availableQuantity') {
+            const numValue = typeof value === 'string' ? parseInt(value) || 0 : value;
+            if (isNaN(numValue)) return;
+
+            setVariants(prev => prev.map((variant, i) =>
+                i === index ? { ...variant, [field]: numValue } : variant
+            ));
+        } else {
+            setVariants(prev => prev.map((variant, i) =>
+                i === index ? { ...variant, [field]: value } : variant
+            ));
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -608,15 +696,12 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
             }
 
             // 2. Собираем все URL изображений
-            // Заменяем превью на реальные URL из S3
             const allImageUrls: string[] = [];
             allImages.forEach(img => {
                 const tempIndex = tempFilePreviews.indexOf(img);
                 if (tempIndex !== -1 && uploadedUrls[tempIndex]) {
-                    // Заменяем превью на реальный URL
                     allImageUrls.push(uploadedUrls[tempIndex]);
                 } else {
-                    // Это уже существующий URL
                     allImageUrls.push(img);
                 }
             });
@@ -625,21 +710,42 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
             const mainImage = allImageUrls.length > 0 ? allImageUrls[0] : '';
             const additional = allImageUrls.length > 1 ? allImageUrls.slice(1) : [];
 
-            const submitData = {
+            interface SubmitData {
+                name: string;
+                description: string;
+                price: number;
+                imageUrl: string;
+                categoryId: number;
+                subcategoryId: number;
+                color: string;
+                material: string;
+                careInstructions: string;
+                additionalImages: string[];
+                deletedImages: string[];
+                variants: Array<{
+                    size: string;
+                    availableQuantity: number;
+                    reservedQuantity: number;
+                }>;
+            }
+
+            const submitData: SubmitData  = {
                 name: formData.name,
                 description: formData.description,
                 price: formData.price || 0,
                 imageUrl: mainImage,
                 categoryId: formData.categoryId || 0,
                 subcategoryId: formData.subcategoryId || 0,
-                availableQuantity: formData.availableQuantity || 0,
-                reservedQuantity: formData.reservedQuantity || 0,
                 color: formData.color || '',
-                size: formData.size || '',
                 material: formData.material || '',
                 careInstructions: formData.careInstructions || '',
                 additionalImages: additional,
-                deletedImages: isEditing ? imagesToDelete : []
+                deletedImages: isEditing ? imagesToDelete : [],
+                variants: variants.map(v => ({
+                    size: v.size,
+                    availableQuantity: v.availableQuantity,
+                    reservedQuantity: v.reservedQuantity || 0
+                }))
             };
 
             // 4. Сохраняем товар
@@ -705,7 +811,7 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
     };
 
     const handleChange = (field: string, value: string | number) => {
-        if (['price', 'availableQuantity', 'reservedQuantity'].includes(field)) {
+        if (field === 'price') {
             if (typeof value === 'string') {
                 value = value === '' ? 0 : parseFloat(value);
                 if (isNaN(value)) value = 0;
@@ -720,12 +826,10 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
 
     // Обработка закрытия модального окна
     const handleClose = () => {
-        // Очищаем превью временных файлов (освобождаем память)
         tempFilePreviews.forEach(preview => {
             URL.revokeObjectURL(preview);
         });
 
-        // Временные файлы НЕ загружаются на S3 при отмене
         onClose();
     };
 
@@ -859,24 +963,14 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
                                         </div>
 
                                         <div className="col-6 mb-3">
-                                            <label className="form-label small text-muted">Размер</label>
+                                            <label className="form-label small text-muted">Материал</label>
                                             <input
                                                 type="text"
                                                 className="form-control rounded-0"
-                                                value={formData.size}
-                                                onChange={(e) => handleChange('size', e.target.value)}
+                                                value={formData.material}
+                                                onChange={(e) => handleChange('material', e.target.value)}
                                             />
                                         </div>
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label small text-muted">Материал</label>
-                                        <input
-                                            type="text"
-                                            className="form-control rounded-0"
-                                            value={formData.material}
-                                            onChange={(e) => handleChange('material', e.target.value)}
-                                        />
                                     </div>
 
                                     <div className="mb-3">
@@ -890,26 +984,85 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
                                         />
                                     </div>
 
-                                    <div className="mb-3">
-                                        <label className="form-label small text-muted">Количество на складе *</label>
-                                        <input
-                                            type="number"
-                                            className="form-control rounded-0"
-                                            value={formData.availableQuantity || 0}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                if (value === '') {
-                                                    handleChange('availableQuantity', 0);
-                                                } else {
-                                                    const numValue = parseInt(value);
-                                                    if (!isNaN(numValue)) {
-                                                        handleChange('availableQuantity', numValue);
-                                                    }
-                                                }
-                                            }}
-                                            min="0"
-                                            required
-                                        />
+                                    {/* Секция вариантов товара */}
+                                    <div className="mb-3 border-top pt-3">
+                                        <label className="form-label small text-muted">
+                                            Варианты товара (размеры и количество)
+                                        </label>
+
+                                        <div className="mb-3">
+                                            <div className="row g-2 mb-3">
+                                                <div className="col-6">
+                                                    <input
+                                                        type="text"
+                                                        className="form-control form-control-sm rounded-0"
+                                                        placeholder="Размер (например: S, M, L, 42)"
+                                                        value={newVariant.size}
+                                                        onChange={(e) => setNewVariant(prev => ({...prev, size: e.target.value}))}
+                                                    />
+                                                </div>
+                                                <div className="col-4">
+                                                    <input
+                                                        type="number"
+                                                        className="form-control form-control-sm rounded-0"
+                                                        placeholder="Количество"
+                                                        min="0"
+                                                        value={newVariant.availableQuantity}
+                                                        onChange={(e) => setNewVariant(prev => ({...prev, availableQuantity: parseInt(e.target.value) || 0}))}
+                                                    />
+                                                </div>
+                                                <div className="col-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-dark btn-sm rounded-0 w-100"
+                                                        onClick={handleAddVariant}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {variants.length > 0 && (
+                                            <div className="border rounded p-2 mb-3">
+                                                <div className="small text-muted mb-2">Текущие варианты:</div>
+                                                {variants.map((variant, index) => (
+                                                    <div key={index} className="d-flex align-items-center mb-2">
+                                                        <div className="me-2 flex-grow-1">
+                                                            <div className="row g-2">
+                                                                <div className="col-6">
+                                                                    <input
+                                                                        type="text"
+                                                                        className="form-control form-control-sm rounded-0"
+                                                                        value={variant.size}
+                                                                        onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                <div className="col-4">
+                                                                    <input
+                                                                        type="number"
+                                                                        className="form-control form-control-sm rounded-0"
+                                                                        min="0"
+                                                                        value={variant.availableQuantity}
+                                                                        onChange={(e) => handleVariantChange(index, 'availableQuantity', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-sm rounded-0 ms-2"
+                                                            onClick={() => handleRemoveVariant(index)}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <div className="mt-2 pt-2 border-top small text-muted">
+                                                    Всего доступно: {variants.reduce((sum, v) => sum + v.availableQuantity, 0)} шт.
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1100,8 +1253,12 @@ const ProductModal = ({product, onClose, onSave, refreshCategoriesTrigger}: Prod
                             <button
                                 type="submit"
                                 className="btn btn-dark rounded-0"
-                                disabled={saving || allImages.length === 0 || !formData.categoryId}
-                                title={allImages.length === 0 ? "Добавьте хотя бы одно фото" : !formData.categoryId ? "Выберите категорию" : ""}
+                                disabled={saving || allImages.length === 0 || !formData.categoryId || variants.length === 0}
+                                title={
+                                    allImages.length === 0 ? "Добавьте хотя бы одно фото" :
+                                        !formData.categoryId ? "Выберите категорию" :
+                                            variants.length === 0 ? "Добавьте хотя бы один вариант" : ""
+                                }
                             >
                                 {saving ? (
                                     <>

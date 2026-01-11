@@ -18,5 +18,6 @@ public class CartSyncResponse {
         private Integer reservedQuantity;
         private String message;
         private Boolean removed;
+        private String size; // Добавляем размер
     }
 }

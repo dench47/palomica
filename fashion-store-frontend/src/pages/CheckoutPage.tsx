@@ -8,6 +8,8 @@ import {showCartNotification, showOrderNotification} from '../utils/swalConfig';
 
 
 
+
+
 const CheckoutPage = () => {
     const { items, totalPrice, clearCart } = useCart();
     const navigate = useNavigate();
@@ -19,7 +21,7 @@ const CheckoutPage = () => {
     const [orderComplete, setOrderComplete] = useState(false);
     const [comment, setComment] = useState('');
 
-    // Состояние для полей клиента (только для гостей)
+       // Состояние для полей клиента (только для гостей)
     const [customerData, setCustomerData] = useState({
         name: '',
         email: '',
@@ -39,12 +41,19 @@ const CheckoutPage = () => {
         setIsSubmitting(true);
 
         try {
+            // Для реального приложения здесь нужно получать данные из профиля пользователя
+            const finalCustomerData = isGuest ? customerData : {
+                name: "Имя из профиля", // TODO: заменить на реальные данные
+                email: "email@example.com",
+                phone: "+79991234567"
+            };
+
             // Собираем данные для заказа
             const orderData = {
-                customerName: isGuest ? customerData.name : "Зарегистрированный пользователь",
-                customerEmail: isGuest ? customerData.email : "user@example.com",
-                customerPhone: isGuest ? customerData.phone : "+79991234567",
-                deliveryAddress: "Москва, ул. Тверская, 15", // Позже добавим поле адреса
+                customerName: finalCustomerData.name,
+                customerEmail: finalCustomerData.email,
+                customerPhone: finalCustomerData.phone,
+                deliveryAddress: "Москва, ул. Тверская, 15", // TODO: добавить поле адреса
                 deliveryMethod,
                 paymentMethod,
                 comment,
@@ -81,8 +90,7 @@ const CheckoutPage = () => {
                     'error'
                 );
             }
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error) {
+        } catch {
             setIsSubmitting(false);
             showCartNotification(
                 'Ошибка',
@@ -494,22 +502,19 @@ const CheckoutPage = () => {
                                     <div className="flex-grow-1">
                                         <p className="small mb-1">{item.product.name}</p>
 
-                                        {item.selectedVariant && (
-                                            <div className="mb-1">
-                                                {item.selectedVariant.size && (
-                                                    <span className="badge bg-dark text-light me-1 rounded-0 px-1 py-0"
-                                                          style={{ fontSize: '0.65rem' }}>
-                                                        Размер: {item.selectedVariant.size}
-                                                    </span>
-                                                )}
-                                                {item.selectedVariant.color && (
-                                                    <span className="badge bg-dark text-light rounded-0 px-1 py-0"
-                                                          style={{ fontSize: '0.65rem' }}>
-                                                        Цвет: {item.selectedVariant.color}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
+                                        <div className="mb-1">
+    <span className="badge bg-dark text-light me-1 rounded-0 px-1 py-0"
+          style={{ fontSize: '0.65rem' }}>
+        Размер: {item.selectedVariant.size}
+    </span>
+
+                                            {item.selectedVariant.color && (
+                                                <span className="badge bg-dark text-light rounded-0 px-1 py-0"
+                                                      style={{ fontSize: '0.65rem' }}>
+            Цвет: {item.selectedVariant.color}
+        </span>
+                                            )}
+                                        </div>
 
                                         <div className="d-flex justify-content-between">
                                             <span className="small text-muted">{item.quantity} шт.</span>

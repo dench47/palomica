@@ -1,4 +1,3 @@
-// CartPage.tsx - ПОЛНЫЙ ФАЙЛ
 import {useCart} from '../context/CartContext';
 import {Link, useNavigate} from 'react-router-dom';
 import MySwal from '../utils/swalConfig';
@@ -179,28 +178,26 @@ const CartPage = () => {
                                                 {item.product.name}
                                             </h3>
 
-                                            {item.selectedVariant && (
-                                                <div className="mb-2">
-                                                    {item.selectedVariant.size && (
-                                                        <span
-                                                            className="badge bg-dark text-light me-2 rounded-0 px-2 py-1"
-                                                            style={{fontSize: '0.7rem', fontWeight: 'normal'}}>
-                                                            Размер: {item.selectedVariant.size}
-                                                        </span>
-                                                    )}
-                                                    {item.selectedVariant.color && (
-                                                        <span className="badge bg-dark text-light rounded-0 px-2 py-1"
-                                                              style={{fontSize: '0.7rem', fontWeight: 'normal'}}>
-                                                            Цвет: {item.selectedVariant.color}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
+                                            {/* Отображение размера и цвета */}
+                                            <div className="mb-2">
+                                                <span
+                                                    className="badge bg-dark text-light me-2 rounded-0 px-2 py-1"
+                                                    style={{fontSize: '0.7rem', fontWeight: 'normal'}}>
+                                                    Размер: {item.selectedVariant.size}
+                                                </span>
+
+                                                {item.selectedVariant.color && (
+                                                    <span className="badge bg-dark text-light rounded-0 px-2 py-1"
+                                                          style={{fontSize: '0.7rem', fontWeight: 'normal'}}>
+                                                        Цвет: {item.selectedVariant.color}
+                                                    </span>
+                                                )}
+                                            </div>
 
                                             <p className="text-muted small mb-3">
-                                                {item.product.description.length > 100
+                                                {item.product.description && item.product.description.length > 100
                                                     ? `${item.product.description.substring(0, 100)}...`
-                                                    : item.product.description}
+                                                    : item.product.description || ''}
                                             </p>
                                             <p className="mb-0" style={{fontFamily: "'Cormorant Garamond', serif"}}>
                                                 {formatPrice(item.product.price)} / шт.
@@ -215,7 +212,7 @@ const CartPage = () => {
                                             </div>
                                             <button
                                                 className="btn btn-link text-dark p-0 text-decoration-none small"
-                                                onClick={() => handleRemoveItem(item.variantId)} // Убрали название товара
+                                                onClick={() => handleRemoveItem(item.variantId)}
                                                 style={{letterSpacing: '0.05em'}}
                                             >
                                                 УДАЛИТЬ

@@ -15,7 +15,12 @@ public class CartSyncRequest {
     public static class CartItemRequest {
         private Long productId;
         private Integer quantity;
-        private String size;
-        private String color;
+        private String size;  // Размер теперь обязателен для резервирования
+        private String color; // Может быть null, если не используется
+
+        // Проверка, что размер указан
+        public boolean hasSize() {
+            return size != null && !size.trim().isEmpty();
+        }
     }
 }

@@ -1,6 +1,15 @@
 // ========== ТИПЫ ДАННЫХ ==========
 
-// Продукт
+// Вариант товара (новая структура)
+export type ProductVariant = {
+    id: number;
+    size: string;
+    availableQuantity: number;
+    reservedQuantity: number;
+    actuallyAvailable: number; // Вычисляемое поле
+}
+
+// Продукт (обновленная структура)
 export type Product = {
     id: number;
     name: string;
@@ -8,13 +17,17 @@ export type Product = {
     price: number;
     imageUrl: string;
     color?: string;
-    size?: string;
     material?: string;
     careInstructions?: string;
     additionalImages?: string[];
     category: string;        // Название категории (строка)
     subcategory?: string;    // Название подкатегории (строка)
-    availableQuantity: number;
+    variants: ProductVariant[]; // Новое поле: варианты товара
+
+    // Вычисляемые поля для обратной совместимости
+    getSizes?: () => string[];
+    getTotalAvailableQuantity?: () => number;
+    getAvailableQuantityForSize?: (size: string) => number;
 }
 
 // Категория (соответствует CategoryDTO.java)
@@ -61,7 +74,7 @@ export interface OrderRequest {
 export interface CartSyncItemRequest {
     productId: number;
     quantity: number;
-    size?: string;
+    size?: string;  // Теперь обязателен для работы с вариантами
     color?: string;
 }
 
@@ -76,6 +89,7 @@ export interface ProductUpdate {
     reservedQuantity: number;
     message?: string;
     removed: boolean;
+    size?: string;  // Добавляем размер
 }
 
 export interface CartSyncResponse {
@@ -100,6 +114,35 @@ const getSessionId = (): string => {
     return sessionId;
 };
 
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const processProduct = (product: any): Product => {
+    const processedProduct: Product = {
+        ...product,
+        // Для обратной совместимости добавляем старые поля
+        size: product.variants?.map((v: ProductVariant) => v.size).join(',') || '',
+        availableQuantity: product.variants?.reduce((sum: number, v: ProductVariant) =>
+            sum + v.availableQuantity, 0) || 0,
+    };
+
+    // Добавляем вычисляемые методы
+    processedProduct.getSizes = () =>
+        product.variants?.map((v: ProductVariant) => v.size) || [];
+
+    processedProduct.getTotalAvailableQuantity = () =>
+        product.variants?.reduce((sum: number, v: ProductVariant) =>
+            sum + v.availableQuantity, 0) || 0;
+
+    processedProduct.getAvailableQuantityForSize = (size: string) => {
+        const variant = product.variants?.find((v: ProductVariant) => v.size === size);
+        return variant ? variant.actuallyAvailable ||
+            Math.max(0, variant.availableQuantity - variant.reservedQuantity) : 0;
+    };
+
+    return processedProduct;
+};
+
 // ========== СЕРВИСЫ ==========
 
 // Сервис категорий
@@ -118,7 +161,6 @@ export const categoryService = {
         }
     },
 
-
     getSubcategoriesByCategoryId: async (categoryId: number): Promise<Subcategory[]> => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/categories/${categoryId}/subcategories`);
@@ -133,17 +175,18 @@ export const categoryService = {
     }
 };
 
-// Сервис товаров
+// Сервис товаров (обновленный для работы с вариантами)
 export const productService = {
     async getAllProducts(): Promise<Product[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/api/products`);
-
             if (!response.ok) {
                 console.error(`HTTP error! status: ${response.status}`);
                 return [];
             }
-            return await response.json();
+            const products = await response.json();
+            // Обрабатываем каждый продукт, добавляя вычисляемые поля
+            return products.map(processProduct);
         } catch (error) {
             console.error('Error fetching products:', error);
             return [];
@@ -157,21 +200,60 @@ export const productService = {
                 console.error(`HTTP error! status: ${response.status}`);
                 return null;
             }
-            return await response.json();
+            const product = await response.json();
+            return processProduct(product);
         } catch (error) {
             console.error('Error fetching product:', error);
             return null;
         }
+    },
+
+    // Новый метод: получить доступные размеры товара
+    async getProductSizes(id: number): Promise<string[]> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/products/${id}/sizes`);
+            if (!response.ok) {
+                console.error(`HTTP error! status: ${response.status}`);
+                return [];
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching product sizes:', error);
+            return [];
+        }
+    },
+
+    // Новый метод: проверить доступность конкретного размера
+    async checkAvailability(id: number, size: string): Promise<number> {
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/api/products/${id}/availability?size=${encodeURIComponent(size)}`
+            );
+            if (!response.ok) {
+                console.error(`HTTP error! status: ${response.status}`);
+                return 0;
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error checking availability:', error);
+            return 0;
+        }
     }
 };
 
-// Сервис корзины
+// Сервис корзины (обновленный для работы с размерами)
 export const cartService = {
     // Синхронизация корзины с сервером
     async syncCart(items: CartSyncItemRequest[]): Promise<CartSyncResponse> {
         try {
+            // Проверяем, что все элементы имеют размер
+            const itemsWithSize = items.map(item => ({
+                ...item,
+                size: item.size || 'ONE SIZE' // Если размер не указан, используем по умолчанию
+            }));
+
             const sessionId = getSessionId();
-            const request: CartSyncRequest = { sessionId, items };
+            const request: CartSyncRequest = { sessionId, items: itemsWithSize };
 
             const response = await fetch(`${API_BASE_URL}/api/cart/sync`, {
                 method: 'POST',
@@ -195,8 +277,13 @@ export const cartService = {
     // Резервирование товаров
     async reserveItems(items: CartSyncItemRequest[]): Promise<boolean> {
         try {
+            const itemsWithSize = items.map(item => ({
+                ...item,
+                size: item.size || 'ONE SIZE'
+            }));
+
             const sessionId = getSessionId();
-            const request: CartSyncRequest = { sessionId, items };
+            const request: CartSyncRequest = { sessionId, items: itemsWithSize };
 
             const response = await fetch(`${API_BASE_URL}/api/cart/reserve`, {
                 method: 'POST',
@@ -216,8 +303,13 @@ export const cartService = {
     // Освобождение резервирования
     async releaseItems(items: CartSyncItemRequest[]): Promise<boolean> {
         try {
+            const itemsWithSize = items.map(item => ({
+                ...item,
+                size: item.size || 'ONE SIZE'
+            }));
+
             const sessionId = getSessionId();
-            const request: CartSyncRequest = { sessionId, items };
+            const request: CartSyncRequest = { sessionId, items: itemsWithSize };
 
             const response = await fetch(`${API_BASE_URL}/api/cart/release`, {
                 method: 'POST',
@@ -235,7 +327,7 @@ export const cartService = {
     },
 };
 
-// Сервис S3
+// Сервис S3 (без изменений)
 export const s3Service = {
     async deleteFile(fileUrl: string): Promise<boolean> {
         try {

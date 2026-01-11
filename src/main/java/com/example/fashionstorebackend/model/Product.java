@@ -30,8 +30,6 @@ public class Product {
 
     private String color;
 
-    private String size;
-
     private String material;
 
     @Column(name = "care_instructions", length = 500)
@@ -46,12 +44,6 @@ public class Product {
     @JoinColumn(name = "subcategory_id")
     private Subcategory subcategoryEntity;
 
-    @Column(name = "available_quantity")
-    private Integer availableQuantity;
-
-    @Column(name = "reserved_quantity")
-    private Integer reservedQuantity = 0;
-
     @ElementCollection
     @CollectionTable(
             name = "product_images",
@@ -60,6 +52,9 @@ public class Product {
     @Column(name = "image_url")
     private List<String> additionalImages = new ArrayList<>();
 
+    // НОВОЕ: Варианты товара (размеры с количеством)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER) // Изменили LAZY на EAGER
+    private List<ProductVariant> variants = new ArrayList<>();
     // Конструкторы
     public Product() {}
 
@@ -71,32 +66,29 @@ public class Product {
     }
 
     public Product(String name, String description, Double price, String imageUrl,
-                   String color, String size, String material, String careInstructions) {
+                   String color, String material, String careInstructions) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.imageUrl = imageUrl;
         this.color = color;
-        this.size = size;
         this.material = material;
         this.careInstructions = careInstructions;
     }
 
-    // Полный конструктор с сущностями категорий
+    // Полный конструктор с сущностями категорий (без поля size)
     public Product(String name, String description, Double price, String imageUrl,
-                   String color, String size, String material, String careInstructions,
-                   Category categoryEntity, Subcategory subcategoryEntity, Integer availableQuantity) {
+                   String color, String material, String careInstructions,
+                   Category categoryEntity, Subcategory subcategoryEntity) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.imageUrl = imageUrl;
         this.color = color;
-        this.size = size;
         this.material = material;
         this.careInstructions = careInstructions;
         this.categoryEntity = categoryEntity;
         this.subcategoryEntity = subcategoryEntity;
-        this.availableQuantity = availableQuantity;
     }
 
     // Геттеры для совместимости с фронтендом
@@ -117,6 +109,51 @@ public class Product {
         return subcategoryEntity != null ? subcategoryEntity.getId() : null;
     }
 
+    // НОВОЕ: Методы для работы с вариантами
+
+    // Получить список всех доступных размеров
+    public List<String> getSizes() {
+        return variants.stream()
+                .filter(ProductVariant::isAvailable)
+                .map(ProductVariant::getSize)
+                .toList();
+    }
+
+    // Получить общее доступное количество (по всем вариантам)
+    public Integer getTotalAvailableQuantity() {
+        return variants.stream()
+                .mapToInt(ProductVariant::getAvailableQuantity)
+                .sum();
+    }
+
+    // Получить общее зарезервированное количество (по всем вариантам)
+    public Integer getTotalReservedQuantity() {
+        return variants.stream()
+                .mapToInt(ProductVariant::getReservedQuantity)
+                .sum();
+    }
+
+    // Получить общее фактически доступное количество
+    public Integer getTotalActuallyAvailable() {
+        return variants.stream()
+                .mapToInt(ProductVariant::getActuallyAvailable)
+                .sum();
+    }
+
+    // Получить вариант по размеру
+    public ProductVariant getVariantBySize(String size) {
+        return variants.stream()
+                .filter(v -> v.getSize().equalsIgnoreCase(size))
+                .findFirst()
+                .orElse(null);
+    }
+
+    // Добавить вариант
+    public void addVariant(String size, Integer availableQuantity) {
+        ProductVariant variant = new ProductVariant(this, size, availableQuantity);
+        variants.add(variant);
+    }
+
     // toString для удобства
     @Override
     public String toString() {
@@ -125,7 +162,8 @@ public class Product {
                 ", name='" + name + '\'' +
                 ", category='" + getCategory() + '\'' +
                 ", subcategory='" + getSubcategory() + '\'' +
-                ", availableQuantity=" + getAvailableQuantity() +
+                ", variants=" + variants.size() +
+                ", totalAvailable=" + getTotalAvailableQuantity() +
                 ", price=" + price +
                 '}';
     }
