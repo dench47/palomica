@@ -1,6 +1,6 @@
 // ========== ТИПЫ ДАННЫХ ==========
 
-// Вариант товара (новая структура)
+// Вариант товара
 export type ProductVariant = {
     id: number;
     size: string;
@@ -9,7 +9,7 @@ export type ProductVariant = {
     actuallyAvailable: number; // Вычисляемое поле
 }
 
-// Продукт (обновленная структура)
+// Продукт
 export type Product = {
     id: number;
     name: string;
@@ -22,7 +22,7 @@ export type Product = {
     additionalImages?: string[];
     category: string;        // Название категории (строка)
     subcategory?: string;    // Название подкатегории (строка)
-    variants: ProductVariant[]; // Новое поле: варианты товара
+    variants: ProductVariant[]; // Варианты товара
 
     // Вычисляемые поля для обратной совместимости
     getSizes?: () => string[];
@@ -70,49 +70,12 @@ export interface OrderRequest {
     items: OrderItemRequest[];
 }
 
-// Типы для синхронизации корзины
-export interface CartSyncItemRequest {
-    productId: number;
-    quantity: number;
-    size?: string;  // Теперь обязателен для работы с вариантами
-    color?: string;
-}
-
-export interface CartSyncRequest {
-    sessionId: string;
-    items: CartSyncItemRequest[];
-}
-
-export interface ProductUpdate {
-    productId: number;
-    availableQuantity: number;
-    reservedQuantity: number;
-    message?: string;
-    removed: boolean;
-    size?: string;  // Добавляем размер
-}
-
-export interface CartSyncResponse {
-    updates: ProductUpdate[];
-    message: string;
-}
-
 // ========== КОНФИГУРАЦИЯ API ==========
 
 // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
 const API_BASE_URL = import.meta.env.DEV
     ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
     : '';  // В продакшене: пустая строка (относительный путь)
-
-// Генерируем уникальный sessionId для пользователя
-const getSessionId = (): string => {
-    let sessionId = localStorage.getItem('cart_session_id');
-    if (!sessionId) {
-        sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('cart_session_id', sessionId);
-    }
-    return sessionId;
-};
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
@@ -175,7 +138,7 @@ export const categoryService = {
     }
 };
 
-// Сервис товаров (обновленный для работы с вариантами)
+// Сервис товаров
 export const productService = {
     async getAllProducts(): Promise<Product[]> {
         try {
@@ -208,7 +171,7 @@ export const productService = {
         }
     },
 
-    // Новый метод: получить доступные размеры товара
+    // Получить доступные размеры товара
     async getProductSizes(id: number): Promise<string[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/api/products/${id}/sizes`);
@@ -223,7 +186,7 @@ export const productService = {
         }
     },
 
-    // Новый метод: проверить доступность конкретного размера
+    // Проверить доступность конкретного размера
     async checkAvailability(id: number, size: string): Promise<number> {
         try {
             const response = await fetch(
@@ -241,93 +204,7 @@ export const productService = {
     }
 };
 
-// Сервис корзины (обновленный для работы с размерами)
-export const cartService = {
-    // Синхронизация корзины с сервером
-    async syncCart(items: CartSyncItemRequest[]): Promise<CartSyncResponse> {
-        try {
-            // Проверяем, что все элементы имеют размер
-            const itemsWithSize = items.map(item => ({
-                ...item,
-                size: item.size || 'ONE SIZE' // Если размер не указан, используем по умолчанию
-            }));
-
-            const sessionId = getSessionId();
-            const request: CartSyncRequest = { sessionId, items: itemsWithSize };
-
-            const response = await fetch(`${API_BASE_URL}/api/cart/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(request),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error syncing cart:', error);
-            return { updates: [], message: 'Ошибка синхронизации' };
-        }
-    },
-
-    // Резервирование товаров
-    async reserveItems(items: CartSyncItemRequest[]): Promise<boolean> {
-        try {
-            const itemsWithSize = items.map(item => ({
-                ...item,
-                size: item.size || 'ONE SIZE'
-            }));
-
-            const sessionId = getSessionId();
-            const request: CartSyncRequest = { sessionId, items: itemsWithSize };
-
-            const response = await fetch(`${API_BASE_URL}/api/cart/reserve`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(request),
-            });
-
-            return response.ok;
-        } catch (error) {
-            console.error('Error reserving items:', error);
-            return false;
-        }
-    },
-
-    // Освобождение резервирования
-    async releaseItems(items: CartSyncItemRequest[]): Promise<boolean> {
-        try {
-            const itemsWithSize = items.map(item => ({
-                ...item,
-                size: item.size || 'ONE SIZE'
-            }));
-
-            const sessionId = getSessionId();
-            const request: CartSyncRequest = { sessionId, items: itemsWithSize };
-
-            const response = await fetch(`${API_BASE_URL}/api/cart/release`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(request),
-            });
-
-            return response.ok;
-        } catch (error) {
-            console.error('Error releasing items:', error);
-            return false;
-        }
-    },
-};
-
-// Сервис S3 (без изменений)
+// Сервис S3
 export const s3Service = {
     async deleteFile(fileUrl: string): Promise<boolean> {
         try {

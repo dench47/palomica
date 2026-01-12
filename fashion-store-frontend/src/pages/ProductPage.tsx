@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {useCart} from '../context/CartContext';
 import {productService} from '../services/api';
-import type {Product, ProductVariant} from '../services/api';
+import type {Product} from '../services/api';
 import ProductCard from '../components/ProductCard';
 import {Package, Ruler, Palette, Check} from 'lucide-react';
 import toast from "react-hot-toast";
@@ -55,46 +55,43 @@ const ProductPage = () => {
         return item ? item.quantity : 0;
     };
 
-    // Получить доступное количество для выбранного размера
-    const getAvailableQuantityForSelectedSize = (): number => {
-        if (!product || !selectedSize) return 0;
+    // Проверка доступности для выбранного размера
+    const isSizeAvailable = (): boolean => {
+        if (!product || !selectedSize) return false;
 
         if (product.getAvailableQuantityForSize) {
-            return product.getAvailableQuantityForSize(selectedSize);
+            return product.getAvailableQuantityForSize(selectedSize) > 0;
         }
 
         // Fallback для обратной совместимости
         const variant = product.variants?.find(v => v.size === selectedSize);
-        return variant ? variant.actuallyAvailable : 0;
+        return variant ? variant.actuallyAvailable > 0 : false;
     };
 
-    // Получить общее доступное количество (всех размеров)
-    const getTotalAvailableQuantity = (): number => {
-        if (!product) return 0;
+    // Проверка общего наличия товара (хотя бы один размер доступен)
+    const isProductInStock = (): boolean => {
+        if (!product) return false;
 
         if (product.getTotalAvailableQuantity) {
-            return product.getTotalAvailableQuantity();
+            return product.getTotalAvailableQuantity() > 0;
         }
 
         // Fallback для обратной совместимости
-        return product.variants?.reduce((sum, v) => sum + v.availableQuantity, 0) || 0;
+        return product.variants?.some(v => v.actuallyAvailable > 0) || false;
     };
 
-    const getRemainingToAdd = (): number => {
-        if (!product || !selectedSize) return 0;
+    // Получить список доступных размеров
+    const getAvailableSizes = (): string[] => {
+        if (!product) return [];
 
-        const availableForSize = getAvailableQuantityForSelectedSize();
-        if (availableForSize === 0) return 0;
+        if (product.getSizes) {
+            return product.getSizes();
+        }
 
-        // Ищем товары в корзине с таким же размером
-        const cartItemsForThisProductAndSize = items.filter(item =>
-            item.product.id === product.id &&
-            item.selectedVariant?.size === selectedSize
-        );
-
-        const inCartQuantity = cartItemsForThisProductAndSize.reduce((sum, item) => sum + item.quantity, 0);
-
-        return Math.max(0, availableForSize - inCartQuantity);
+        // Fallback: фильтруем размеры, где есть товар в наличии
+        return product.variants
+            ?.filter(v => v.actuallyAvailable > 0)
+            .map(v => v.size) || [];
     };
 
     const loadProduct = async () => {
@@ -112,11 +109,9 @@ const ProductPage = () => {
                 setProduct(cartProduct);
 
                 // Устанавливаем первый доступный размер
-                const sizes = data.getSizes ? data.getSizes() :
-                    (data.variants?.map((v: ProductVariant) => v.size) || []);
-
-                if (sizes.length > 0) {
-                    setSelectedSize(sizes[0]);
+                const availableSizes = getAvailableSizes();
+                if (availableSizes.length > 0) {
+                    setSelectedSize(availableSizes[0]);
                 }
             } else {
                 setError('Товар не найден');
@@ -163,9 +158,8 @@ const ProductPage = () => {
 
     const handleAddToCart = () => {
         if (product && selectedSize) {
-            const remainingToAdd = getRemainingToAdd();
-
-            if (remainingToAdd === 0) {
+            // Проверяем доступность
+            if (!isSizeAvailable()) {
                 toast.error(
                     <div className="d-flex align-items-center">
                         <span className="me-2" style={{color: '#dc3545'}}>😔</span>
@@ -188,32 +182,8 @@ const ProductPage = () => {
                 return;
             }
 
-            const maxToAdd = Math.min(quantity, remainingToAdd);
-
-            if (maxToAdd < quantity) {
-                toast(
-                    <div className="d-flex align-items-center">
-                        <span className="me-2" style={{color: '#ffc107'}}>⚠️</span>
-                        <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                            <strong>"{product.name}"</strong> (Размер: {selectedSize}) доступно только {remainingToAdd} шт.
-                        </span>
-                    </div>,
-                    {
-                        duration: 4000,
-                        style: {
-                            background: '#fff3cd',
-                            color: '#856404',
-                            border: '1px solid #ffc107',
-                            borderRadius: '0',
-                            padding: '16px 20px',
-                            fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: '1rem'
-                        }
-                    }
-                );
-            }
-
-            for (let i = 0; i < maxToAdd; i++) {
+            // Добавляем в корзину
+            for (let i = 0; i < quantity; i++) {
                 addToCart(product, { size: selectedSize });
             }
 
@@ -289,25 +259,10 @@ const ProductPage = () => {
         ...(product.additionalImages || [])
     ].filter(Boolean);
 
-    const sizes = product.getSizes ? product.getSizes() :
-        (product.variants?.map(v => v.size) || []);
+    const availableSizes = getAvailableSizes();
     const totalPrice = product.price * quantity;
     const isInCart = isProductInCart(product.id);
     const cartQuantity = getCartQuantity(product.id);
-
-    // Количество в корзине для выбранного размера
-    const getCartQuantityForSelectedSize = (): number => {
-        if (!product || !selectedSize) return 0;
-
-        const itemsForSize = items.filter(item =>
-            item.product.id === product.id &&
-            item.selectedVariant?.size === selectedSize
-        );
-
-        return itemsForSize.reduce((sum, item) => sum + item.quantity, 0);
-    };
-
-    const cartQuantityForSelectedSize = getCartQuantityForSelectedSize();
 
     return (
         <div className="container-fluid px-0" style={{backgroundColor: 'var(--cream-bg)'}}>
@@ -399,7 +354,6 @@ const ProductPage = () => {
                                     }}>
                                         {formatPrice(product.price)}
                                     </span>
-
                                 </div>
                             </div>
 
@@ -427,7 +381,7 @@ const ProductPage = () => {
                                         </div>
                                     )}
 
-                                    {sizes.length > 0 && (
+                                    {availableSizes.length > 0 && (
                                         <div className="col-12 col-sm-6 d-flex align-items-start">
                                             <Ruler size={18} className="me-2 flex-shrink-0" style={{
                                                 color: 'var(--accent-brown)',
@@ -437,7 +391,7 @@ const ProductPage = () => {
                                                 <div className="small"
                                                      style={{opacity: 0.75, color: 'var(--text-medium)'}}>Доступные размеры
                                                 </div>
-                                                <div style={{color: 'var(--text-dark)'}}>{sizes.join(', ')}</div>
+                                                <div style={{color: 'var(--text-dark)'}}>{availableSizes.join(', ')}</div>
                                             </div>
                                         </div>
                                     )}
@@ -475,7 +429,7 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            {sizes.length > 0 && (
+                            {availableSizes.length > 0 && (
                                 <div className="mb-4">
                                     <h3 className="h6 fw-light mb-3" style={{
                                         fontFamily: "'Cormorant Garamond', serif",
@@ -484,7 +438,7 @@ const ProductPage = () => {
                                         Выберите размер
                                     </h3>
                                     <div className="d-flex flex-wrap gap-2">
-                                        {sizes.map(size => (
+                                        {availableSizes.map(size => (
                                             <button
                                                 key={size}
                                                 className={`btn ${selectedSize === size ? '' : 'btn-outline-dark'} rounded-0 border-1`}
@@ -505,13 +459,10 @@ const ProductPage = () => {
 
                                     {selectedSize && (
                                         <div className="mt-2 small" style={{color: 'var(--text-medium)'}}>
-                                            Доступно: <strong style={{color: 'var(--text-dark)'}}>
-                                            {getAvailableQuantityForSelectedSize()} шт.
-                                        </strong>
-                                            {cartQuantityForSelectedSize > 0 && (
-                                                <span style={{marginLeft: '8px', color: 'var(--accent-brown)'}}>
-                                                    (в корзине: {cartQuantityForSelectedSize} шт.)
-                                                </span>
+                                            {isSizeAvailable() ? (
+                                                <span style={{color: 'var(--success)'}}>✓ В наличии</span>
+                                            ) : (
+                                                <span style={{color: 'var(--danger)'}}>✗ Нет в наличии</span>
                                             )}
                                         </div>
                                     )}
@@ -550,16 +501,21 @@ const ProductPage = () => {
 
                                     {selectedSize ? (
                                         <span className="small" style={{color: 'var(--text-medium)'}}>
-                                            Размер <strong style={{color: 'var(--text-dark)'}}>{selectedSize}</strong>:
-                                            {' '}в наличии <strong style={{color: 'var(--text-dark)'}}>
-                                                {getAvailableQuantityForSelectedSize()} шт.
-                                            </strong>
+                                            Размер <strong style={{color: 'var(--text-dark)'}}>{selectedSize}</strong>
+                                            {' '}
+                                            {isSizeAvailable() ? (
+                                                <span style={{color: 'var(--success)'}}>✓ В наличии</span>
+                                            ) : (
+                                                <span style={{color: 'var(--danger)'}}>✗ Нет в наличии</span>
+                                            )}
                                         </span>
                                     ) : (
                                         <span className="small" style={{color: 'var(--text-medium)'}}>
-                                            Всего в наличии: <strong style={{color: 'var(--text-dark)'}}>
-                                                {getTotalAvailableQuantity()} шт.
-                                            </strong>
+                                            {isProductInStock() ? (
+                                                <span style={{color: 'var(--success)'}}>✓ Товар в наличии</span>
+                                            ) : (
+                                                <span style={{color: 'var(--danger)'}}>✗ Товар закончился</span>
+                                            )}
                                         </span>
                                     )}
                                 </div>
@@ -573,7 +529,7 @@ const ProductPage = () => {
                                                 borderColor: 'var(--text-dark)',
                                                 color: 'var(--text-dark)'
                                             }}
-                                            disabled={!selectedSize && sizes.length > 0}
+                                            disabled={!selectedSize && availableSizes.length > 0}
                                         >
                                             –
                                         </button>
@@ -587,7 +543,7 @@ const ProductPage = () => {
                                         <button
                                             className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
                                             onClick={() => {
-                                                if (!selectedSize && sizes.length > 0) {
+                                                if (!selectedSize && availableSizes.length > 0) {
                                                     toast.error(
                                                         <div className="d-flex align-items-center">
                                                             <span className="me-2" style={{color: '#dc3545'}}>⚠️</span>
@@ -608,38 +564,13 @@ const ProductPage = () => {
                                                     return;
                                                 }
 
-                                                const remainingToAdd = getRemainingToAdd();
-                                                const currentInCart = cartQuantityForSelectedSize;
-
-                                                if (currentInCart + quantity + 1 <= getAvailableQuantityForSelectedSize()) {
-                                                    setQuantity(prev => prev + 1);
-                                                } else {
-                                                    toast(
-                                                        <div className="d-flex align-items-center">
-                                                            <span className="me-2" style={{ color: '#ffc107' }}>⚠️</span>
-                                                            <span style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                                                                <strong>"{product.name}"</strong> (Размер: {selectedSize}) доступно только {remainingToAdd} шт.
-                                                            </span>
-                                                        </div>,
-                                                        {
-                                                            duration: 3000,
-                                                            position: 'bottom-right',
-                                                            style: {
-                                                                background: '#fff3cd',
-                                                                color: '#856404',
-                                                                border: '1px solid #ffc107',
-                                                                borderRadius: '0',
-                                                                padding: '12px 16px'
-                                                            }
-                                                        }
-                                                    );
-                                                }
+                                                setQuantity(prev => prev + 1);
                                             }}
                                             style={{
                                                 borderColor: 'var(--text-dark)',
                                                 color: 'var(--text-dark)'
                                             }}
-                                            disabled={!selectedSize && sizes.length > 0}
+                                            disabled={!selectedSize && availableSizes.length > 0}
                                         >
                                             +
                                         </button>
@@ -661,31 +592,31 @@ const ProductPage = () => {
                                 <button
                                     className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
-                                    disabled={!product || !selectedSize || getRemainingToAdd() === 0}
+                                    disabled={!product || !selectedSize || !isSizeAvailable()}
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
                                         transition: 'all 0.3s ease',
-                                        backgroundColor: (!selectedSize || getRemainingToAdd() === 0) ? 'var(--text-medium)' : 'var(--text-dark)',
+                                        backgroundColor: (!selectedSize || !isSizeAvailable()) ? 'var(--text-medium)' : 'var(--text-dark)',
                                         color: 'var(--cream-light)',
-                                        border: `1px solid ${(!selectedSize || getRemainingToAdd() === 0) ? 'var(--text-medium)' : 'var(--text-dark)'}`,
-                                        cursor: (!selectedSize || getRemainingToAdd() === 0) ? 'not-allowed' : 'pointer'
+                                        border: `1px solid ${(!selectedSize || !isSizeAvailable()) ? 'var(--text-medium)' : 'var(--text-dark)'}`,
+                                        cursor: (!selectedSize || !isSizeAvailable()) ? 'not-allowed' : 'pointer'
                                     }}
                                     onMouseOver={(e) => {
-                                        if (selectedSize && getRemainingToAdd() > 0) {
+                                        if (selectedSize && isSizeAvailable()) {
                                             e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
                                             e.currentTarget.style.borderColor = 'var(--accent-brown)';
                                         }
                                     }}
                                     onMouseOut={(e) => {
-                                        if (selectedSize && getRemainingToAdd() > 0) {
+                                        if (selectedSize && isSizeAvailable()) {
                                             e.currentTarget.style.backgroundColor = 'var(--text-dark)';
                                             e.currentTarget.style.borderColor = 'var(--text-dark)';
                                         }
                                     }}
                                 >
-                                    {!selectedSize && sizes.length > 0 ? 'ВЫБЕРИТЕ РАЗМЕР' :
-                                        getRemainingToAdd() === 0 ? 'ТОВАР ЗАКОНЧИЛСЯ' :
+                                    {!selectedSize && availableSizes.length > 0 ? 'ВЫБЕРИТЕ РАЗМЕР' :
+                                        !isSizeAvailable() ? 'ТОВАР ЗАКОНЧИЛСЯ' :
                                             (isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
                                 </button>
 
