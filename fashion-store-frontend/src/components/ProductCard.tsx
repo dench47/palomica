@@ -1,26 +1,16 @@
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-
-// Импортируем тип Product из api.ts
 import type { Product } from '../services/api';
 
 interface ProductCardProps {
-    product: Product; // Используем полный тип Product
+    product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-    const { addToCart } = useCart();
     const navigate = useNavigate();
 
     const handleCardClick = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         navigate(`/product/${product.id}`);
-    };
-
-    const handleAddToCart = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        addToCart(product);
-        alert(`Товар "${product.name}" добавлен в корзину!`);
     };
 
     const formatPrice = (price: number) => {
@@ -35,7 +25,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div
             className="card h-100 border-0 rounded-0 hover-scale position-relative"
             onClick={handleCardClick}
-            style={{ cursor: 'pointer', backgroundColor: '#edf2f2' }} // Белый фон карточки
+            style={{ cursor: 'pointer', backgroundColor: '#edf2f2' }}
         >
             {/* Изображение */}
             <div className="position-relative overflow-hidden" style={{ height: '400px' }}>
@@ -45,27 +35,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     alt={product.name}
                     style={{ transition: 'transform 0.5s ease' }}
                 />
-
-                {/* Кнопка корзины */}
-                <div className="position-absolute bottom-0 start-0 w-100 p-3 text-center opacity-0 hover-opacity-100 translate-y-100 hover-translate-y-0"
-                     style={{
-                         transition: 'all 0.4s ease',
-                         backgroundColor: 'rgba(255,255,255,0.95)'
-                     }}
-                     onClick={(e) => e.stopPropagation()}
-                >
-                    <button
-                        className="btn btn-outline-dark rounded-0 border-2 px-4 fw-light"
-                        onClick={handleAddToCart}
-                        style={{
-                            letterSpacing: '0.1em',
-                            fontSize: '0.85rem',
-                            fontFamily: "'Cormorant Garamond', serif"
-                        }}
-                    >
-                        ДОБАВИТЬ В КОРЗИНУ
-                    </button>
-                </div>
             </div>
 
             {/* Информация */}
