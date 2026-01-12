@@ -18,7 +18,7 @@ interface CartProduct extends Product {
 const ProductPage = () => {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const {addToCart, items} = useCart();
+    const {addToCart, items, isProductAvailable} = useCart();
 
     const [product, setProduct] = useState<CartProduct | null>(null);
     const [loading, setLoading] = useState(true);
@@ -44,6 +44,30 @@ const ProductPage = () => {
         }
     }, [product]);
 
+    // Получить список доступных размеров
+    const getAvailableSizes = (): string[] => {
+        if (!product) return [];
+
+        if (product.getSizes) {
+            return product.getSizes();
+        }
+
+        // Fallback: фильтруем размеры, где есть товар в наличии
+        return product.variants
+            ?.filter(v => v.actuallyAvailable > 0)
+            .map(v => v.size) || [];
+    };
+
+    // Автоматически выбираем размер если он один
+    useEffect(() => {
+        if (product) {
+            const availableSizes = getAvailableSizes();
+            if (availableSizes.length === 1 && !selectedSize) {
+                setSelectedSize(availableSizes[0]);
+            }
+        }
+    }, [product, selectedSize]);
+
     const isProductInCart = (productId: number) => {
         return items.some(item => item.product.id === productId);
     };
@@ -59,39 +83,16 @@ const ProductPage = () => {
     const isSizeAvailable = (): boolean => {
         if (!product || !selectedSize) return false;
 
-        if (product.getAvailableQuantityForSize) {
-            return product.getAvailableQuantityForSize(selectedSize) > 0;
-        }
-
-        // Fallback для обратной совместимости
-        const variant = product.variants?.find(v => v.size === selectedSize);
-        return variant ? variant.actuallyAvailable > 0 : false;
+        // Используем метод из CartContext
+        return isProductAvailable(product, { size: selectedSize });
     };
 
     // Проверка общего наличия товара (хотя бы один размер доступен)
     const isProductInStock = (): boolean => {
         if (!product) return false;
 
-        if (product.getTotalAvailableQuantity) {
-            return product.getTotalAvailableQuantity() > 0;
-        }
-
-        // Fallback для обратной совместимости
-        return product.variants?.some(v => v.actuallyAvailable > 0) || false;
-    };
-
-    // Получить список доступных размеров
-    const getAvailableSizes = (): string[] => {
-        if (!product) return [];
-
-        if (product.getSizes) {
-            return product.getSizes();
-        }
-
-        // Fallback: фильтруем размеры, где есть товар в наличии
-        return product.variants
-            ?.filter(v => v.actuallyAvailable > 0)
-            .map(v => v.size) || [];
+        const availableSizes = getAvailableSizes();
+        return availableSizes.length > 0;
     };
 
     const loadProduct = async () => {
@@ -107,12 +108,6 @@ const ProductPage = () => {
                     selectedVariant: {}
                 };
                 setProduct(cartProduct);
-
-                // Устанавливаем первый доступный размер
-                const availableSizes = getAvailableSizes();
-                if (availableSizes.length > 0) {
-                    setSelectedSize(availableSizes[0]);
-                }
             } else {
                 setError('Товар не найден');
             }
@@ -260,6 +255,7 @@ const ProductPage = () => {
     ].filter(Boolean);
 
     const availableSizes = getAvailableSizes();
+    const hasOnlyOneSize = availableSizes.length === 1;
     const totalPrice = product.price * quantity;
     const isInCart = isProductInCart(product.id);
     const cartQuantity = getCartQuantity(product.id);
@@ -389,9 +385,12 @@ const ProductPage = () => {
                                             }}/>
                                             <div>
                                                 <div className="small"
-                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>Доступные размеры
+                                                     style={{opacity: 0.75, color: 'var(--text-medium)'}}>
+                                                    {hasOnlyOneSize ? 'Размер' : 'Доступные размеры'}
                                                 </div>
-                                                <div style={{color: 'var(--text-dark)'}}>{availableSizes.join(', ')}</div>
+                                                <div style={{color: 'var(--text-dark)'}}>
+                                                    {hasOnlyOneSize ? availableSizes[0] : availableSizes.join(', ')}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -429,7 +428,8 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            {availableSizes.length > 0 && (
+                            {/* Показываем выбор размера только если больше одного размера */}
+                            {availableSizes.length > 0 && !hasOnlyOneSize && (
                                 <div className="mb-4">
                                     <h3 className="h6 fw-light mb-3" style={{
                                         fontFamily: "'Cormorant Garamond', serif",
@@ -466,6 +466,34 @@ const ProductPage = () => {
                                             )}
                                         </div>
                                     )}
+                                </div>
+                            )}
+
+                            {/* Если только один размер, показываем его статически */}
+                            {hasOnlyOneSize && selectedSize && (
+                                <div className="mb-4">
+                                    <h3 className="h6 fw-light mb-2" style={{
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        color: 'var(--text-dark)'
+                                    }}>
+                                        Размер
+                                    </h3>
+                                    <div className="d-flex flex-wrap gap-2 align-items-center">
+                                        <span className="border px-3 py-2" style={{
+                                            fontSize: '0.85rem',
+                                            letterSpacing: '0.05em',
+                                            borderColor: 'var(--text-dark)',
+                                            color: 'var(--text-dark)'
+                                        }}>
+                                            {selectedSize}
+                                        </span>
+                                        <span className="small" style={{
+                                            color: isSizeAvailable() ? 'var(--success)' : 'var(--danger)',
+                                            marginLeft: '10px'
+                                        }}>
+                                            {isSizeAvailable() ? '✓ В наличии' : '✗ Нет в наличии'}
+                                        </span>
+                                    </div>
                                 </div>
                             )}
 
@@ -693,12 +721,6 @@ const ProductPage = () => {
 
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
                         {relatedProducts
-                            .filter(p => {
-                                if (p.getTotalAvailableQuantity) {
-                                    return p.getTotalAvailableQuantity() > 0;
-                                }
-                                return (p.variants?.reduce((sum, v) => sum + v.availableQuantity, 0) || 0) > 0;
-                            })
                             .slice(0, 4)
                             .map((product) => (
                                 <div className="col" key={product.id}>

@@ -67,28 +67,6 @@ const CatalogPage = () => {
         setFilteredProducts(filtered);
     };
 
-    const getCategoryCount = (categoryName: string): number => {
-        if (categoryName === 'all') {
-            return products.filter(p => p.availableQuantity > 0).length;
-        }
-
-        // Проверяем, является ли это категорией
-        const isCategory = categories.some(c => c.name.toLowerCase() === categoryName.toLowerCase());
-
-        if (isCategory) {
-            return products.filter(p =>
-                p.category?.toLowerCase() === categoryName.toLowerCase() &&
-                p.availableQuantity > 0
-            ).length;
-        }
-
-        // Если не категория, значит подкатегория
-        return products.filter(p =>
-            p.subcategory?.toLowerCase() === categoryName.toLowerCase() &&
-            p.availableQuantity > 0
-        ).length;
-    };
-
     const handleCategoryClick = (categoryId: number, categoryName: string) => {
         if (openCategoryId === categoryId) {
             setOpenCategoryId(null);
@@ -147,12 +125,6 @@ const CatalogPage = () => {
                 }}>
                     КАТАЛОГ
                 </h1>
-
-                <p className="text-center text-muted small mb-5">
-                    {selectedCategory === 'all'
-                        ? `${products.filter(p => p.availableQuantity > 0).length} товаров`
-                        : `${filteredProducts.filter(p => p.availableQuantity > 0).length} товаров в "${selectedCategory}"`}
-                </p>
             </div>
 
             <div className="row g-0">
@@ -172,9 +144,6 @@ const CatalogPage = () => {
                                     }}
                                 >
                                     Все товары
-                                    <span className="ms-2 small opacity-75">
-                                        ({getCategoryCount('all')})
-                                    </span>
                                 </button>
                             </div>
 
@@ -192,33 +161,25 @@ const CatalogPage = () => {
                                         }}
                                     >
                                         {category.name}
-                                        <span className="ms-2 small opacity-75">
-                                            ({getCategoryCount(category.name)})
-                                        </span>
                                     </button>
 
                                     {category.subcategories && category.subcategories.length > 0 && openCategoryId === category.id && (
                                         <div className="ms-3 mt-2">
-                                            {category.subcategories
-                                                .filter(sub => getCategoryCount(sub.name) > 0)
-                                                .map(sub => (
-                                                    <button
-                                                        key={sub.id}
-                                                        className={`btn btn-link p-0 d-block text-start text-decoration-none small ${selectedCategory === sub.name ? 'text-dark' : 'text-muted'}`}
-                                                        onClick={() => handleSubcategoryClick(sub.name)}
-                                                        style={{
-                                                            fontSize: '0.85rem',
-                                                            border: 'none',
-                                                            background: 'none',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        {sub.name}
-                                                        <span className="ms-2 opacity-75">
-                                                            ({getCategoryCount(sub.name)})
-                                                        </span>
-                                                    </button>
-                                                ))}
+                                            {category.subcategories.map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    className={`btn btn-link p-0 d-block text-start text-decoration-none small ${selectedCategory === sub.name ? 'text-dark' : 'text-muted'}`}
+                                                    onClick={() => handleSubcategoryClick(sub.name)}
+                                                    style={{
+                                                        fontSize: '0.85rem',
+                                                        border: 'none',
+                                                        background: 'none',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {sub.name}
+                                                </button>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
@@ -228,14 +189,14 @@ const CatalogPage = () => {
                 </div>
 
                 <div className="col-lg-9 col-xl-10 px-4 px-md-5 pb-5">
-                    {filteredProducts.filter(p => p.availableQuantity > 0).length === 0 && (
+                    {filteredProducts.length === 0 && (
                         <div className="text-center py-5">
                             <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1 }}>🛍️</div>
                             <h3 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
                                 Товары не найдены
                             </h3>
                             <p className="text-muted mb-4">
-                                В категории "{selectedCategory}" пока нет товаров в наличии
+                                В категории "{selectedCategory}" пока нет товаров
                             </p>
                             <button
                                 className="btn btn-outline-dark rounded-0 px-4 py-2"
@@ -254,20 +215,15 @@ const CatalogPage = () => {
                                         style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                                         {selectedCategory === 'all' ? 'Все товары' : selectedCategory}
                                     </h2>
-                                    <span className="small text-muted">
-                                        {filteredProducts.filter(p => p.availableQuantity > 0).length} товаров
-                                    </span>
                                 </div>
                             </div>
 
                             <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-                                {filteredProducts
-                                    .filter(product => product.availableQuantity > 0)
-                                    .map((product) => (
-                                        <div className="col" key={product.id}>
-                                            <ProductCard product={product} />
-                                        </div>
-                                    ))}
+                                {filteredProducts.map((product) => (
+                                    <div className="col" key={product.id}>
+                                        <ProductCard product={product} />
+                                    </div>
+                                ))}
                             </div>
                         </>
                     )}
