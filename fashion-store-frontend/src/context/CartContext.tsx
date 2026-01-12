@@ -1,4 +1,4 @@
-// CartContext.tsx - УПРОЩЕННЫЙ (без синхронизации)
+// CartContext.tsx - С контролем максимального количества (без отображения количества)
 import type {ReactNode} from 'react';
 import {createContext, useContext, useEffect, useState} from 'react';
 import type {Product} from '../services/api';
@@ -21,7 +21,7 @@ export interface CartItem {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: Product, variant: ProductVariant) => void;
+    addToCart: (product: Product, variant: ProductVariant, quantity?: number) => void;
     removeFromCart: (variantId: string) => void;
     updateQuantity: (variantId: string, quantity: number) => void;
     clearCart: () => void;
@@ -30,6 +30,9 @@ interface CartContextType {
     getVariantId: (productId: number, variant: ProductVariant) => string;
     getItemByVariantId: (variantId: string) => CartItem | undefined;
     isProductAvailable: (product: Product, variant: ProductVariant) => boolean;
+    getMaxAvailableQuantity: (product: Product, variant: ProductVariant) => number;
+    getRemainingQuantity: (product: Product, variant: ProductVariant) => number;
+    getCartQuantityForProductAndSize: (productId: number, size: string) => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -58,22 +61,45 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
         return items.find(item => item.variantId === variantId);
     };
 
-    // Проверка доступности товара с вариантом
-    const isProductAvailable = (product: Product, variant: ProductVariant): boolean => {
-        if (!variant.size) return false;
+    // Получить количество товара в корзине для конкретного продукта и размера
+    const getCartQuantityForProductAndSize = (productId: number, size: string): number => {
+        const variantId = getVariantId(productId, { size });
+        const item = items.find(item => item.variantId === variantId);
+        return item ? item.quantity : 0;
+    };
 
-        // Если у товара есть метод для проверки
+    // Получить максимально доступное количество для варианта
+    const getMaxAvailableQuantity = (product: Product, variant: ProductVariant): number => {
+        if (!variant.size) return 0;
+
         if (product.getAvailableQuantityForSize) {
-            return product.getAvailableQuantityForSize(variant.size) > 0;
+            return product.getAvailableQuantityForSize(variant.size);
         }
 
         // Fallback для обратной совместимости
         const variantData = product.variants?.find(v => v.size === variant.size);
-        return variantData ? (variantData.actuallyAvailable || variantData.availableQuantity) > 0 : false;
+        return variantData ? (variantData.actuallyAvailable || variantData.availableQuantity) : 0;
     };
 
-    // Добавление товара в корзину (без резервирования)
-    const addToCart = (product: Product, variant: ProductVariant) => {
+    // Получить оставшееся доступное количество (с учетом уже в корзине)
+    const getRemainingQuantity = (product: Product, variant: ProductVariant): number => {
+        const maxAvailable = getMaxAvailableQuantity(product, variant);
+        if (maxAvailable === 0) return 0;
+
+        const variantId = getVariantId(product.id, variant);
+        const existingItem = items.find(item => item.variantId === variantId);
+        const inCartQuantity = existingItem ? existingItem.quantity : 0;
+
+        return Math.max(0, maxAvailable - inCartQuantity);
+    };
+
+    // Проверка доступности товара с вариантом
+    const isProductAvailable = (product: Product, variant: ProductVariant): boolean => {
+        return getMaxAvailableQuantity(product, variant) > 0;
+    };
+
+    // Добавление товара в корзину с контролем лимита
+    const addToCart = (product: Product, variant: ProductVariant, quantityToAdd: number = 1) => {
         // Проверяем размер
         if (!variant.size) {
             toast.error(
@@ -97,8 +123,10 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             return;
         }
 
-        // Проверяем доступность
-        if (!isProductAvailable(product, variant)) {
+        const variantId = getVariantId(product.id, variant);
+        const maxAvailable = getMaxAvailableQuantity(product, variant);
+
+        if (maxAvailable === 0) {
             toast.error(
                 <div className="d-flex align-items-center">
                     <span className="me-2" style={{color: '#dc3545'}}>😔</span>
@@ -119,30 +147,43 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             return;
         }
 
-        const variantId = getVariantId(product.id, variant);
-
-        const newItem: CartItem = {
-            product,
-            quantity: 1,
-            selectedVariant: variant,
-            variantId
-        };
-
         setItems(prevItems => {
             const existingItem = prevItems.find(item => item.variantId === variantId);
+            const currentQuantity = existingItem ? existingItem.quantity : 0;
+            const totalAfterAdding = currentQuantity + quantityToAdd;
+
+            // Проверяем, не превышает ли лимит
+            if (totalAfterAdding > maxAvailable) {
+                const canAdd = Math.max(0, maxAvailable - currentQuantity);
+
+                if (canAdd === 0) {
+                    // НЕ показываем toast при достижении лимита - просто не добавляем
+                    return prevItems;
+                }
+
+                // Добавляем только доступное количество
+                quantityToAdd = canAdd;
+            }
 
             if (existingItem) {
                 return prevItems.map(item =>
                     item.variantId === variantId
-                        ? {...item, quantity: item.quantity + 1}
+                        ? {...item, quantity: item.quantity + quantityToAdd}
                         : item
                 );
             }
 
+            const newItem: CartItem = {
+                product,
+                quantity: quantityToAdd,
+                selectedVariant: variant,
+                variantId
+            };
+
             return [...prevItems, newItem];
         });
 
-        // Показываем уведомление
+        // Показываем уведомление об успешном добавлении
         toast.success(
             <div className="d-flex align-items-center">
                 <ShoppingBag size={18} className="me-2" />
@@ -160,7 +201,7 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                         color: '#666',
                         marginTop: '2px'
                     }}>
-                        <strong>"{product.name}"</strong> (Размер: {variant.size})
+                        <strong>"{product.name}"</strong> (Размер: {variant.size}) ×{quantityToAdd} шт.
                     </div>
                 </div>
             </div>,
@@ -221,11 +262,21 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
         setItems(prevItems => prevItems.filter(item => item.variantId !== variantId));
     };
 
-    // Обновление количества
+    // Обновление количества с проверкой лимита
     const updateQuantity = (variantId: string, quantity: number) => {
         if (quantity < 1) {
             removeFromCart(variantId);
             return;
+        }
+
+        const oldItem = items.find(item => item.variantId === variantId);
+        if (!oldItem) return;
+
+        // Проверяем лимит
+        const maxAvailable = getMaxAvailableQuantity(oldItem.product, oldItem.selectedVariant);
+        if (quantity > maxAvailable) {
+            // НЕ показываем toast - просто устанавливаем максимальное количество
+            quantity = maxAvailable;
         }
 
         setItems(prevItems =>
@@ -276,7 +327,10 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             totalPrice,
             getVariantId,
             getItemByVariantId,
-            isProductAvailable
+            isProductAvailable,
+            getMaxAvailableQuantity,
+            getRemainingQuantity,
+            getCartQuantityForProductAndSize
         }}>
             {children}
         </CartContext.Provider>

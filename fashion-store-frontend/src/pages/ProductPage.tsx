@@ -18,7 +18,7 @@ interface CartProduct extends Product {
 const ProductPage = () => {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const {addToCart, items, isProductAvailable} = useCart();
+    const {addToCart, isProductAvailable, getRemainingQuantity, getCartQuantityForProductAndSize} = useCart();
 
     const [product, setProduct] = useState<CartProduct | null>(null);
     const [loading, setLoading] = useState(true);
@@ -67,24 +67,30 @@ const ProductPage = () => {
             }
         }
     }, [product, selectedSize]);
-
-    const isProductInCart = (productId: number) => {
-        return items.some(item => item.product.id === productId);
+// Проверка, есть ли выбранный размер в корзине
+    const isCurrentSizeInCart = (): boolean => {
+        if (!product || !selectedSize) return false;
+        return getCartQuantityForProductAndSize(product.id, selectedSize) > 0;
     };
 
-    const isCurrentProductInCart = items.some(item => item.product.id === product?.id);
-
-    const getCartQuantity = (productId: number) => {
-        const item = items.find(item => item.product.id === productId);
-        return item ? item.quantity : 0;
+    // Получить количество выбранного размера в корзине
+    const getCartQuantityForSelectedSize = (): number => {
+        if (!product || !selectedSize) return 0;
+        return getCartQuantityForProductAndSize(product.id, selectedSize);
     };
 
     // Проверка доступности для выбранного размера
     const isSizeAvailable = (): boolean => {
         if (!product || !selectedSize) return false;
 
-        // Используем метод из CartContext
         return isProductAvailable(product, { size: selectedSize });
+    };
+
+    // Получить оставшееся доступное количество для выбранного размера
+    const getRemainingAvailableQuantity = (): number => {
+        if (!product || !selectedSize) return 0;
+
+        return getRemainingQuantity(product, { size: selectedSize });
     };
 
     // Проверка общего наличия товара (хотя бы один размер доступен)
@@ -153,35 +159,8 @@ const ProductPage = () => {
 
     const handleAddToCart = () => {
         if (product && selectedSize) {
-            // Проверяем доступность
-            if (!isSizeAvailable()) {
-                toast.error(
-                    <div className="d-flex align-items-center">
-                        <span className="me-2" style={{color: '#dc3545'}}>😔</span>
-                        <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                            <strong>"{product.name}"</strong> (Размер: {selectedSize}) закончился на складе
-                        </span>
-                    </div>,
-                    {
-                        duration: 4000,
-                        style: {
-                            background: '#f8f9fa',
-                            border: '1px solid #dee2e6',
-                            borderRadius: '0',
-                            padding: '16px 20px',
-                            fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: '1rem'
-                        }
-                    }
-                );
-                return;
-            }
-
-            // Добавляем в корзину
-            for (let i = 0; i < quantity; i++) {
-                addToCart(product, { size: selectedSize });
-            }
-
+            // Добавляем все выбранное количество сразу
+            addToCart(product, { size: selectedSize }, quantity);
             setQuantity(1);
         }
     };
@@ -196,6 +175,8 @@ const ProductPage = () => {
 
     const handleSizeSelect = (size: string) => {
         setSelectedSize(size);
+        // Сбрасываем количество при смене размера
+        setQuantity(1);
     };
 
     if (loading) {
@@ -257,8 +238,10 @@ const ProductPage = () => {
     const availableSizes = getAvailableSizes();
     const hasOnlyOneSize = availableSizes.length === 1;
     const totalPrice = product.price * quantity;
-    const isInCart = isProductInCart(product.id);
-    const cartQuantity = getCartQuantity(product.id);
+    const isAvailable = isSizeAvailable();
+    const remainingQuantity = getRemainingAvailableQuantity();
+    const cartQuantityForSelectedSize = getCartQuantityForSelectedSize();
+    const isSelectedSizeInCart = isCurrentSizeInCart();
 
     return (
         <div className="container-fluid px-0" style={{backgroundColor: 'var(--cream-bg)'}}>
@@ -459,7 +442,7 @@ const ProductPage = () => {
 
                                     {selectedSize && (
                                         <div className="mt-2 small" style={{color: 'var(--text-medium)'}}>
-                                            {isSizeAvailable() ? (
+                                            {isAvailable ? (
                                                 <span style={{color: 'var(--success)'}}>✓ В наличии</span>
                                             ) : (
                                                 <span style={{color: 'var(--danger)'}}>✗ Нет в наличии</span>
@@ -488,16 +471,17 @@ const ProductPage = () => {
                                             {selectedSize}
                                         </span>
                                         <span className="small" style={{
-                                            color: isSizeAvailable() ? 'var(--success)' : 'var(--danger)',
+                                            color: isAvailable ? 'var(--success)' : 'var(--danger)',
                                             marginLeft: '10px'
                                         }}>
-                                            {isSizeAvailable() ? '✓ В наличии' : '✗ Нет в наличии'}
+                                            {isAvailable ? '✓ В наличии' : '✗ Нет в наличии'}
                                         </span>
                                     </div>
                                 </div>
                             )}
 
-                            {isInCart && (
+                            {/* Показываем "Товар в корзине" только если выбранный размер в корзине */}
+                            {isSelectedSizeInCart && (
                                 <div className="mb-4">
                                     <div className="px-4 py-3 rounded-0 d-inline-block" style={{
                                         backgroundColor: 'var(--accent-brown)',
@@ -512,7 +496,7 @@ const ProductPage = () => {
                                         <div className="d-flex align-items-center">
                                             <span className="me-3">✓</span>
                                             <span>Товар в корзине</span>
-                                            <span className="ms-3 fw-bold">{cartQuantity} шт.</span>
+                                            <span className="ms-3 fw-bold">{cartQuantityForSelectedSize} шт.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -531,7 +515,7 @@ const ProductPage = () => {
                                         <span className="small" style={{color: 'var(--text-medium)'}}>
                                             Размер <strong style={{color: 'var(--text-dark)'}}>{selectedSize}</strong>
                                             {' '}
-                                            {isSizeAvailable() ? (
+                                            {isAvailable ? (
                                                 <span style={{color: 'var(--success)'}}>✓ В наличии</span>
                                             ) : (
                                                 <span style={{color: 'var(--danger)'}}>✗ Нет в наличии</span>
@@ -555,7 +539,8 @@ const ProductPage = () => {
                                             onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
                                             style={{
                                                 borderColor: 'var(--text-dark)',
-                                                color: 'var(--text-dark)'
+                                                color: 'var(--text-dark)',
+                                                opacity: quantity === 1 ? 0.5 : 1
                                             }}
                                             disabled={!selectedSize && availableSizes.length > 0}
                                         >
@@ -568,40 +553,58 @@ const ProductPage = () => {
                                             {quantity}
                                         </span>
 
-                                        <button
-                                            className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
-                                            onClick={() => {
-                                                if (!selectedSize && availableSizes.length > 0) {
-                                                    toast.error(
-                                                        <div className="d-flex align-items-center">
-                                                            <span className="me-2" style={{color: '#dc3545'}}>⚠️</span>
-                                                            <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                                                                Сначала выберите размер
-                                                            </span>
-                                                        </div>,
-                                                        {
-                                                            duration: 3000,
-                                                            style: {
-                                                                background: '#f8f9fa',
-                                                                border: '1px solid #dc3545',
-                                                                borderRadius: '0',
-                                                                padding: '12px 16px'
+                                        {isAvailable && remainingQuantity > 0 ? (
+                                            <button
+                                                className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
+                                                onClick={() => {
+                                                    if (!selectedSize && availableSizes.length > 0) {
+                                                        toast.error(
+                                                            <div className="d-flex align-items-center">
+                                                                <span className="me-2" style={{color: '#dc3545'}}>⚠️</span>
+                                                                <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                                                    Сначала выберите размер
+                                                                </span>
+                                                            </div>,
+                                                            {
+                                                                duration: 3000,
+                                                                style: {
+                                                                    background: '#f8f9fa',
+                                                                    border: '1px solid #dc3545',
+                                                                    borderRadius: '0',
+                                                                    padding: '12px 16px'
+                                                                }
                                                             }
-                                                        }
-                                                    );
-                                                    return;
-                                                }
+                                                        );
+                                                        return;
+                                                    }
 
-                                                setQuantity(prev => prev + 1);
-                                            }}
-                                            style={{
-                                                borderColor: 'var(--text-dark)',
-                                                color: 'var(--text-dark)'
-                                            }}
-                                            disabled={!selectedSize && availableSizes.length > 0}
-                                        >
-                                            +
-                                        </button>
+                                                    if (quantity < remainingQuantity) {
+                                                        setQuantity(prev => prev + 1);
+                                                    }
+                                                }}
+                                                style={{
+                                                    borderColor: 'var(--text-dark)',
+                                                    color: 'var(--text-dark)',
+                                                    opacity: quantity >= remainingQuantity ? 0.5 : 1
+                                                }}
+                                                disabled={(!selectedSize && availableSizes.length > 0) || quantity >= remainingQuantity}
+                                            >
+                                                +
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="btn btn-outline-secondary rounded-0 border-1 px-3 py-2"
+                                                style={{
+                                                    borderColor: 'var(--text-medium)',
+                                                    color: 'var(--text-medium)',
+                                                    opacity: 0.5,
+                                                    cursor: 'not-allowed'
+                                                }}
+                                                disabled
+                                            >
+                                                +
+                                            </button>
+                                        )}
                                     </div>
 
                                     <div className="text-end">
@@ -620,35 +623,36 @@ const ProductPage = () => {
                                 <button
                                     className="btn rounded-0 w-100 py-3 fw-light mb-3"
                                     onClick={handleAddToCart}
-                                    disabled={!product || !selectedSize || !isSizeAvailable()}
+                                    disabled={!product || !selectedSize || !isAvailable || remainingQuantity === 0}
                                     style={{
                                         letterSpacing: '0.1em',
                                         fontSize: '0.9rem',
                                         transition: 'all 0.3s ease',
-                                        backgroundColor: (!selectedSize || !isSizeAvailable()) ? 'var(--text-medium)' : 'var(--text-dark)',
+                                        backgroundColor: (!selectedSize || !isAvailable || remainingQuantity === 0) ? 'var(--text-medium)' : 'var(--text-dark)',
                                         color: 'var(--cream-light)',
-                                        border: `1px solid ${(!selectedSize || !isSizeAvailable()) ? 'var(--text-medium)' : 'var(--text-dark)'}`,
-                                        cursor: (!selectedSize || !isSizeAvailable()) ? 'not-allowed' : 'pointer'
+                                        border: `1px solid ${(!selectedSize || !isAvailable || remainingQuantity === 0) ? 'var(--text-medium)' : 'var(--text-dark)'}`,
+                                        cursor: (!selectedSize || !isAvailable || remainingQuantity === 0) ? 'not-allowed' : 'pointer'
                                     }}
                                     onMouseOver={(e) => {
-                                        if (selectedSize && isSizeAvailable()) {
+                                        if (selectedSize && isAvailable && remainingQuantity > 0) {
                                             e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
                                             e.currentTarget.style.borderColor = 'var(--accent-brown)';
                                         }
                                     }}
                                     onMouseOut={(e) => {
-                                        if (selectedSize && isSizeAvailable()) {
+                                        if (selectedSize && isAvailable && remainingQuantity > 0) {
                                             e.currentTarget.style.backgroundColor = 'var(--text-dark)';
                                             e.currentTarget.style.borderColor = 'var(--text-dark)';
                                         }
                                     }}
                                 >
                                     {!selectedSize && availableSizes.length > 0 ? 'ВЫБЕРИТЕ РАЗМЕР' :
-                                        !isSizeAvailable() ? 'ТОВАР ЗАКОНЧИЛСЯ' :
-                                            (isInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
+                                        !isAvailable ? 'НЕТ В НАЛИЧИИ' :
+                                            remainingQuantity === 0 ? 'ДОСТИГНУТ ЛИМИТ' :
+                                                (isSelectedSizeInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
                                 </button>
 
-                                {isCurrentProductInCart && (
+                                {isSelectedSizeInCart && (
                                     <div style={{
                                         overflow: 'hidden',
                                         transition: 'all 0.3s ease',
