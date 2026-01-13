@@ -15,6 +15,8 @@ import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminLayout from './components/admin/AdminLayout';
 import ProtectedRoute from './components/admin/ProtectedRoute';
+import OrderPage from './pages/OrderPage';
+
 
 
 import {Toaster} from 'react-hot-toast';
@@ -69,6 +71,8 @@ function App() {
                         <Route path="/checkout" element={<CheckoutPage/>}/>
                         <Route path="/catalog" element={<CatalogPage/>}/>
                         <Route path="/search" element={<SearchPage/>}/>
+                        <Route path="/order/:orderId" element={<OrderPage />} />
+
                         {/* Админ маршруты */}
                         <Route path="/admin/login" element={<AdminLoginPage />} />
 

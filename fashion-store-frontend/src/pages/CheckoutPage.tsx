@@ -1,34 +1,25 @@
-// Заменяем весь файл CheckoutPage.tsx на этот код:
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { orderService } from '../services/orderService';
-import {showCartNotification, showOrderNotification} from '../utils/swalConfig';
-
-
-
-
-
+import { showCartNotification, showOrderNotification } from '../utils/swalConfig';
 
 const CheckoutPage = () => {
     const { items, totalPrice, clearCart } = useCart();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const isGuest = searchParams.get('guest') === 'true';
 
-    const [step, setStep] = useState(1); // 1 - доставка, 2 - оплата
+    const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
     const [comment, setComment] = useState('');
 
-       // Состояние для полей клиента (только для гостей)
     const [customerData, setCustomerData] = useState({
         name: '',
         email: '',
-        phone: ''
+        phone: '',
+        address: ''
     });
 
-    // Состояние для выбора доставки и оплаты
     const [deliveryMethod, setDeliveryMethod] = useState('courier');
     const [paymentMethod, setPaymentMethod] = useState('card');
 
@@ -36,24 +27,25 @@ const CheckoutPage = () => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
     };
 
+    const handleCustomerDataChange = (field: string, value: string) => {
+        setCustomerData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         try {
-            // Для реального приложения здесь нужно получать данные из профиля пользователя
-            const finalCustomerData = isGuest ? customerData : {
-                name: "Имя из профиля", // TODO: заменить на реальные данные
-                email: "email@example.com",
-                phone: "+79991234567"
-            };
-
-            // Собираем данные для заказа
             const orderData = {
-                customerName: finalCustomerData.name,
-                customerEmail: finalCustomerData.email,
-                customerPhone: finalCustomerData.phone,
-                deliveryAddress: "Москва, ул. Тверская, 15", // TODO: добавить поле адреса
+                customerName: customerData.name,
+                customerEmail: customerData.email,
+                customerPhone: customerData.phone,
+                deliveryAddress: deliveryMethod === 'pickup'
+                    ? "Москва, ул. Тверская, 15 (самовывоз)"
+                    : customerData.address,
                 deliveryMethod,
                 paymentMethod,
                 comment,
@@ -61,26 +53,24 @@ const CheckoutPage = () => {
                 total: totalPrice
             };
 
-            console.log('Отправка заказа:', orderData);
-
-            // Отправляем заказ на сервер
             const result = await orderService.createOrder(orderData);
 
-            if (result.success && result.orderId) {
-                const generatedOrderNumber = 'ORD' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-
-                // Очищаем корзину
+            if (result.success && result.orderId && result.accessToken) {
+                const orderUrl = `/order/${result.orderId}?token=${result.accessToken}`;
                 clearCart();
 
-                // Показываем красивое уведомление о заказе
                 showOrderNotification(
                     'Заказ оформлен!',
-                    `Номер заказа: <strong>#${generatedOrderNumber}</strong><br><br>
-                 Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
-                 Сумма заказа: <strong>${formatPrice(totalPrice)}</strong>`
+                    `Номер заказа: <strong>#${result.orderId}</strong><br><br>
+                     Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
+                     Сумма заказа: <strong>${formatPrice(totalPrice)}</strong><br><br>
+                     <a href="${orderUrl}" style="color: #282840; text-decoration: underline;">
+                         Ссылка для отслеживания заказа
+                     </a>`
                 ).then(() => {
                     setIsSubmitting(false);
                     setOrderComplete(true);
+                    navigate(orderUrl);
                 });
             } else {
                 setIsSubmitting(false);
@@ -127,11 +117,10 @@ const CheckoutPage = () => {
                 backgroundColor: '#9696a8',
                 minHeight: '100vh',
                 width: '100%',
-                paddingTop: '120px' // Добавляем отступ сверу для шапки
+                paddingTop: '120px'
             }}>
                 <div className="container-fluid px-0 d-flex flex-column align-items-center justify-content-center">
                     <div className="text-center w-100" style={{ maxWidth: '900px' }}>
-                        {/* Логотип из бэкенда */}
                         <div className="mb-4 d-flex justify-content-center">
                             <img
                                 src="/images/logo-thanks.jpg"
@@ -139,15 +128,13 @@ const CheckoutPage = () => {
                                 className="img-fluid"
                                 style={{
                                     maxWidth: '100%',
-                                    maxHeight: '40vh', // Уменьшили высоту логотипа
+                                    maxHeight: '40vh',
                                     objectFit: 'contain'
                                 }}
                             />
                         </div>
 
-                        {/* Текст и кнопка */}
                         <div className="mt-2">
-                            {/* Новая надпись */}
                             <div className="mb-4">
                                 <h2
                                     className="fw-light mb-3"
@@ -160,10 +147,8 @@ const CheckoutPage = () => {
                                 >
                                     Спасибо за заказ!
                                 </h2>
-
                             </div>
 
-                            {/* Кнопка */}
                             <div className="d-flex justify-content-center">
                                 <Link
                                     to="/"
@@ -187,26 +172,20 @@ const CheckoutPage = () => {
         );
     }
 
-    const handleCustomerDataChange = (field: string, value: string) => {
-        setCustomerData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    // Проверяем, можно ли перейти к шагу 2
     const canGoToStep2 = () => {
-        if (isGuest) {
-            return customerData.name.trim() !== '' &&
-                customerData.email.trim() !== '' &&
-                customerData.phone.trim() !== '';
+        const hasBasicInfo = customerData.name.trim() !== '' &&
+            customerData.email.trim() !== '' &&
+            customerData.phone.trim() !== '';
+
+        if (deliveryMethod === 'courier' || deliveryMethod === 'post') {
+            return hasBasicInfo && customerData.address.trim() !== '';
         }
-        return true; // Для вошедших пользователей всегда можно
+
+        return hasBasicInfo;
     };
 
     return (
         <div className="container-fluid px-0">
-            {/* Заголовок */}
             <div className="px-4 px-md-5 pt-5">
                 <h1 className="fw-light text-center mb-1" style={{
                     fontFamily: "'Playfair Display', serif",
@@ -221,55 +200,65 @@ const CheckoutPage = () => {
             </div>
 
             <div className="row g-0">
-                {/* Форма */}
                 <div className="col-lg-8 px-4 px-md-5 pb-5">
                     <form onSubmit={handleSubmit}>
-                        {/* Шаг 1: Доставка и данные клиента */}
                         {step === 1 && (
                             <div className="mb-5">
-                                {/* Данные клиента (только для гостей) */}
-                                {isGuest && (
-                                    <div className="mb-5">
-                                        <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                                            Ваши данные
-                                        </h3>
+                                <div className="mb-5">
+                                    <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                        Ваши данные
+                                    </h3>
+                                    <div className="row">
+                                        <div className="col-md-4 mb-3">
+                                            <label className="form-label small text-muted">Имя *</label>
+                                            <input
+                                                type="text"
+                                                className="form-control rounded-0 border-1"
+                                                required
+                                                value={customerData.name}
+                                                onChange={(e) => handleCustomerDataChange('name', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label className="form-label small text-muted">Email *</label>
+                                            <input
+                                                type="email"
+                                                className="form-control rounded-0 border-1"
+                                                required
+                                                value={customerData.email}
+                                                onChange={(e) => handleCustomerDataChange('email', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label className="form-label small text-muted">Телефон *</label>
+                                            <input
+                                                type="tel"
+                                                className="form-control rounded-0 border-1"
+                                                required
+                                                value={customerData.phone}
+                                                onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
+                                                placeholder="+7 (999) 123-45-67"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {(deliveryMethod === 'courier' || deliveryMethod === 'post') && (
                                         <div className="row">
-                                            <div className="col-md-4 mb-3">
-                                                <label className="form-label small text-muted">Имя *</label>
+                                            <div className="col-12 mb-3">
+                                                <label className="form-label small text-muted">Адрес доставки *</label>
                                                 <input
                                                     type="text"
                                                     className="form-control rounded-0 border-1"
-                                                    required
-                                                    value={customerData.name}
-                                                    onChange={(e) => handleCustomerDataChange('name', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="col-md-4 mb-3">
-                                                <label className="form-label small text-muted">Email *</label>
-                                                <input
-                                                    type="email"
-                                                    className="form-control rounded-0 border-1"
-                                                    required
-                                                    value={customerData.email}
-                                                    onChange={(e) => handleCustomerDataChange('email', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="col-md-4 mb-3">
-                                                <label className="form-label small text-muted">Телефон *</label>
-                                                <input
-                                                    type="tel"
-                                                    className="form-control rounded-0 border-1"
-                                                    required
-                                                    value={customerData.phone}
-                                                    onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
-                                                    placeholder="+7 (999) 123-45-67"
+                                                    required={deliveryMethod === 'courier' || deliveryMethod === 'post'}
+                                                    value={customerData.address}
+                                                    onChange={(e) => handleCustomerDataChange('address', e.target.value)}
+                                                    placeholder="Город, улица, дом, квартира, индекс"
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
 
-                                {/* Способ доставки */}
                                 <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                                     Способ доставки
                                 </h3>
@@ -375,7 +364,6 @@ const CheckoutPage = () => {
                             </div>
                         )}
 
-                        {/* Шаг 2: Оплата */}
                         {step === 2 && (
                             <div className="mb-5">
                                 <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
@@ -479,7 +467,6 @@ const CheckoutPage = () => {
                     </form>
                 </div>
 
-                {/* Панель итогов */}
                 <div className="col-lg-4 bg-light px-4 px-md-5 py-5">
                     <div className="sticky-top" style={{ top: '2rem' }}>
                         <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -503,16 +490,16 @@ const CheckoutPage = () => {
                                         <p className="small mb-1">{item.product.name}</p>
 
                                         <div className="mb-1">
-    <span className="badge bg-dark text-light me-1 rounded-0 px-1 py-0"
-          style={{ fontSize: '0.65rem' }}>
-        Размер: {item.selectedVariant.size}
-    </span>
+                                            <span className="badge bg-dark text-light me-1 rounded-0 px-1 py-0"
+                                                  style={{ fontSize: '0.65rem' }}>
+                                                Размер: {item.selectedVariant.size}
+                                            </span>
 
                                             {item.selectedVariant.color && (
                                                 <span className="badge bg-dark text-light rounded-0 px-1 py-0"
                                                       style={{ fontSize: '0.65rem' }}>
-            Цвет: {item.selectedVariant.color}
-        </span>
+                                                    Цвет: {item.selectedVariant.color}
+                                                </span>
                                             )}
                                         </div>
 
@@ -542,8 +529,6 @@ const CheckoutPage = () => {
                                 <strong className="fs-5">{formatPrice(totalPrice)}</strong>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>

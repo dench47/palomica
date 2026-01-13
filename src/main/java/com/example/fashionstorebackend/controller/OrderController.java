@@ -5,16 +5,20 @@ import com.example.fashionstorebackend.model.*;
 import com.example.fashionstorebackend.repository.OrderRepository;
 import com.example.fashionstorebackend.repository.ProductRepository;
 import com.example.fashionstorebackend.repository.ProductVariantRepository;
+import com.example.fashionstorebackend.service.EmailService;
+import com.example.fashionstorebackend.service.TelegramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"https://palomika.ru", "http://localhost:5173"})
 public class OrderController {
 
     @Autowired
@@ -25,6 +29,12 @@ public class OrderController {
 
     @Autowired
     private ProductVariantRepository productVariantRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private TelegramService telegramService; // ДОБАВИЛИ TELEGRAM SERVICE
 
     @PostMapping
     @Transactional
@@ -119,10 +129,8 @@ public class OrderController {
                     actualQuantity = itemRequest.getQuantity();
 
                     // Для старых товаров без вариантов уменьшаем общее количество
-                    // Это обратная совместимость для товаров, созданных до введения вариантов
                     if (product.getVariants().isEmpty()) {
-                        // Если у товара нет вариантов, создаем заказ
-                        // Но фактически это не должно происходить, так как все товары теперь с вариантами
+                        // Если у товара нет вариантов
                     }
                 }
 
@@ -141,7 +149,31 @@ public class OrderController {
             order.setTotalAmount(totalAmount);
             Order savedOrder = orderRepository.save(order);
 
-            return ResponseEntity.ok(savedOrder.getId());
+            // ОТПРАВЛЯЕМ ПИСЬМО С ПОДТВЕРЖДЕНИЕМ ЗАКАЗА
+            try {
+                emailService.sendOrderConfirmation(savedOrder);
+                System.out.println("✅ Email отправлен для заказа #" + savedOrder.getId());
+            } catch (Exception e) {
+                // Логируем ошибку, но не прерываем выполнение
+                System.err.println("❌ Ошибка отправки email: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            // ОТПРАВЛЯЕМ TELEGRAM УВЕДОМЛЕНИЕ АДМИНУ
+            try {
+                telegramService.sendNewOrderNotification(savedOrder);
+                System.out.println("✅ Telegram уведомление отправлено для заказа #" + savedOrder.getId());
+            } catch (Exception e) {
+                System.err.println("❌ Ошибка отправки Telegram уведомления: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            // Возвращаем ID и токен
+            Map<String, Object> response = new HashMap<>();
+            response.put("orderId", savedOrder.getId());
+            response.put("accessToken", savedOrder.getAccessToken());
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Ошибка при создании заказа: " + e.getMessage());
