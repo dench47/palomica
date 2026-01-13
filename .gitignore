@@ -53,3 +53,17 @@ build/
 *.swp
 *.swo
 *~
+
+# Конфигурационные файлы с секретами
+/src/main/resources/application.properties
+!/src/main/resources/application.properties.example
+
+# Backup файлы
+*.backup
+*.bak
+
+# Файлы окружения
+.env
+.env.local
+.secrets/
+config/
