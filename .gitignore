@@ -66,4 +66,5 @@ build/
 .env
 .env.local
 .secrets/
-config/
+config/node_modules/
+fashion-store-frontend/node_modules/
