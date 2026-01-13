@@ -1,4 +1,4 @@
-# IDE
+﻿# IDE
 .idea/
 *.iml
 .vscode/
@@ -12,7 +12,7 @@ logs/
 .settings/
 bin/
 
-# Spring Boot static build files (генерируются автоматически)
+# Spring Boot static build files
 src/main/resources/static/assets/
 src/main/resources/static/index.html
 src/main/resources/static/humans.txt
@@ -54,17 +54,17 @@ build/
 *.swo
 *~
 
-# Конфигурационные файлы с секретами
-/src/main/resources/application.properties
-!/src/main/resources/application.properties.example
-
-# Backup файлы
-*.backup
-*.bak
-
-# Файлы окружения
+# ========== БЕЗОПАСНОСТЬ ==========
+# Файлы с секретами (НЕ КОММИТИТЬ!)
 .env
-.env.local
+*.env
+!.env.example
 .secrets/
-config/node_modules/
-fashion-store-frontend/node_modules/
+config/
+
+# Временные файлы деплоя
+deploy.zip
+пш
+# Node.js
+node_modules/
+
