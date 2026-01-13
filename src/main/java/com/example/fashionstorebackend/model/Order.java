@@ -6,6 +6,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Setter
 @Getter
@@ -42,16 +43,51 @@ public class Order {
     @Column(nullable = false)
     private String status = "NEW"; // NEW, PROCESSING, COMPLETED, CANCELLED
 
+    @Column(name = "access_token", unique = true)
+    private String accessToken;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-    public Order() {}
+    public Order() {
+        generateAccessToken();
+    }
+
+    public Order(String customerName, String customerEmail, String customerPhone,
+                 String deliveryAddress, String deliveryMethod, String paymentMethod,
+                 String comment, Double totalAmount) {
+        this.customerName = customerName;
+        this.customerEmail = customerEmail;
+        this.customerPhone = customerPhone;
+        this.deliveryAddress = deliveryAddress;
+        this.deliveryMethod = deliveryMethod;
+        this.paymentMethod = paymentMethod;
+        this.comment = comment;
+        this.totalAmount = totalAmount;
+        generateAccessToken();
+    }
+
+    public void generateAccessToken() {
+        if (this.accessToken == null) {
+            this.accessToken = UUID.randomUUID().toString();
+        }
+    }
 
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.accessToken == null) {
+            generateAccessToken();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
     }
 }

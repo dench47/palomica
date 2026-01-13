@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение заказа</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .header h1 {
+            color: #282840;
+            font-family: 'Playfair Display', serif;
+            font-weight: 300;
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 0.05em;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .order-info {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #282840;
+        }
+        .order-number {
+            font-size: 20px;
+            color: #282840;
+            margin: 0 0 10px 0;
+        }
+        .order-details {
+            margin: 20px 0;
+        }
+        .order-details p {
+            margin: 8px 0;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .items-table th {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+        }
+        .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .total {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #282840;
+        }
+        .button {
+            display: inline-block;
+            background: #282840;
+            color: white !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 0;
+            font-size: 14px;
+            letter-spacing: 0.1em;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 12px;
+        }
+        .highlight {
+            color: #282840;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Спасибо за заказ!</h1>
+    </div>
+
+    <div class="content">
+        <p>Здравствуйте, <span th:text="${order.customerName}" class="highlight"></span>!</p>
+        <p>Ваш заказ <strong>#<span th:text="${order.id}"></span></strong> успешно оформлен <span th:text="${orderDate}"></span>.</p>
+
+        <div class="order-info">
+            <div class="order-number">Заказ #<span th:text="${order.id}"></span></div>
+            <div class="order-details">
+                <p><strong>Доставка:</strong> <span th:text="${deliveryMethod}"></span></p>
+                <p><strong>Оплата:</strong> <span th:text="${paymentMethod}"></span></p>
+                <p th:if="${order.deliveryAddress}"><strong>Адрес:</strong> <span th:text="${order.deliveryAddress}"></span></p>
+                <p><strong>Сумма заказа:</strong> <span th:text="${totalAmount}" class="highlight"></span></p>
+            </div>
+        </div>
+
+        <h3>Товары в заказе:</h3>
+        <table class="items-table">
+            <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Сумма</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${items}">
+                <td>
+                    <div><strong th:text="${item.product.name}"></strong></div>
+                    <div th:if="${item.size}" style="font-size: 12px; color: #666;">Размер: <span th:text="${item.size}"></span></div>
+                    <div th:if="${item.color}" style="font-size: 12px; color: #666;">Цвет: <span th:text="${item.color}"></span></div>
+                </td>
+                <td th:text="${item.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' ₽'}"></td>
+                <td th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT') + ' ₽'}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="total">
+            Итого: <span th:text="${totalAmount}" class="highlight"></span>
+        </div>
+
+        <p>Вы можете отслеживать статус заказа по ссылке:</p>
+        <p style="text-align: center;">
+            <a th:href="${orderUrl}" class="button" target="_blank">ОТКРЫТЬ СТРАНИЦУ ЗАКАЗА</a>
+        </p>
+
+        <p style="font-size: 12px; color: #666;">
+            Сохраните эту ссылку — она уникальна для вашего заказа. Если у вас есть вопросы,
+            ответьте на это письмо или позвоните нам по телефону +7 (999) 123-45-67.
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>С уважением,<br>Команда Palomika.ru</p>
+        <p>© 2024 Palomika.ru. Все права защищены.</p>
+    </div>
+</div>
+</body>
+</html>

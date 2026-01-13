@@ -16,6 +16,8 @@ public class SpaController {
             "/catalog",
             "/cart",
             "/checkout",
+            "/search",
+            "/order/**", // ДОБАВИЛ ЭТОТ МАРШРУТ!
             "/account",
             "/admin",
             "/admin/**"
