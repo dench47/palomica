@@ -1,0 +1,50 @@
+# ========== ШАБЛОН - заполни значениями локально ==========
+
+# БД MySQL
+spring.datasource.url=jdbc:mysql://localhost:3306/fashion_store_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.username=fashion_user
+spring.datasource.password=ЗДЕСЬ_ПАРОЛЬ_MYSQL
+
+# Beget S3
+beget.s3.endpoint=https://s3.ru1.storage.beget.cloud
+beget.s3.access-key=ЗДЕСЬ_ACCESS_KEY
+beget.s3.secret-key=ЗДЕСЬ_SECRET_KEY
+beget.s3.bucket-name=4db29927e331-palomika-images
+beget.s3.region=ru1
+beget.s3.path-style-url=https://s3.ru1.storage.beget.cloud/4db29927e331-palomika-images
+
+# Email Beget
+spring.mail.host=smtp.beget.com
+spring.mail.port=465
+spring.mail.username=order@palomika.ru
+spring.mail.password=ЗДЕСЬ_ПАРОЛЬ_ПОЧТЫ
+
+# Telegram
+telegram.bot.token=ЗДЕСЬ_TELEGRAM_TOKEN
+telegram.bot.username=palomika_shop_bot
+telegram.bot.admin-chat-id=8384857705
+
+# ========== Остальные настройки (безопасные) ==========
+server.port=8085
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.web.resources.static-locations=classpath:/static/
+spring.mvc.static-path-pattern=/**
+
+jwt.secret=your-very-secret-key-for-jwt-tokens-must-be-at-least-32-chars
+jwt.expiration=86400000
+
+spring.mail.protocol=smtp
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=false
+spring.mail.properties.mail.smtp.ssl.enable=true
+spring.mail.properties.mail.smtp.ssl.required=true
+
+app.email.from=order@palomika.ru
+app.email.from-name=Palomika.ru
+app.frontend-url=http://localhost:5173
+app.base-url=http://localhost:8085
