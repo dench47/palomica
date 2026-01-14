@@ -58,6 +58,8 @@
             <version>2.0.2</version>
         </dependency>
 
+
+
         <!-- В раздел dependencies -->
         <dependency>
             <groupId>org.telegram</groupId>

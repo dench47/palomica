@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -27,12 +28,34 @@ public class TelegramService {
     public void sendNewOrderNotification(Order order) {
         try {
             String message = formatNewOrderMessage(order);
-            boolean sent = sendMessage(message, true);
+            List<String> adminChatIds = telegramConfig.getAdminChatIds();
 
-            if (sent) {
-                log.info("✅ Telegram уведомление о заказе #{} отправлено", order.getId());
+            log.info("Отправка уведомлений о заказе #{} на chat_ids: {}",
+                    order.getId(), adminChatIds);
+
+            int sentCount = 0;
+            int totalAdmins = adminChatIds.size();
+
+            for (String chatId : adminChatIds) {
+                try {
+                    boolean sent = sendMessageToChat(message, chatId, true);
+                    if (sent) {
+                        sentCount++;
+                        log.debug("✅ Уведомление отправлено на chat_id: {}", chatId);
+                    } else {
+                        log.error("❌ Не удалось отправить уведомление на chat_id: {}", chatId);
+                    }
+                } catch (Exception e) {
+                    log.error("Ошибка при отправке на chat_id {}: {}", chatId, e.getMessage());
+                }
+            }
+
+            if (sentCount == totalAdmins) {
+                log.info("✅ Telegram уведомления о заказе #{} отправлены ВСЕМ {} админам",
+                        order.getId(), totalAdmins);
             } else {
-                log.error("❌ Не удалось отправить Telegram уведомление для заказа #{}", order.getId());
+                log.warn("⚠️ Telegram уведомления о заказе #{} отправлены {}/{} админам",
+                        order.getId(), sentCount, totalAdmins);
             }
 
         } catch (Exception e) {
@@ -84,12 +107,12 @@ public class TelegramService {
         return sb.toString();
     }
 
-    private boolean sendMessage(String text, boolean markdown) {
+    private boolean sendMessageToChat(String text, String chatId, boolean markdown) {
         try {
             String url = TELEGRAM_API_URL + telegramConfig.getBotToken() + "/sendMessage";
 
             Map<String, Object> request = new HashMap<>();
-            request.put("chat_id", telegramConfig.getAdminChatId());
+            request.put("chat_id", chatId);
             request.put("text", text);
 
             if (markdown) {
@@ -104,15 +127,15 @@ public class TelegramService {
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                log.debug("Сообщение отправлено: {}", text.substring(0, Math.min(100, text.length())));
                 return true;
             } else {
-                log.error("Ошибка отправки: {} - {}", response.getStatusCode(), response.getBody());
+                log.error("Telegram API ошибка для chat_id {}: {} - {}",
+                        chatId, response.getStatusCode(), response.getBody());
                 return false;
             }
 
         } catch (Exception e) {
-            log.error("Исключение при отправке: {}", e.getMessage());
+            log.error("Исключение при отправке на chat_id {}: {}", chatId, e.getMessage());
             return false;
         }
     }
