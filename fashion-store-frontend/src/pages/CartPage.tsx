@@ -18,13 +18,13 @@ const CartPage = () => {
     };
 
     const handleCheckout = () => {
-        // Прямой переход на оформление заказа без всяких окон
         navigate('/checkout');
     };
 
     if (items.length === 0) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+            <div
+                className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
                     <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>🛒</div>
                     <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
@@ -33,8 +33,8 @@ const CartPage = () => {
                     <p className="text-muted mb-4 small">Добавьте товары из каталога</p>
                     <Link
                         to="/"
-                        className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
-                        style={{letterSpacing: '0.1em', fontSize: '0.9rem'}}
+                        className="btn-fs btn-fs-outline btn-fs-lg"
+                        style={{minWidth: '250px'}}
                     >
                         ВЕРНУТЬСЯ К ПОКУПКАМ
                     </Link>
@@ -62,13 +62,14 @@ const CartPage = () => {
                             <div className="row g-0">
                                 <div className="col-4 col-md-3">
                                     <div
-                                        className="w-100"
+                                        className="w-100 hover-lift"
                                         style={{
                                             backgroundImage: `url(${item.product.imageUrl})`,
                                             backgroundSize: 'cover',
                                             backgroundPosition: 'center',
                                             paddingBottom: '100%',
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            borderRadius: '8px'
                                         }}
                                         onClick={() => navigate(`/product/${item.product.id}`)}
                                     ></div>
@@ -84,14 +85,26 @@ const CartPage = () => {
 
                                             <div className="mb-2">
                                                 <span
-                                                    className="badge bg-dark text-light me-2 rounded-0 px-2 py-1"
-                                                    style={{fontSize: '0.7rem', fontWeight: 'normal'}}>
+                                                    className="badge me-2 rounded-pill px-3 py-1"
+                                                    style={{
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '500',
+                                                        backgroundColor: 'rgba(138, 122, 99, 0.15)',
+                                                        color: 'var(--accent-brown)',
+                                                        border: '1px solid rgba(138, 122, 99, 0.3)'
+                                                    }}>
                                                     Размер: {item.selectedVariant.size}
                                                 </span>
 
                                                 {item.selectedVariant.color && (
-                                                    <span className="badge bg-dark text-light rounded-0 px-2 py-1"
-                                                          style={{fontSize: '0.7rem', fontWeight: 'normal'}}>
+                                                    <span className="badge rounded-pill px-3 py-1"
+                                                          style={{
+                                                              fontSize: '0.8rem',
+                                                              fontWeight: '500',
+                                                              backgroundColor: 'rgba(138, 122, 99, 0.15)',
+                                                              color: 'var(--accent-brown)',
+                                                              border: '1px solid rgba(138, 122, 99, 0.3)'
+                                                          }}>
                                                         Цвет: {item.selectedVariant.color}
                                                     </span>
                                                 )}
@@ -113,9 +126,8 @@ const CartPage = () => {
                                                 <span>Сумма: <strong>{formatPrice(item.product.price * item.quantity)}</strong></span>
                                             </div>
                                             <button
-                                                className="btn btn-link text-dark p-0 text-decoration-none small"
+                                                className="btn-fs btn-fs-ghost btn-fs-sm"
                                                 onClick={() => handleRemoveItem(item.variantId)}
-                                                style={{letterSpacing: '0.05em'}}
                                             >
                                                 УДАЛИТЬ
                                             </button>
@@ -128,16 +140,15 @@ const CartPage = () => {
 
                     <div className="text-start mt-4">
                         <button
-                            className="btn btn-outline-dark rounded-0 border-1 px-4 py-2 fw-light"
+                            className="btn-fs btn-fs-outline btn-fs-sm"
                             onClick={handleClearCart}
-                            style={{fontSize: '0.85rem', letterSpacing: '0.1em'}}
                         >
                             ОЧИСТИТЬ КОРЗИНУ
                         </button>
                     </div>
                 </div>
 
-                <div className="col-lg-4 bg-light px-4 px-md-5 py-5">
+                <div className="col-lg-4 bg-light px-4 px-md-5 py-5" style={{backgroundColor: 'var(--cream-light)'}}>
                     <div className="sticky-top" style={{top: '2rem'}}>
                         <h3 className="h5 fw-light mb-4" style={{fontFamily: "'Playfair Display', serif"}}>
                             Итог заказа
@@ -157,21 +168,21 @@ const CartPage = () => {
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleCheckout}
-                            className="btn btn-dark rounded-0 w-100 py-3 fw-light mb-3"
-                            style={{letterSpacing: '0.1em', fontSize: '0.9rem'}}
-                        >
-                            ОФОРМИТЬ ЗАКАЗ
-                        </button>
+                        <div className="button-group">
+                            <button
+                                onClick={handleCheckout}
+                                className="btn-fs btn-fs-checkout btn-fs-block"
+                            >
+                                ОФОРМИТЬ ЗАКАЗ
+                            </button>
 
-                        <Link
-                            to="/"
-                            className="btn btn-outline-dark rounded-0 w-100 py-3 fw-light"
-                            style={{letterSpacing: '0.1em', fontSize: '0.85rem'}}
-                        >
-                            ПРОДОЛЖИТЬ ПОКУПКИ
-                        </Link>
+                            <Link
+                                to="/"
+                                className="btn-fs btn-fs-outline btn-fs-lg btn-fs-block"
+                            >
+                                ПРОДОЛЖИТЬ ПОКУПКИ
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

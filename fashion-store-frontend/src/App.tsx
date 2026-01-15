@@ -17,8 +17,6 @@ import AdminLayout from './components/admin/AdminLayout';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import OrderPage from './pages/OrderPage';
 
-
-
 import {Toaster} from 'react-hot-toast';
 import './App.css';
 
@@ -26,39 +24,26 @@ function App() {
     return (
         <CartProvider>
             <div className="App d-flex flex-column min-vh-100 bg-cream">
+                {/* Единый Toaster для всего приложения */}
                 <Toaster
-                    position="bottom-right"
+                    position="top-center"
                     toastOptions={{
                         duration: 3000,
                         style: {
-                            background: '#f8f9fa',
-                            color: '#212529',
-                            border: '1px solid #dee2e6',
                             fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: '1rem',
-                            borderRadius: '0',
-                            padding: '16px 20px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                            letterSpacing: '0.02em'
                         },
                         success: {
-                            style: {
-                                borderLeft: '4px solid #28a745',
-                            },
                             iconTheme: {
                                 primary: '#28a745',
-                                secondary: '#fff',
-                            },
+                                secondary: '#faf9f6'
+                            }
                         },
                         error: {
-                            style: {
-                                borderLeft: '4px solid #dc3545',
-                            },
                             iconTheme: {
                                 primary: '#dc3545',
-                                secondary: '#fff',
-                            },
-                        },
+                                secondary: '#faf9f6'
+                            }
+                        }
                     }}
                 />
                 <CartNotifications/>

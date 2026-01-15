@@ -22,8 +22,15 @@ const IconButton = ({
         <>
             <Icon size={size} className={className} />
             {badge && badge > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-dark"
-                      style={{ fontSize: '0.6rem', padding: '2px 5px' }}>
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                      style={{
+                          fontSize: '0.6rem',
+                          padding: '2px 5px',
+                          backgroundColor: '#fe722c', // ОРАНЖЕВЫЙ ЦВЕТ
+                          color: 'white',
+                          border: '2px solid var(--cream-bg)',
+                          animation: badge > 0 ? 'pulse 1.5s infinite' : 'none'
+                      }}>
                     {badge}
                 </span>
             )}

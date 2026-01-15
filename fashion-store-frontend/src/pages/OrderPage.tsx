@@ -50,7 +50,7 @@ const OrderPage = () => {
                     color: item.color || undefined
                 };
 
-                // Добавляем каждый товар в корзину (product уже полный из orderService)
+                // Добавляем каждый товар в корзину
                 addToCart(item.product, variant, item.quantity);
             }
 
@@ -58,7 +58,6 @@ const OrderPage = () => {
             navigate('/cart');
         } catch (err) {
             console.error('Error reordering:', err);
-            alert('Не удалось добавить товары в корзину');
         }
     };
 
@@ -81,7 +80,11 @@ const OrderPage = () => {
         return (
             <div className="container-fluid px-4 px-md-5 py-5 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
-                    <div className="spinner-border text-dark" role="status" style={{ width: '3rem', height: '3rem' }}>
+                    <div className="spinner-border" role="status" style={{
+                        width: '3rem',
+                        height: '3rem',
+                        color: 'var(--accent-brown)'
+                    }}>
                         <span className="visually-hidden">Загрузка...</span>
                     </div>
                     <p className="mt-3 text-muted small">Загружаем информацию о заказе...</p>
@@ -94,14 +97,14 @@ const OrderPage = () => {
         return (
             <div className="container-fluid px-4 px-md-5 py-5 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
-                    <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1 }}>⚠️</div>
+                    <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1, color: 'var(--accent-brown)' }}>⚠️</div>
                     <h2 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
                         {error || 'Заказ не найден'}
                     </h2>
                     <p className="text-muted mb-4">Проверьте ссылку или обратитесь в поддержку</p>
                     <Link
                         to="/"
-                        className="btn btn-outline-dark rounded-0 px-4 py-2"
+                        className="btn-fs btn-fs-outline"
                     >
                         Вернуться в магазин
                     </Link>
@@ -131,15 +134,22 @@ const OrderPage = () => {
                         <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                             Статус заказа
                         </h3>
-                        <div className="p-4 border" style={{ backgroundColor: 'var(--cream-light)' }}>
-                            <div className="d-flex align-items-center">
-                                <span className={`badge ${getStatusBadgeClass(order.status)} me-3 rounded-0`}
-                                      style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
-                                    {getStatusText(order.status)}
-                                </span>
-                                <span className="small text-muted">
-                                    Обновлено: {formatDate(order.createdAt)}
-                                </span>
+                        <div className="status-card" data-status={order.status.toLowerCase()}>
+                            <div className="status-icon">
+                                {getStatusIcon(order.status)}
+                            </div>
+                            <div className="status-content">
+                                <div className="d-flex align-items-center">
+                                    <span className="status-badge">
+                                        {getStatusText(order.status)}
+                                    </span>
+                                    <span className="small text-muted ms-3">
+                                        Обновлено: {formatDate(order.createdAt)}
+                                    </span>
+                                </div>
+                                <p className="small text-muted mb-0 mt-2">
+                                    {getStatusDescription(order.status)}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -148,17 +158,18 @@ const OrderPage = () => {
                         <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                             Товары в заказе
                         </h3>
-                        <div className="border">
+                        <div className="border rounded-3 overflow-hidden">
                             {order.items.map((item, index) => (
-                                <div key={`${item.product.id}-${index}`} className="p-4 border-bottom">
+                                <div key={`${item.product.id}-${index}`} className="p-4 border-bottom bg-cream-light">
                                     <div className="row">
                                         <div className="col-md-2">
-                                            <div style={{
+                                            <div className="order-item-image" style={{
                                                 width: '80px',
                                                 height: '80px',
                                                 backgroundImage: `url(${item.product.imageUrl})`,
                                                 backgroundSize: 'cover',
-                                                backgroundPosition: 'center'
+                                                backgroundPosition: 'center',
+                                                borderRadius: '8px'
                                             }}></div>
                                         </div>
                                         <div className="col-md-6">
@@ -176,7 +187,8 @@ const OrderPage = () => {
                                         <div className="col-md-4 text-end">
                                             <div className="fw-light" style={{
                                                 fontFamily: "'Cormorant Garamond', serif",
-                                                fontSize: '1.1rem'
+                                                fontSize: '1.1rem',
+                                                color: 'var(--accent-brown)'
                                             }}>
                                                 {formatPrice(item.price * item.quantity)}
                                             </div>
@@ -191,7 +203,7 @@ const OrderPage = () => {
                     </div>
                 </div>
 
-                <div className="col-lg-4 bg-light px-4 px-md-5 py-5">
+                <div className="col-lg-4 bg-light px-4 px-md-5 py-5" style={{ backgroundColor: 'var(--cream-light)' }}>
                     <div className="sticky-top" style={{ top: '2rem' }}>
                         <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
                             Информация о заказе
@@ -240,35 +252,35 @@ const OrderPage = () => {
                             </div>
                         )}
 
+                        {/* УБИРАЕМ "Сумма товаров" - оставляем только ИТОГО */}
                         <div className="border-top pt-3 mt-3">
-                            <div className="d-flex justify-content-between mb-2">
-                                <span className="small text-muted">Сумма товаров</span>
-                                <span>{formatPrice(order.totalAmount)}</span>
-                            </div>
-                            <div className="d-flex justify-content-between mt-3 pt-3 border-top">
-                                <strong className="fw-normal">Итого</strong>
-                                <strong className="fs-5" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                            <div className="d-flex justify-content-between mt-3">
+                                <strong className="fw-normal fs-5">Итого</strong>
+                                <strong className="fs-5" style={{
+                                    fontFamily: "'Cormorant Garamond', serif",
+                                    color: 'var(--accent-brown)'
+                                }}>
                                     {formatPrice(order.totalAmount)}
                                 </strong>
                             </div>
                         </div>
 
                         <div className="mt-4 pt-3 border-top">
-                            <Link
-                                to="/"
-                                className="btn btn-dark rounded-0 w-100 py-3 fw-light mb-3"
-                                style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
-                            >
-                                ПРОДОЛЖИТЬ ПОКУПКИ
-                            </Link>
+                            <div className="button-group">
+                                <Link
+                                    to="/"
+                                    className="btn-fs btn-fs-primary btn-fs-lg btn-fs-block"
+                                >
+                                    ПРОДОЛЖИТЬ ПОКУПКИ
+                                </Link>
 
-                            <button
-                                className="btn btn-outline-dark rounded-0 w-100 py-3 fw-light"
-                                onClick={handleReorder}
-                                style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
-                            >
-                                ПОВТОРИТЬ ЗАКАЗ
-                            </button>
+                                <button
+                                    className="btn-fs btn-fs-outline btn-fs-lg btn-fs-block"
+                                    onClick={handleReorder}
+                                >
+                                    ПОВТОРИТЬ ЗАКАЗ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -278,16 +290,15 @@ const OrderPage = () => {
 };
 
 // Вспомогательные функции
-const getStatusBadgeClass = (status: string): string => {
+const getStatusIcon = (status: string) => {
     switch (status?.toUpperCase()) {
-        case 'NEW': return 'bg-primary';
-        case 'PROCESSING': return 'bg-warning text-dark';
-        case 'COMPLETED': return 'bg-success';
-        case 'CANCELLED': return 'bg-danger';
-        default: return 'bg-secondary';
+        case 'NEW': return '🆕';
+        case 'PROCESSING': return '🔄';
+        case 'COMPLETED': return '✅';
+        case 'CANCELLED': return '❌';
+        default: return '📋';
     }
 };
-
 const getStatusText = (status: string): string => {
     switch (status?.toUpperCase()) {
         case 'NEW': return 'Новый';
@@ -298,11 +309,22 @@ const getStatusText = (status: string): string => {
     }
 };
 
+const getStatusDescription = (status: string): string => {
+    switch (status?.toUpperCase()) {
+        case 'NEW': return 'Заказ принят и ожидает обработки';
+        case 'PROCESSING': return 'Заказ готовится к отправке';
+        case 'COMPLETED': return 'Заказ доставлен и завершен';
+        case 'CANCELLED': return 'Заказ был отменен';
+        default: return 'Статус заказа не определен';
+    }
+};
+
 const getDeliveryMethodText = (method: string): string => {
     switch (method?.toLowerCase()) {
         case 'courier': return 'Курьерская доставка';
         case 'post': return 'Почта России';
         case 'pickup': return 'Самовывоз';
+        case 'marketplace': return 'Маркетплейсы (Wildberries, OZON)';
         default: return method || 'Не указано';
     }
 };
@@ -311,7 +333,7 @@ const getPaymentMethodText = (method: string): string => {
     switch (method?.toLowerCase()) {
         case 'card': return 'Банковской картой';
         case 'cash': return 'Наличными при получении';
-        case 'sbp': return 'СБП';
+        case 'sbp': return 'СБП (Система быстрых платежей)';
         default: return method || 'Не указано';
     }
 };

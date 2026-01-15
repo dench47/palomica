@@ -105,7 +105,7 @@ const CatalogPage = () => {
                     </h2>
                     <p className="text-muted mb-4">{error}</p>
                     <button
-                        className="btn btn-outline-dark rounded-0 px-4 py-2"
+                        className="btn-fs btn-fs-outline"
                         onClick={loadData}
                     >
                         Попробовать снова
@@ -199,7 +199,7 @@ const CatalogPage = () => {
                                 В категории "{selectedCategory}" пока нет товаров
                             </p>
                             <button
-                                className="btn btn-outline-dark rounded-0 px-4 py-2"
+                                className="btn-fs btn-fs-outline"
                                 onClick={() => setSelectedCategory('all')}
                             >
                                 Показать все товары
@@ -230,7 +230,7 @@ const CatalogPage = () => {
 
                     <div className="d-lg-none text-center mt-5">
                         <button
-                            className="btn btn-outline-dark rounded-0 px-4 py-2"
+                            className="btn-fs btn-fs-outline btn-fs-sm"
                             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                         >
                             ↑ Наверх к категориям

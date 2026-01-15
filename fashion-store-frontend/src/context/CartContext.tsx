@@ -1,9 +1,8 @@
-// CartContext.tsx - С контролем максимального количества (без отображения количества)
 import type {ReactNode} from 'react';
 import {createContext, useContext, useEffect, useState} from 'react';
 import type {Product} from '../services/api';
 import toast from 'react-hot-toast';
-import {ShoppingBag, XCircle, Check} from 'lucide-react';
+import {ShoppingBag, XCircle} from 'lucide-react';
 
 // Тип для варианта товара
 export interface ProductVariant {
@@ -110,14 +109,8 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                     </span>
                 </div>,
                 {
-                    duration: 3000,
-                    position: 'bottom-right',
-                    style: {
-                        background: '#f8f9fa',
-                        border: '1px solid #dc3545',
-                        borderRadius: '0',
-                        padding: '12px 16px'
-                    }
+                    duration: 3000
+                    // УБРАЛИ position: 'bottom-right' - используем настройки из App.tsx
                 }
             );
             return;
@@ -135,13 +128,8 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                     </span>
                 </div>,
                 {
-                    duration: 4000,
-                    style: {
-                        background: '#f8f9fa',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '0',
-                        padding: '16px 20px'
-                    }
+                    duration: 4000
+                    // УБРАЛИ position: 'bottom-right' - используем настройки из App.tsx
                 }
             );
             return;
@@ -186,19 +174,20 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
         // Показываем уведомление об успешном добавлении
         toast.success(
             <div className="d-flex align-items-center">
-                <ShoppingBag size={18} className="me-2" />
+                <ShoppingBag size={18} className="me-2" style={{ color: 'var(--toast-brown)' }} />
                 <div>
                     <div style={{
                         fontFamily: "'Cormorant Garamond', serif",
                         fontWeight: '500',
-                        fontSize: '0.95rem'
+                        fontSize: '0.95rem',
+                        color: 'var(--toast-brown-dark)'
                     }}>
-                        Товар добавлен
+                        Товар добавлен в корзину
                     </div>
                     <div style={{
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: '0.85rem',
-                        color: '#666',
+                        color: 'var(--toast-brown)',
                         marginTop: '2px'
                     }}>
                         <strong>"{product.name}"</strong> (Размер: {variant.size}) ×{quantityToAdd} шт.
@@ -207,14 +196,7 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
             </div>,
             {
                 duration: 2500,
-                position: 'bottom-right',
-                style: {
-                    background: '#f8f9fa',
-                    border: '1px solid #28a745',
-                    borderLeft: '3px solid #28a745',
-                    borderRadius: '0',
-                    padding: '12px 16px'
-                }
+                icon: '🛒'
             }
         );
     };
@@ -226,19 +208,20 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
         if (itemToRemove) {
             toast(
                 <div className="d-flex align-items-center">
-                    <XCircle size={18} className="me-2" style={{color: '#6c757d'}} />
+                    <XCircle size={18} className="me-2" style={{ color: 'var(--toast-brown)' }} />
                     <div>
                         <div style={{
                             fontFamily: "'Cormorant Garamond', serif",
                             fontWeight: '500',
-                            fontSize: '0.95rem'
+                            fontSize: '0.95rem',
+                            color: 'var(--toast-brown-dark)'
                         }}>
-                            Товар удален
+                            Товар удален из корзины
                         </div>
                         <div style={{
                             fontFamily: "'Cormorant Garamond', serif",
                             fontSize: '0.85rem',
-                            color: '#666',
+                            color: 'var(--toast-brown)',
                             marginTop: '2px'
                         }}>
                             <strong>"{itemToRemove.product.name}"</strong> (Размер: {itemToRemove.selectedVariant.size})
@@ -247,14 +230,7 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
                 </div>,
                 {
                     duration: 2500,
-                    position: 'bottom-right',
-                    style: {
-                        background: '#f8f9fa',
-                        border: '1px solid #6c757d',
-                        borderLeft: '3px solid #6c757d',
-                        borderRadius: '0',
-                        padding: '12px 16px'
-                    }
+                    icon: '🗑️'
                 }
             );
         }
@@ -289,25 +265,6 @@ export const CartProvider = ({children}: { children: ReactNode }) => {
     // Очистка корзины
     const clearCart = () => {
         setItems([]);
-        toast.success(
-            <div className="d-flex align-items-center">
-                <Check size={18} className="me-2" />
-                <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                    Корзина очищена
-                </span>
-            </div>,
-            {
-                duration: 2500,
-                position: 'bottom-right',
-                style: {
-                    background: '#f8f9fa',
-                    border: '1px solid #28a745',
-                    borderLeft: '3px solid #28a745',
-                    borderRadius: '0',
-                    padding: '12px 16px'
-                }
-            }
-        );
     };
 
     // Общее количество товаров
