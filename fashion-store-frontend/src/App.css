@@ -192,4 +192,56 @@ main {
     transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
   }
+
+  /* App.css - добавить в конец */
+
+  /* Стили для бейджей с размерами и цветами */
+  .badge-size {
+    background-color: rgba(138, 122, 99, 0.15) !important;
+    color: var(--accent-brown) !important;
+    border: 1px solid rgba(138, 122, 99, 0.3) !important;
+    border-radius: 20px !important;
+    padding: 4px 12px !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+  }
+
+  .badge-size:hover {
+    background-color: rgba(138, 122, 99, 0.25) !important;
+    border-color: var(--accent-brown) !important;
+  }
+
+  /* Кнопки в каталоге (фильтры) */
+  .btn-category {
+    background: transparent;
+    border: none;
+    color: var(--text-medium);
+    padding: 8px 0;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+
+  .btn-category:hover,
+  .btn-category.active {
+    color: var(--accent-brown);
+    background: transparent;
+  }
+
+  .btn-subcategory {
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    padding: 4px 0 4px 16px;
+    font-size: 0.85rem;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+
+  .btn-subcategory:hover,
+  .btn-subcategory.active {
+    color: var(--accent-brown);
+    background: transparent;
+  }
 }

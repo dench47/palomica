@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { useCart } from '../context/CartContext';
-import { Link, useNavigate } from 'react-router-dom';
-import { orderService } from '../services/orderService';
-import { showCartNotification, showOrderNotification } from '../utils/swalConfig';
+import {useState} from 'react';
+import {useCart} from '../context/CartContext';
+import {Link, useNavigate} from 'react-router-dom';
+import {orderService} from '../services/orderService';
+import {showCartNotification, showOrderNotification} from '../utils/swalConfig';
+import {Truck, Package, Store, ShoppingBag, CreditCard, QrCode} from 'lucide-react';
 
 const CheckoutPage = () => {
-    const { items, totalPrice, clearCart } = useCart();
+    const {items, totalPrice, clearCart} = useCart();
     const navigate = useNavigate();
 
     const [step, setStep] = useState(1);
@@ -45,7 +46,9 @@ const CheckoutPage = () => {
                 customerPhone: customerData.phone,
                 deliveryAddress: deliveryMethod === 'pickup'
                     ? "Москва, ул. Тверская, 15 (самовывоз)"
-                    : customerData.address,
+                    : deliveryMethod === 'marketplace'
+                        ? "Доставка через маркетплейсы"
+                        : customerData.address,
                 deliveryMethod,
                 paymentMethod,
                 comment,
@@ -64,7 +67,7 @@ const CheckoutPage = () => {
                     `Номер заказа: <strong>#${result.orderId}</strong><br><br>
                      Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
                      Сумма заказа: <strong>${formatPrice(totalPrice)}</strong><br><br>
-                     <a href="${orderUrl}" style="color: #282840; text-decoration: underline;">
+                     <a href="${orderUrl}" style="color: var(--accent-brown); text-decoration: underline;">
                          Ссылка для отслеживания заказа
                      </a>`
                 ).then(() => {
@@ -92,81 +95,21 @@ const CheckoutPage = () => {
 
     if (items.length === 0 && !orderComplete) {
         return (
-            <div className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
+            <div
+                className="container-fluid px-4 px-md-5 py-5 min-vh-50 d-flex align-items-center justify-content-center">
                 <div className="text-center w-100">
-                    <div className="mb-4" style={{ fontSize: '3rem', opacity: 0.1 }}>📦</div>
-                    <h2 className="fw-light mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    <div className="mb-4" style={{fontSize: '3rem', opacity: 0.1}}>📦</div>
+                    <h2 className="fw-light mb-3" style={{fontFamily: "'Playfair Display', serif"}}>
                         Корзина пуста
                     </h2>
                     <p className="text-muted mb-4 small">Добавьте товары для оформления заказа</p>
                     <Link
                         to="/"
-                        className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
-                        style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                        className="btn-fs btn-fs-outline btn-fs-lg"
+                        style={{minWidth: '250px'}}
                     >
                         ВЕРНУТЬСЯ К ПОКУПКАМ
                     </Link>
-                </div>
-            </div>
-        );
-    }
-
-    if (orderComplete) {
-        return (
-            <div style={{
-                backgroundColor: '#9696a8',
-                minHeight: '100vh',
-                width: '100%',
-                paddingTop: '120px'
-            }}>
-                <div className="container-fluid px-0 d-flex flex-column align-items-center justify-content-center">
-                    <div className="text-center w-100" style={{ maxWidth: '900px' }}>
-                        <div className="mb-4 d-flex justify-content-center">
-                            <img
-                                src="/images/logo-thanks.jpg"
-                                alt="Fashion Store"
-                                className="img-fluid"
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '40vh',
-                                    objectFit: 'contain'
-                                }}
-                            />
-                        </div>
-
-                        <div className="mt-2">
-                            <div className="mb-4">
-                                <h2
-                                    className="fw-light mb-3"
-                                    style={{
-                                        fontFamily: "'Playfair Display', serif",
-                                        color: '#282840',
-                                        fontSize: '1.8rem',
-                                        letterSpacing: '0.05em'
-                                    }}
-                                >
-                                    Спасибо за заказ!
-                                </h2>
-                            </div>
-
-                            <div className="d-flex justify-content-center">
-                                <Link
-                                    to="/"
-                                    className="btn btn-dark rounded-0 px-5 py-3 fw-light"
-                                    style={{
-                                        letterSpacing: '0.1em',
-                                        fontSize: '0.9rem',
-                                        minWidth: '200px',
-                                        backgroundColor: '#282840',
-                                        borderColor: '#282840',
-                                        marginTop: '10px'
-                                    }}
-                                >
-                                    НА ГЛАВНУЮ
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         );
@@ -204,16 +147,139 @@ const CheckoutPage = () => {
                     <form onSubmit={handleSubmit}>
                         {step === 1 && (
                             <div className="mb-5">
+                                {/* ПЕРВЫМ ДЕЛОМ - ВЫБОР ДОСТАВКИ */}
+                                <h3 className="h5 fw-light mb-4" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                    Способ доставки
+                                </h3>
+
+                                <div className="row g-3 mb-5">
+                                    {/* Курьерская доставка */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`delivery-option ${deliveryMethod === 'courier' ? 'selected' : ''}`}
+                                            onClick={() => setDeliveryMethod('courier')}
+                                        >
+                                            <div className="delivery-icon">
+                                                <Truck size={24}/>
+                                            </div>
+                                            <div className="delivery-content">
+                                                <h4 className="h6 mb-1">Курьерская доставка</h4>
+                                                <p className="small text-muted mb-1">1-3 рабочих дня</p>
+                                                <div className="d-flex justify-content-between align-items-center mt-2">
+                                                    <span className="badge bg-success">Бесплатно</span>
+                                                    <div className="form-check">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="radio"
+                                                            name="delivery"
+                                                            checked={deliveryMethod === 'courier'}
+                                                            onChange={() => setDeliveryMethod('courier')}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Почта России */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`delivery-option ${deliveryMethod === 'post' ? 'selected' : ''}`}
+                                            onClick={() => setDeliveryMethod('post')}
+                                        >
+                                            <div className="delivery-icon">
+                                                <Package size={24}/>
+                                            </div>
+                                            <div className="delivery-content">
+                                                <h4 className="h6 mb-1">Почта России</h4>
+                                                <p className="small text-muted mb-1">5-14 рабочих дней</p>
+                                                <div className="d-flex justify-content-between align-items-center mt-2">
+                                                    <span className="badge bg-secondary">от 350 ₽</span>
+                                                    <div className="form-check">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="radio"
+                                                            name="delivery"
+                                                            checked={deliveryMethod === 'post'}
+                                                            onChange={() => setDeliveryMethod('post')}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Самовывоз */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`delivery-option ${deliveryMethod === 'pickup' ? 'selected' : ''}`}
+                                            onClick={() => setDeliveryMethod('pickup')}
+                                        >
+                                            <div className="delivery-icon">
+                                                <Store size={24}/>
+                                            </div>
+                                            <div className="delivery-content">
+                                                <h4 className="h6 mb-1">Самовывоз</h4>
+                                                <p className="small text-muted mb-1">Москва, ул. Тверская, 15</p>
+                                                <div className="d-flex justify-content-between align-items-center mt-2">
+                                                    <span className="badge bg-success">Бесплатно</span>
+                                                    <div className="form-check">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="radio"
+                                                            name="delivery"
+                                                            checked={deliveryMethod === 'pickup'}
+                                                            onChange={() => setDeliveryMethod('pickup')}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Маркетплейсы */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`delivery-option ${deliveryMethod === 'marketplace' ? 'selected' : ''}`}
+                                            onClick={() => setDeliveryMethod('marketplace')}
+                                        >
+                                            <div className="delivery-icon">
+                                                <ShoppingBag size={24}/>
+                                            </div>
+                                            <div className="delivery-content">
+                                                <h4 className="h6 mb-1">Маркетплейсы</h4>
+                                                <p className="small text-muted mb-1">Wildberries, OZON,
+                                                    Яндекс.Маркет</p>
+                                                <div className="d-flex justify-content-between align-items-center mt-2">
+                                                    <span className="badge bg-secondary">от 100 ₽</span>
+                                                    <div className="form-check">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="radio"
+                                                            name="delivery"
+                                                            checked={deliveryMethod === 'marketplace'}
+                                                            onChange={() => setDeliveryMethod('marketplace')}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ПОТОМ - ДАННЫЕ КЛИЕНТА */}
+                                <h3 className="h5 fw-light mb-4" style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                                    Ваши данные
+                                </h3>
+
                                 <div className="mb-5">
-                                    <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                                        Ваши данные
-                                    </h3>
                                     <div className="row">
                                         <div className="col-md-4 mb-3">
                                             <label className="form-label small text-muted">Имя *</label>
                                             <input
                                                 type="text"
-                                                className="form-control rounded-0 border-1"
+                                                className="form-control"
+                                                style={{borderRadius: '8px'}}
                                                 required
                                                 value={customerData.name}
                                                 onChange={(e) => handleCustomerDataChange('name', e.target.value)}
@@ -223,7 +289,8 @@ const CheckoutPage = () => {
                                             <label className="form-label small text-muted">Email *</label>
                                             <input
                                                 type="email"
-                                                className="form-control rounded-0 border-1"
+                                                className="form-control"
+                                                style={{borderRadius: '8px'}}
                                                 required
                                                 value={customerData.email}
                                                 onChange={(e) => handleCustomerDataChange('email', e.target.value)}
@@ -233,7 +300,8 @@ const CheckoutPage = () => {
                                             <label className="form-label small text-muted">Телефон *</label>
                                             <input
                                                 type="tel"
-                                                className="form-control rounded-0 border-1"
+                                                className="form-control"
+                                                style={{borderRadius: '8px'}}
                                                 required
                                                 value={customerData.phone}
                                                 onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
@@ -242,13 +310,15 @@ const CheckoutPage = () => {
                                         </div>
                                     </div>
 
+                                    {/* Адрес показывается только для курьера и почты */}
                                     {(deliveryMethod === 'courier' || deliveryMethod === 'post') && (
                                         <div className="row">
                                             <div className="col-12 mb-3">
                                                 <label className="form-label small text-muted">Адрес доставки *</label>
                                                 <input
                                                     type="text"
-                                                    className="form-control rounded-0 border-1"
+                                                    className="form-control"
+                                                    style={{borderRadius: '8px'}}
                                                     required={deliveryMethod === 'courier' || deliveryMethod === 'post'}
                                                     value={customerData.address}
                                                     onChange={(e) => handleCustomerDataChange('address', e.target.value)}
@@ -259,76 +329,11 @@ const CheckoutPage = () => {
                                     )}
                                 </div>
 
-                                <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                                    Способ доставки
-                                </h3>
-
-                                <div className="mb-4">
-                                    <div className="form-check mb-3 border-bottom pb-3">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="radio"
-                                            name="delivery"
-                                            id="courier"
-                                            checked={deliveryMethod === 'courier'}
-                                            onChange={() => setDeliveryMethod('courier')}
-                                        />
-                                        <label className="form-check-label w-100" htmlFor="courier">
-                                            <div className="d-flex justify-content-between">
-                                                <div>
-                                                    <strong>Курьерская доставка</strong>
-                                                    <p className="small text-muted mb-0">1-3 рабочих дня · Бесплатно</p>
-                                                </div>
-                                                <span className="text-success">Бесплатно</span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div className="form-check mb-3 border-bottom pb-3">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="radio"
-                                            name="delivery"
-                                            id="post"
-                                            checked={deliveryMethod === 'post'}
-                                            onChange={() => setDeliveryMethod('post')}
-                                        />
-                                        <label className="form-check-label w-100" htmlFor="post">
-                                            <div className="d-flex justify-content-between">
-                                                <div>
-                                                    <strong>Почта России</strong>
-                                                    <p className="small text-muted mb-0">5-14 рабочих дней</p>
-                                                </div>
-                                                <span>от 350 ₽</span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div className="form-check">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="radio"
-                                            name="delivery"
-                                            id="pickup"
-                                            checked={deliveryMethod === 'pickup'}
-                                            onChange={() => setDeliveryMethod('pickup')}
-                                        />
-                                        <label className="form-check-label w-100" htmlFor="pickup">
-                                            <div className="d-flex justify-content-between">
-                                                <div>
-                                                    <strong>Самовывоз из магазина</strong>
-                                                    <p className="small text-muted mb-0">Москва, ул. Тверская, 15</p>
-                                                </div>
-                                                <span className="text-success">Бесплатно</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
                                 <div className="mb-4">
                                     <label className="form-label small text-muted">Комментарий к заказу</label>
                                     <textarea
-                                        className="form-control rounded-0 border-1"
+                                        className="form-control"
+                                        style={{borderRadius: '8px'}}
                                         rows={3}
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
@@ -340,21 +345,20 @@ const CheckoutPage = () => {
                                 <div className="mt-5 d-flex justify-content-between">
                                     <button
                                         type="button"
-                                        className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
+                                        className="btn-fs btn-fs-outline btn-fs-lg"
                                         onClick={() => navigate('/cart')}
-                                        style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                                        style={{minWidth: '150px'}}
                                     >
                                         ← НАЗАД
                                     </button>
 
                                     <button
                                         type="button"
-                                        className="btn btn-dark rounded-0 px-5 py-3 fw-light"
+                                        className="btn-fs btn-fs-primary btn-fs-lg"
                                         onClick={() => setStep(2)}
                                         disabled={!canGoToStep2()}
                                         style={{
-                                            letterSpacing: '0.1em',
-                                            fontSize: '0.9rem',
+                                            minWidth: '200px',
                                             opacity: canGoToStep2() ? 1 : 0.5
                                         }}
                                     >
@@ -366,72 +370,95 @@ const CheckoutPage = () => {
 
                         {step === 2 && (
                             <div className="mb-5">
-                                <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                                <h3 className="h5 fw-light mb-4" style={{fontFamily: "'Cormorant Garamond', serif"}}>
                                     Способ оплаты
                                 </h3>
 
-                                <div className="mb-5">
-                                    <div className="form-check mb-3 border-bottom pb-3">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="radio"
-                                            name="payment"
-                                            id="card"
-                                            checked={paymentMethod === 'card'}
-                                            onChange={() => setPaymentMethod('card')}
-                                        />
-                                        <label className="form-check-label w-100" htmlFor="card">
-                                            <div>
-                                                <strong>Банковской картой онлайн</strong>
-                                                <p className="small text-muted mb-0">Visa, Mastercard, МИР</p>
+                                <div className="row g-3 mb-5">
+                                    {/* Карта онлайн */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`payment-option ${paymentMethod === 'card' ? 'selected' : ''}`}
+                                            onClick={() => setPaymentMethod('card')}
+                                        >
+                                            <div className="payment-icon">
+                                                <CreditCard size={24}/>
                                             </div>
-                                        </label>
+                                            <div className="payment-content">
+                                                <h4 className="h6 mb-1">Картой онлайн</h4>
+                                                <p className="small text-muted mb-2">Visa, Mastercard, МИР</p>
+                                                <div className="form-check">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="radio"
+                                                        name="payment"
+                                                        checked={paymentMethod === 'card'}
+                                                        onChange={() => setPaymentMethod('card')}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="form-check mb-3 border-bottom pb-3">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="radio"
-                                            name="payment"
-                                            id="cash"
-                                            checked={paymentMethod === 'cash'}
-                                            onChange={() => setPaymentMethod('cash')}
-                                        />
-                                        <label className="form-check-label w-100" htmlFor="cash">
-                                            <div>
-                                                <strong>Наличными при получении</strong>
-                                                <p className="small text-muted mb-0">Только для курьерской доставки</p>
+                                    {/* Наличными */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`payment-option ${paymentMethod === 'cash' ? 'selected' : ''}`}
+                                            onClick={() => setPaymentMethod('cash')}
+                                        >
+                                            <div className="payment-icon">
+                                                {/* ЗНАК РУБЛЯ ВМЕСТО ДОЛЛАРА */}
+                                                <span style={{fontSize: '24px', fontWeight: 'bold'}}>₽</span>
                                             </div>
-                                        </label>
+                                            <div className="payment-content">
+                                                <h4 className="h6 mb-1">Наличными</h4>
+                                                <p className="small text-muted mb-2">При получении заказа</p>
+                                                <div className="form-check">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="radio"
+                                                        name="payment"
+                                                        checked={paymentMethod === 'cash'}
+                                                        onChange={() => setPaymentMethod('cash')}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="form-check">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="radio"
-                                            name="payment"
-                                            id="sbp"
-                                            checked={paymentMethod === 'sbp'}
-                                            onChange={() => setPaymentMethod('sbp')}
-                                        />
-                                        <label className="form-check-label w-100" htmlFor="sbp">
-                                            <div>
-                                                <strong>СБП (Система быстрых платежей)</strong>
-                                                <p className="small text-muted mb-0">По QR-коду или номеру телефона</p>
+                                    {/* СБП */}
+                                    <div className="col-md-6">
+                                        <div
+                                            className={`payment-option ${paymentMethod === 'sbp' ? 'selected' : ''}`}
+                                            onClick={() => setPaymentMethod('sbp')}
+                                        >
+                                            <div className="payment-icon">
+                                                <QrCode size={24}/>
                                             </div>
-                                        </label>
+                                            <div className="payment-content">
+                                                <h4 className="h6 mb-1">СБП</h4>
+                                                <p className="small text-muted mb-2">Система быстрых платежей</p>
+                                                <div className="form-check">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="radio"
+                                                        name="payment"
+                                                        checked={paymentMethod === 'sbp'}
+                                                        onChange={() => setPaymentMethod('sbp')}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="mt-5 pt-3 border-top">
-                                    <div className="form-check mb-4">
-                                        <input
-                                            className="form-check-input rounded-0"
-                                            type="checkbox"
-                                            id="agree"
-                                            required
-                                        />
-                                        <label className="form-check-label small text-muted" htmlFor="agree">
+                                    {/* НАША НОВАЯ ГАЛОЧКА - ВАРИАНТ 2 */}
+                                    <div className="custom-agreement mb-4">
+                                        <div className="custom-agreement-checkbox">
+                                            <input type="checkbox" id="agree" required/>
+                                        </div>
+                                        <label htmlFor="agree" className="custom-agreement-text">
                                             Я соглашаюсь с условиями обработки персональных данных и правилами возврата
                                         </label>
                                     </div>
@@ -439,17 +466,17 @@ const CheckoutPage = () => {
                                     <div className="d-flex justify-content-between">
                                         <button
                                             type="button"
-                                            className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
+                                            className="btn-fs btn-fs-outline btn-fs-lg"
                                             onClick={() => setStep(1)}
-                                            style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                                            style={{minWidth: '150px'}}
                                         >
                                             ← НАЗАД
                                         </button>
                                         <button
                                             type="submit"
-                                            className="btn btn-dark rounded-0 px-5 py-3 fw-light"
+                                            className="btn-fs btn-fs-primary btn-fs-lg"
                                             disabled={isSubmitting}
-                                            style={{ letterSpacing: '0.1em', fontSize: '0.9rem' }}
+                                            style={{minWidth: '200px'}}
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -467,14 +494,15 @@ const CheckoutPage = () => {
                     </form>
                 </div>
 
-                <div className="col-lg-4 bg-light px-4 px-md-5 py-5">
-                    <div className="sticky-top" style={{ top: '2rem' }}>
-                        <h3 className="h5 fw-light mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <div className="col-lg-4 bg-light px-4 px-md-5 py-5" style={{backgroundColor: 'var(--cream-light)'}}>
+                    <div className="sticky-top" style={{top: '2rem'}}>
+                        <h3 className="h5 fw-light mb-4" style={{fontFamily: "'Playfair Display', serif"}}>
                             Ваш заказ
                         </h3>
 
-                        <div className="mb-4">
-                            {items.slice(0, 3).map(item => (
+                        {/* ВСЕ ТОВАРЫ СРАЗУ БЕЗ ОГРАНИЧЕНИЙ */}
+                        <div className="mb-4" style={{maxHeight: '400px', overflowY: 'auto', paddingRight: '8px'}}>
+                            {items.map(item => (
                                 <div key={item.variantId} className="d-flex mb-3 pb-3 border-bottom">
                                     <div
                                         className="flex-shrink-0 me-3"
@@ -483,50 +511,56 @@ const CheckoutPage = () => {
                                             height: '60px',
                                             backgroundImage: `url(${item.product.imageUrl})`,
                                             backgroundSize: 'cover',
-                                            backgroundPosition: 'center'
+                                            backgroundPosition: 'center',
+                                            borderRadius: '6px'
                                         }}
                                     ></div>
                                     <div className="flex-grow-1">
                                         <p className="small mb-1">{item.product.name}</p>
 
                                         <div className="mb-1">
-                                            <span className="badge bg-dark text-light me-1 rounded-0 px-1 py-0"
-                                                  style={{ fontSize: '0.65rem' }}>
-                                                Размер: {item.selectedVariant.size}
-                                            </span>
+              <span className="badge me-1 rounded-pill px-2 py-1"
+                    style={{
+                        fontSize: '0.65rem',
+                        backgroundColor: 'rgba(138, 122, 99, 0.15)',
+                        color: 'var(--accent-brown)',
+                        border: '1px solid rgba(138, 122, 99, 0.3)'
+                    }}>
+                Размер: {item.selectedVariant.size}
+              </span>
 
                                             {item.selectedVariant.color && (
-                                                <span className="badge bg-dark text-light rounded-0 px-1 py-0"
-                                                      style={{ fontSize: '0.65rem' }}>
-                                                    Цвет: {item.selectedVariant.color}
-                                                </span>
+                                                <span className="badge rounded-pill px-2 py-1"
+                                                      style={{
+                                                          fontSize: '0.65rem',
+                                                          backgroundColor: 'rgba(138, 122, 99, 0.15)',
+                                                          color: 'var(--accent-brown)',
+                                                          border: '1px solid rgba(138, 122, 99, 0.3)'
+                                                      }}>
+                  Цвет: {item.selectedVariant.color}
+                </span>
                                             )}
                                         </div>
 
                                         <div className="d-flex justify-content-between">
                                             <span className="small text-muted">{item.quantity} шт.</span>
-                                            <span className="small">{formatPrice(item.product.price * item.quantity)}</span>
+                                            <span
+                                                className="small">{formatPrice(item.product.price * item.quantity)}</span>
                                         </div>
                                     </div>
                                 </div>
                             ))}
-
-                            {items.length > 3 && (
-                                <p className="small text-muted text-center mb-0">
-                                    и еще {items.length - 3} товара
-                                </p>
-                            )}
                         </div>
 
                         <div className="border-top pt-3">
-                            <div className="d-flex justify-content-between mb-2">
-                                <span className="small text-muted">Сумма товаров</span>
-                                <span>{formatPrice(totalPrice)}</span>
-                            </div>
-
-                            <div className="d-flex justify-content-between mt-3 pt-3 border-top">
-                                <strong className="fw-normal">Итого к оплате</strong>
-                                <strong className="fs-5">{formatPrice(totalPrice)}</strong>
+                            <div className="d-flex justify-content-between mt-3">
+                                <strong className="fw-normal fs-5">Итого к оплате</strong>
+                                <strong className="fs-5" style={{
+                                    fontFamily: "'Cormorant Garamond', serif",
+                                    color: 'var(--accent-brown)'
+                                }}>
+                                    {formatPrice(totalPrice)}
+                                </strong>
                             </div>
                         </div>
                     </div>

@@ -2,7 +2,7 @@ import { useCart } from '../context/CartContext';
 import { useState, type FormEvent, type ChangeEvent, useEffect, useRef } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { FiSearch } from 'react-icons/fi';
-import { User, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import IconButton from './IconButton'; // Импортируем созданный компонент
 
 const Header = () => {
@@ -126,14 +126,6 @@ const Header = () => {
                         {/*    size={20}*/}
                         {/*    className="text-white"*/}
                         {/*/>*/}
-
-                        {/* Аккаунт */}
-                        <IconButton
-                            icon={User}
-                            onClick={() => navigate('/account')}
-                            size={20}
-                            className="text-white"
-                        />
 
                         {/* Корзина с бейджем */}
                         <IconButton

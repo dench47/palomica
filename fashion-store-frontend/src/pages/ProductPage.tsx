@@ -5,7 +5,7 @@ import {productService} from '../services/api';
 import type {Product} from '../services/api';
 import ProductCard from '../components/ProductCard';
 import {Package, Ruler, Palette, Check} from 'lucide-react';
-import toast from "react-hot-toast";
+import toast from 'react-hot-toast';
 
 interface CartProduct extends Product {
     selectedVariant?: {
@@ -67,7 +67,8 @@ const ProductPage = () => {
             }
         }
     }, [product, selectedSize]);
-// Проверка, есть ли выбранный размер в корзине
+
+    // Проверка, есть ли выбранный размер в корзине
     const isCurrentSizeInCart = (): boolean => {
         if (!product || !selectedSize) return false;
         return getCartQuantityForProductAndSize(product.id, selectedSize) > 0;
@@ -82,21 +83,18 @@ const ProductPage = () => {
     // Проверка доступности для выбранного размера
     const isSizeAvailable = (): boolean => {
         if (!product || !selectedSize) return false;
-
         return isProductAvailable(product, { size: selectedSize });
     };
 
     // Получить оставшееся доступное количество для выбранного размера
     const getRemainingAvailableQuantity = (): number => {
         if (!product || !selectedSize) return 0;
-
         return getRemainingQuantity(product, { size: selectedSize });
     };
 
     // Проверка общего наличия товара (хотя бы один размер доступен)
     const isProductInStock = (): boolean => {
         if (!product) return false;
-
         const availableSizes = getAvailableSizes();
         return availableSizes.length > 0;
     };
@@ -214,14 +212,8 @@ const ProductPage = () => {
                         {error || 'Товар не найден'}
                     </h2>
                     <button
-                        className="btn btn-outline-dark rounded-0 px-5 py-3 fw-light"
+                        className="btn-fs btn-fs-outline"
                         onClick={() => navigate('/')}
-                        style={{
-                            letterSpacing: '0.1em',
-                            fontSize: '0.9rem',
-                            borderColor: 'var(--text-dark)',
-                            color: 'var(--text-dark)'
-                        }}
                     >
                         ← ВЕРНУТЬСЯ В МАГАЗИН
                     </button>
@@ -249,12 +241,8 @@ const ProductPage = () => {
                 <nav aria-label="Навигация" className="d-none d-md-block">
                     <div className="d-flex align-items-center small" style={{color: 'var(--text-medium)'}}>
                         <button
-                            className="btn btn-link p-0 text-decoration-none me-2"
+                            className="btn-fs btn-fs-ghost p-0 me-2"
                             onClick={() => navigate('/')}
-                            style={{
-                                fontSize: '0.85rem',
-                                color: 'var(--text-dark)'
-                            }}
                         >
                             ГЛАВНАЯ
                         </button>
@@ -411,7 +399,7 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            {/* Показываем выбор размера только если больше одного размера */}
+                            {/* Выбор размера */}
                             {availableSizes.length > 0 && !hasOnlyOneSize && (
                                 <div className="mb-4">
                                     <h3 className="h6 fw-light mb-3" style={{
@@ -424,16 +412,8 @@ const ProductPage = () => {
                                         {availableSizes.map(size => (
                                             <button
                                                 key={size}
-                                                className={`btn ${selectedSize === size ? '' : 'btn-outline-dark'} rounded-0 border-1`}
+                                                className={`btn-fs btn-fs-size ${selectedSize === size ? 'active' : ''}`}
                                                 onClick={() => handleSizeSelect(size)}
-                                                style={{
-                                                    padding: '0.5rem 1.5rem',
-                                                    fontSize: '0.85rem',
-                                                    letterSpacing: '0.05em',
-                                                    backgroundColor: selectedSize === size ? 'var(--text-dark)' : 'transparent',
-                                                    borderColor: 'var(--text-dark)',
-                                                    color: selectedSize === size ? 'var(--cream-light)' : 'var(--text-dark)'
-                                                }}
                                             >
                                                 {size}
                                             </button>
@@ -443,16 +423,16 @@ const ProductPage = () => {
                                     {selectedSize && (
                                         <div className="mt-2 small" style={{color: 'var(--text-medium)'}}>
                                             {isAvailable ? (
-                                                <span style={{color: 'var(--success)'}}>✓ В наличии</span>
+                                                <span style={{color: '#28a745'}}>✓ В наличии</span>
                                             ) : (
-                                                <span style={{color: 'var(--danger)'}}>✗ Нет в наличии</span>
+                                                <span style={{color: '#dc3545'}}>✗ Нет в наличии</span>
                                             )}
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* Если только один размер, показываем его статически */}
+                            {/* Если только один размер */}
                             {hasOnlyOneSize && selectedSize && (
                                 <div className="mb-4">
                                     <h3 className="h6 fw-light mb-2" style={{
@@ -465,13 +445,14 @@ const ProductPage = () => {
                                         <span className="border px-3 py-2" style={{
                                             fontSize: '0.85rem',
                                             letterSpacing: '0.05em',
-                                            borderColor: 'var(--text-dark)',
-                                            color: 'var(--text-dark)'
+                                            borderColor: 'var(--accent-brown)',
+                                            color: 'var(--accent-brown)',
+                                            borderRadius: '6px'
                                         }}>
                                             {selectedSize}
                                         </span>
                                         <span className="small" style={{
-                                            color: isAvailable ? 'var(--success)' : 'var(--danger)',
+                                            color: isAvailable ? '#28a745' : '#dc3545',
                                             marginLeft: '10px'
                                         }}>
                                             {isAvailable ? '✓ В наличии' : '✗ Нет в наличии'}
@@ -480,18 +461,17 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            {/* Показываем "Товар в корзине" только если выбранный размер в корзине */}
+                            {/* Товар в корзине */}
                             {isSelectedSizeInCart && (
                                 <div className="mb-4">
-                                    <div className="px-4 py-3 rounded-0 d-inline-block" style={{
-                                        backgroundColor: 'var(--accent-brown)',
-                                        color: 'white',
+                                    <div className="px-4 py-3 d-inline-block" style={{
+                                        backgroundColor: 'rgba(254, 114, 44, 0.1)',
+                                        color: 'var(--accent-brown)',
                                         fontSize: '0.9rem',
                                         letterSpacing: '0.05em',
                                         fontFamily: "'Cormorant Garamond', serif",
-                                        opacity: 0.95,
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                        border: '1px solid var(--accent-brown-light)'
+                                        border: '1px solid rgba(254, 114, 44, 0.2)',
+                                        borderRadius: '8px'
                                     }}>
                                         <div className="d-flex align-items-center">
                                             <span className="me-3">✓</span>
@@ -513,20 +493,20 @@ const ProductPage = () => {
 
                                     {selectedSize ? (
                                         <span className="small" style={{color: 'var(--text-medium)'}}>
-                                            Размер <strong style={{color: 'var(--text-dark)'}}>{selectedSize}</strong>
+                                            Размер <strong style={{color: 'var(--accent-brown)'}}>{selectedSize}</strong>
                                             {' '}
                                             {isAvailable ? (
-                                                <span style={{color: 'var(--success)'}}>✓ В наличии</span>
+                                                <span style={{color: '#28a745'}}>✓ В наличии</span>
                                             ) : (
-                                                <span style={{color: 'var(--danger)'}}>✗ Нет в наличии</span>
+                                                <span style={{color: '#dc3545'}}>✗ Нет в наличии</span>
                                             )}
                                         </span>
                                     ) : (
                                         <span className="small" style={{color: 'var(--text-medium)'}}>
                                             {isProductInStock() ? (
-                                                <span style={{color: 'var(--success)'}}>✓ Товар в наличии</span>
+                                                <span style={{color: '#28a745'}}>✓ Товар в наличии</span>
                                             ) : (
-                                                <span style={{color: 'var(--danger)'}}>✗ Товар закончился</span>
+                                                <span style={{color: '#dc3545'}}>✗ Товар закончился</span>
                                             )}
                                         </span>
                                     )}
@@ -535,12 +515,12 @@ const ProductPage = () => {
                                 <div className="d-flex align-items-center justify-content-between">
                                     <div className="d-flex align-items-center" style={{maxWidth: '150px'}}>
                                         <button
-                                            className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
+                                            className="btn-fs btn-fs-outline btn-fs-sm"
                                             onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
                                             style={{
-                                                borderColor: 'var(--text-dark)',
-                                                color: 'var(--text-dark)',
-                                                opacity: quantity === 1 ? 0.5 : 1
+                                                opacity: quantity === 1 ? 0.5 : 1,
+                                                minWidth: '40px',
+                                                padding: '8px'
                                             }}
                                             disabled={!selectedSize && availableSizes.length > 0}
                                         >
@@ -548,31 +528,22 @@ const ProductPage = () => {
                                         </button>
                                         <span className="flex-grow-1 text-center px-3" style={{
                                             minWidth: '40px',
-                                            color: 'var(--text-dark)'
+                                            color: 'var(--text-dark)',
+                                            fontSize: '1.1rem',
+                                            fontWeight: '500'
                                         }}>
                                             {quantity}
                                         </span>
 
                                         {isAvailable && remainingQuantity > 0 ? (
                                             <button
-                                                className="btn btn-outline-dark rounded-0 border-1 px-3 py-2"
+                                                className="btn-fs btn-fs-outline btn-fs-sm"
                                                 onClick={() => {
                                                     if (!selectedSize && availableSizes.length > 0) {
                                                         toast.error(
-                                                            <div className="d-flex align-items-center">
-                                                                <span className="me-2" style={{color: '#dc3545'}}>⚠️</span>
-                                                                <span style={{fontFamily: "'Cormorant Garamond', serif"}}>
-                                                                    Сначала выберите размер
-                                                                </span>
-                                                            </div>,
+                                                            'Сначала выберите размер',
                                                             {
-                                                                duration: 3000,
-                                                                style: {
-                                                                    background: '#f8f9fa',
-                                                                    border: '1px solid #dc3545',
-                                                                    borderRadius: '0',
-                                                                    padding: '12px 16px'
-                                                                }
+                                                                duration: 3000
                                                             }
                                                         );
                                                         return;
@@ -583,9 +554,9 @@ const ProductPage = () => {
                                                     }
                                                 }}
                                                 style={{
-                                                    borderColor: 'var(--text-dark)',
-                                                    color: 'var(--text-dark)',
-                                                    opacity: quantity >= remainingQuantity ? 0.5 : 1
+                                                    opacity: quantity >= remainingQuantity ? 0.5 : 1,
+                                                    minWidth: '40px',
+                                                    padding: '8px'
                                                 }}
                                                 disabled={(!selectedSize && availableSizes.length > 0) || quantity >= remainingQuantity}
                                             >
@@ -593,11 +564,11 @@ const ProductPage = () => {
                                             </button>
                                         ) : (
                                             <button
-                                                className="btn btn-outline-secondary rounded-0 border-1 px-3 py-2"
+                                                className="btn-fs btn-fs-outline btn-fs-sm"
                                                 style={{
-                                                    borderColor: 'var(--text-medium)',
-                                                    color: 'var(--text-medium)',
                                                     opacity: 0.5,
+                                                    minWidth: '40px',
+                                                    padding: '8px',
                                                     cursor: 'not-allowed'
                                                 }}
                                                 disabled
@@ -619,32 +590,13 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-auto pt-4">
+                            {/* Самый простой вариант - обернуть все кнопки в div с классами */}
+                            <div className="mt-auto pt-4 button-group">
+                                {/* Основная кнопка */}
                                 <button
-                                    className="btn rounded-0 w-100 py-3 fw-light mb-3"
+                                    className="btn-fs btn-fs-primary btn-fs-lg btn-fs-block"
                                     onClick={handleAddToCart}
                                     disabled={!product || !selectedSize || !isAvailable || remainingQuantity === 0}
-                                    style={{
-                                        letterSpacing: '0.1em',
-                                        fontSize: '0.9rem',
-                                        transition: 'all 0.3s ease',
-                                        backgroundColor: (!selectedSize || !isAvailable || remainingQuantity === 0) ? 'var(--text-medium)' : 'var(--text-dark)',
-                                        color: 'var(--cream-light)',
-                                        border: `1px solid ${(!selectedSize || !isAvailable || remainingQuantity === 0) ? 'var(--text-medium)' : 'var(--text-dark)'}`,
-                                        cursor: (!selectedSize || !isAvailable || remainingQuantity === 0) ? 'not-allowed' : 'pointer'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        if (selectedSize && isAvailable && remainingQuantity > 0) {
-                                            e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
-                                            e.currentTarget.style.borderColor = 'var(--accent-brown)';
-                                        }
-                                    }}
-                                    onMouseOut={(e) => {
-                                        if (selectedSize && isAvailable && remainingQuantity > 0) {
-                                            e.currentTarget.style.backgroundColor = 'var(--text-dark)';
-                                            e.currentTarget.style.borderColor = 'var(--text-dark)';
-                                        }
-                                    }}
                                 >
                                     {!selectedSize && availableSizes.length > 0 ? 'ВЫБЕРИТЕ РАЗМЕР' :
                                         !isAvailable ? 'НЕТ В НАЛИЧИИ' :
@@ -652,50 +604,20 @@ const ProductPage = () => {
                                                 (isSelectedSizeInCart ? 'ДОБАВИТЬ ЕЩЁ' : 'ДОБАВИТЬ В КОРЗИНУ')}
                                 </button>
 
+                                {/* Кнопка корзины */}
                                 {isSelectedSizeInCart && (
-                                    <div style={{
-                                        overflow: 'hidden',
-                                        transition: 'all 0.3s ease',
-                                        maxHeight: '60px',
-                                        opacity: 1,
-                                        marginBottom: '1rem'
-                                    }}>
-                                        <button
-                                            className="btn rounded-0 w-100 py-3 fw-light"
-                                            onClick={() => navigate('/cart')}
-                                            style={{
-                                                letterSpacing: '0.1em',
-                                                fontSize: '0.85rem',
-                                                transition: 'all 0.3s ease',
-                                                backgroundColor: 'transparent',
-                                                color: 'var(--text-dark)',
-                                                border: '1px solid var(--text-dark)'
-                                            }}
-                                            onMouseOver={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'var(--accent-brown)';
-                                                e.currentTarget.style.borderColor = 'var(--accent-brown)';
-                                                e.currentTarget.style.color = 'white';
-                                            }}
-                                            onMouseOut={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'transparent';
-                                                e.currentTarget.style.borderColor = 'var(--text-dark)';
-                                                e.currentTarget.style.color = 'var(--text-dark)';
-                                            }}
-                                        >
-                                            ПЕРЕЙТИ В КОРЗИНУ
-                                        </button>
-                                    </div>
+                                    <button
+                                        className="btn-fs btn-fs-outline btn-fs-lg btn-fs-block"
+                                        onClick={() => navigate('/cart')}
+                                    >
+                                        ПЕРЕЙТИ В КОРЗИНУ
+                                    </button>
                                 )}
 
+                                {/* Кнопка продолжения покупок */}
                                 <button
-                                    className="btn btn-outline-dark rounded-0 w-100 py-3 fw-light"
+                                    className="btn-fs btn-fs-outline btn-fs-lg btn-fs-block"
                                     onClick={() => navigate('/')}
-                                    style={{
-                                        letterSpacing: '0.1em',
-                                        fontSize: '0.85rem',
-                                        borderColor: 'var(--text-dark)',
-                                        color: 'var(--text-dark)'
-                                    }}
                                 >
                                     ← ПРОДОЛЖИТЬ ПОКУПКИ
                                 </button>
