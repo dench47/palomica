@@ -1,17 +1,8 @@
 package com.example.fashionstorebackend.controller;
 
-import com.example.fashionstorebackend.dto.ProductDTO;
-import com.example.fashionstorebackend.dto.ProductVariantDTO;
-import com.example.fashionstorebackend.model.Product;
-import com.example.fashionstorebackend.model.ProductVariant;
-import com.example.fashionstorebackend.model.Order;
-import com.example.fashionstorebackend.model.Category;
-import com.example.fashionstorebackend.model.Subcategory;
-import com.example.fashionstorebackend.repository.ProductRepository;
-import com.example.fashionstorebackend.repository.ProductVariantRepository;
-import com.example.fashionstorebackend.repository.OrderRepository;
-import com.example.fashionstorebackend.repository.CategoryRepository;
-import com.example.fashionstorebackend.repository.SubcategoryRepository;
+import com.example.fashionstorebackend.dto.*;
+import com.example.fashionstorebackend.model.*;
+import com.example.fashionstorebackend.repository.*;
 import com.example.fashionstorebackend.service.JwtService;
 import com.example.fashionstorebackend.service.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
@@ -235,6 +226,7 @@ public class AdminController {
                 ProductVariant defaultVariant = new ProductVariant();
                 defaultVariant.setSize(defaultSize);
                 defaultVariant.setAvailableQuantity(availableQuantity);
+                defaultVariant.setReservedQuantity(0);
                 defaultVariant.setProduct(product);
                 product.getVariants().add(defaultVariant);
             }
@@ -511,7 +503,9 @@ public class AdminController {
     // ========== УПРАВЛЕНИЕ ЗАКАЗАМИ ==========
 
     @GetMapping("/orders")
-    public ResponseEntity<?> getAllOrders(HttpServletRequest request) {
+    public ResponseEntity<?> getAllOrders(
+            @RequestParam(required = false) String status,
+            HttpServletRequest request) {
         if (!isAdmin(request)) {
             return ResponseEntity.status(403).body(Map.of(
                     "success", false,
@@ -520,8 +514,20 @@ public class AdminController {
         }
 
         try {
-            List<Order> orders = orderRepository.findAll();
-            return ResponseEntity.ok(orders);
+            List<Order> orders;
+
+            if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("ALL")) {
+                orders = orderRepository.findAllByStatusOrderByCreatedAtDesc(status);
+            } else {
+                orders = orderRepository.findAllByOrderByCreatedAtDesc();
+            }
+
+            // Преобразуем в DTO
+            List<OrderDTO> orderDTOs = orders.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(orderDTOs);
         } catch (Exception e) {
             log.error("Error fetching orders: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
@@ -541,9 +547,14 @@ public class AdminController {
         }
 
         try {
-            Optional<Order> order = orderRepository.findById(id);
-            return order.map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            Optional<Order> orderOpt = orderRepository.findById(id);
+            if (orderOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Возвращаем DTO вместо Entity
+            OrderDTO orderDTO = convertToDTO(orderOpt.get());
+            return ResponseEntity.ok(orderDTO);
         } catch (Exception e) {
             log.error("Error fetching order ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
@@ -572,6 +583,7 @@ public class AdminController {
 
             Order order = orderOptional.get();
             String newStatus = statusUpdate.get("status");
+            String oldStatus = order.getStatus();
 
             if (!isValidStatus(newStatus)) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -580,10 +592,15 @@ public class AdminController {
                 ));
             }
 
+            // Логируем изменение статуса
+            log.info("Order #{} status changed from '{}' to '{}'", id, oldStatus, newStatus);
+
             order.setStatus(newStatus);
             Order updatedOrder = orderRepository.save(order);
 
-            return ResponseEntity.ok(updatedOrder);
+            // Возвращаем DTO вместо Entity
+            OrderDTO orderDTO = convertToDTO(updatedOrder);
+            return ResponseEntity.ok(orderDTO);
         } catch (Exception e) {
             log.error("Error updating order status ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
@@ -628,6 +645,97 @@ public class AdminController {
     // ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
 
     private boolean isValidStatus(String status) {
-        return status != null && List.of("NEW", "PROCESSING", "COMPLETED", "CANCELLED").contains(status);
+        return status != null && List.of("NEW", "PROCESSING", "SHIPPED", "COMPLETED", "CANCELLED").contains(status);
+    }
+
+    // Метод для преобразования Order в OrderDTO
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO dto = new OrderDTO();
+        dto.setId(order.getId());
+        dto.setOrderNumber(order.getOrderNumber()); // Добавляем номер заказа
+        dto.setCustomerName(order.getCustomerName());
+        dto.setCustomerEmail(order.getCustomerEmail());
+        dto.setCustomerPhone(order.getCustomerPhone());
+        dto.setDeliveryAddress(order.getDeliveryAddress());
+        dto.setDeliveryMethod(order.getDeliveryMethod());
+        dto.setPaymentMethod(order.getPaymentMethod());
+        dto.setComment(order.getComment());
+        dto.setTotalAmount(order.getTotalAmount());
+        dto.setStatus(order.getStatus());
+        dto.setAccessToken(order.getAccessToken());
+        dto.setCreatedAt(order.getCreatedAt());
+
+        // Преобразуем OrderItems в OrderItemDTO
+        List<OrderItemDTO> itemDTOs = order.getItems().stream()
+                .map(this::convertItemToDTO)
+                .collect(Collectors.toList());
+        dto.setItems(itemDTOs);
+
+        return dto;
+    }
+
+    // Метод для преобразования OrderItem в OrderItemDTO
+    private OrderItemDTO convertItemToDTO(OrderItem item) {
+        OrderItemDTO dto = new OrderItemDTO();
+        dto.setId(item.getId());
+        dto.setQuantity(item.getQuantity());
+        dto.setPrice(item.getPrice());
+        dto.setSize(item.getSize());
+        dto.setColor(item.getColor());
+
+        // Преобразуем Product в ProductDTO
+        Product product = item.getProduct();
+        ProductDTO productDTO = new ProductDTO(product);
+        dto.setProduct(productDTO);
+
+        return dto;
+    }
+
+    @GetMapping("/orders/search")
+    public ResponseEntity<?> searchOrders(
+            @RequestParam(required = false) String orderNumber,
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String customerPhone,
+            HttpServletRequest request) {
+
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "Доступ запрещен"
+            ));
+        }
+
+        try {
+            List<Order> orders;
+
+            if (orderNumber != null && !orderNumber.trim().isEmpty()) {
+                // Поиск по номеру заказа (частичное совпадение)
+                orders = orderRepository.findByOrderNumberContainingIgnoreCaseOrderByCreatedAtDesc(orderNumber.trim());
+            } else if (customerName != null && !customerName.trim().isEmpty()) {
+                // Поиск по имени клиента (частичное совпадение)
+                orders = orderRepository.findByCustomerNameContainingIgnoreCaseOrderByCreatedAtDesc(customerName.trim());
+            } else if (customerPhone != null && !customerPhone.trim().isEmpty()) {
+                // Поиск по телефону
+                orders = orderRepository.findByCustomerPhoneContainingOrderByCreatedAtDesc(customerPhone.trim());
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Не указаны параметры поиска"
+                ));
+            }
+
+            // Преобразуем в DTO
+            List<OrderDTO> orderDTOs = orders.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(orderDTOs);
+        } catch (Exception e) {
+            log.error("Error searching orders: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Ошибка поиска заказов: " + e.getMessage()
+            ));
+        }
     }
 }

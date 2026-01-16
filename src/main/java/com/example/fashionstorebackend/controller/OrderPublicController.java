@@ -56,6 +56,7 @@ public class OrderPublicController {
     private OrderDTO convertToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
+        dto.setOrderNumber(order.getOrderNumber()); // ДОБАВИТЬ ЭТУ СТРОКУ!
         dto.setCustomerName(order.getCustomerName());
         dto.setCustomerEmail(order.getCustomerEmail());
         dto.setCustomerPhone(order.getCustomerPhone());

@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class OrderDTO {
     private Long id;
+    private String orderNumber; // Добавляем номер заказа
     private String customerName;
     private String customerEmail;
     private String customerPhone;

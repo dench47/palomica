@@ -57,6 +57,7 @@ public class EmailService {
             context.setVariable("totalAmount", formatPrice(order.getTotalAmount()));
             context.setVariable("deliveryMethod", getDeliveryMethodText(order.getDeliveryMethod()));
             context.setVariable("paymentMethod", getPaymentMethodText(order.getPaymentMethod()));
+            context.setVariable("orderNumber", order.getOrderNumber()); // ДОБАВИТЬ ЭТО!
 
             // Генерируем HTML
             String htmlContent = templateEngine.process("email/order-confirmation", context);
@@ -64,17 +65,17 @@ public class EmailService {
             // Настраиваем письмо
             helper.setFrom(fromEmail, fromName);
             helper.setTo(order.getCustomerEmail());
-            helper.setSubject("Заказ #" + order.getId() + " оформлен - Palomika.ru");
+            helper.setSubject("Заказ #" + order.getOrderNumber() + " оформлен - Palomika.ru"); // ИЗМЕНИТЬ!
             helper.setText(htmlContent, true);
 
             // Отправляем
             mailSender.send(message);
             log.info("Письмо с подтверждением заказа #{} отправлено на {}",
-                    order.getId(), order.getCustomerEmail());
+                    order.getOrderNumber(), order.getCustomerEmail()); // ИЗМЕНИТЬ!
             log.info("Ссылка в письме: {}", orderUrl);
 
         } catch (MessagingException e) {
-            log.error("Ошибка отправки письма для заказа #{}: {}", order.getId(), e.getMessage());
+            log.error("Ошибка отправки письма для заказа #{}: {}", order.getOrderNumber(), e.getMessage()); // ИЗМЕНИТЬ!
         } catch (Exception e) {
             log.error("Неожиданная ошибка при отправке письма: {}", e.getMessage());
         }

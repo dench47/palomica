@@ -20,12 +20,16 @@ export interface OrderData {
 }
 
 export interface OrderResponse {
-    orderId: number;
-    accessToken: string;
+    success: boolean;
+    orderId?: number;
+    orderNumber?: string; // ДОБАВИТЬ ЭТО!
+    accessToken?: string;
+    error?: string;
 }
 
 export interface OrderDetails {
     id: number;
+    orderNumber: string; // ДОБАВИТЬ ЭТО!
     customerName: string;
     customerEmail: string;
     customerPhone: string;
@@ -51,12 +55,7 @@ export interface OrderItemDetails {
 }
 
 export const orderService = {
-    async createOrder(orderData: OrderData): Promise<{
-        success: boolean;
-        orderId?: number;
-        accessToken?: string;
-        error?: string
-    }> {
+    async createOrder(orderData: OrderData): Promise<OrderResponse> {
         try {
             // Преобразуем данные корзины в формат для бэкенда
             const orderRequest: OrderRequest = {
@@ -98,6 +97,7 @@ export const orderService = {
             return {
                 success: true,
                 orderId: result.orderId,
+                orderNumber: result.orderNumber, // ДОБАВИТЬ ЭТО!
                 accessToken: result.accessToken
             };
 
@@ -185,6 +185,7 @@ export const orderService = {
 
             return {
                 id: orderData.id,
+                orderNumber: orderData.orderNumber || `ORD-${orderData.id}`, // ДОБАВИТЬ ЭТО!
                 customerName: orderData.customerName,
                 customerEmail: orderData.customerEmail,
                 customerPhone: orderData.customerPhone,

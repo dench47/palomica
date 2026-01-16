@@ -31,7 +31,7 @@ public class TelegramService {
             List<String> adminChatIds = telegramConfig.getAdminChatIds();
 
             log.info("Отправка уведомлений о заказе #{} на chat_ids: {}",
-                    order.getId(), adminChatIds);
+                    order.getOrderNumber(), adminChatIds); // ИЗМЕНИТЬ!
 
             int sentCount = 0;
             int totalAdmins = adminChatIds.size();
@@ -52,10 +52,10 @@ public class TelegramService {
 
             if (sentCount == totalAdmins) {
                 log.info("✅ Telegram уведомления о заказе #{} отправлены ВСЕМ {} админам",
-                        order.getId(), totalAdmins);
+                        order.getOrderNumber(), totalAdmins); // ИЗМЕНИТЬ!
             } else {
                 log.warn("⚠️ Telegram уведомления о заказе #{} отправлены {}/{} админам",
-                        order.getId(), sentCount, totalAdmins);
+                        order.getOrderNumber(), sentCount, totalAdmins); // ИЗМЕНИТЬ!
             }
 
         } catch (Exception e) {
@@ -67,7 +67,7 @@ public class TelegramService {
     private String formatNewOrderMessage(Order order) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("🆕 *НОВЫЙ ЗАКАЗ #").append(order.getId()).append("*\n");
+        sb.append("🆕 *НОВЫЙ ЗАКАЗ #").append(order.getOrderNumber()).append("*\n"); // ИЗМЕНИТЬ!
         sb.append("══════════════\n");
         sb.append("👤 *").append(escapeMarkdown(order.getCustomerName())).append("*\n");
         sb.append("📞 ").append(order.getCustomerPhone()).append("\n");
