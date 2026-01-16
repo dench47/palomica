@@ -58,30 +58,24 @@ const CheckoutPage = () => {
 
             const result = await orderService.createOrder(orderData);
 
+// В CheckoutPage.tsx исправить showOrderNotification
             if (result.success && result.orderId && result.accessToken) {
                 const orderUrl = `/order/${result.orderId}?token=${result.accessToken}`;
                 clearCart();
 
                 showOrderNotification(
                     'Заказ оформлен!',
-                    `Номер заказа: <strong>#${result.orderId}</strong><br><br>
-                     Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
-                     Сумма заказа: <strong>${formatPrice(totalPrice)}</strong><br><br>
-                     <a href="${orderUrl}" style="color: var(--accent-brown); text-decoration: underline;">
-                         Ссылка для отслеживания заказа
-                     </a>`
+                    `Номер заказа: <strong>#${result.orderNumber || result.orderId}</strong><br><br>
+         Мы свяжемся с вами для подтверждения в течение 30 минут.<br>
+         Сумма заказа: <strong>${formatPrice(totalPrice)}</strong><br><br>
+         <a href="${orderUrl}" style="color: var(--accent-brown); text-decoration: underline;">
+             Ссылка для отслеживания заказа
+         </a>`
                 ).then(() => {
                     setIsSubmitting(false);
                     setOrderComplete(true);
                     navigate(orderUrl);
                 });
-            } else {
-                setIsSubmitting(false);
-                showCartNotification(
-                    'Ошибка оформления',
-                    result.error || 'Не удалось оформить заказ',
-                    'error'
-                );
             }
         } catch {
             setIsSubmitting(false);

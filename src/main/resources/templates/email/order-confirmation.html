@@ -107,10 +107,10 @@
 
     <div class="content">
         <p>Здравствуйте, <span th:text="${order.customerName}" class="highlight"></span>!</p>
-        <p>Ваш заказ <strong>#<span th:text="${order.id}"></span></strong> успешно оформлен <span th:text="${orderDate}"></span>.</p>
+        <p>Ваш заказ <strong>#<span th:text="${orderNumber}"></span></strong> успешно оформлен <span th:text="${orderDate}"></span>.</p>
 
         <div class="order-info">
-            <div class="order-number">Заказ #<span th:text="${order.id}"></span></div>
+            <div class="order-number">Заказ #<span th:text="${orderNumber}"></span></div>
             <div class="order-details">
                 <p><strong>Доставка:</strong> <span th:text="${deliveryMethod}"></span></p>
                 <p><strong>Оплата:</strong> <span th:text="${paymentMethod}"></span></p>

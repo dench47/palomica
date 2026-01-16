@@ -1,16 +1,14 @@
 // pages/OrderPage.tsx
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import type { OrderDetails } from '../services/orderService';
-import { useCart } from '../context/CartContext';
 
 const OrderPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
-    const navigate = useNavigate();
-    const { addToCart } = useCart();
+
 
     const [order, setOrder] = useState<OrderDetails | null>(null);
     const [loading, setLoading] = useState(true);
@@ -38,28 +36,6 @@ const OrderPage = () => {
         }
     };
 
-    const handleReorder = async () => {
-        if (!order) return;
-
-        try {
-            // Добавляем все товары из заказа в корзину
-            for (const item of order.items) {
-                // Создаем объект variant
-                const variant = {
-                    size: item.size || 'ONE SIZE',
-                    color: item.color || undefined
-                };
-
-                // Добавляем каждый товар в корзину
-                addToCart(item.product, variant, item.quantity);
-            }
-
-            // Перенаправляем в корзину
-            navigate('/cart');
-        } catch (err) {
-            console.error('Error reordering:', err);
-        }
-    };
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -121,7 +97,7 @@ const OrderPage = () => {
                     fontSize: '2.5rem',
                     letterSpacing: '0.05em'
                 }}>
-                    Заказ #{order.id}
+                    Заказ #{order.orderNumber || order.id} {/* ИЗМЕНИТЬ! */}
                 </h1>
                 <p className="text-center text-muted small mb-5">
                     {formatDate(order.createdAt)}
@@ -274,12 +250,6 @@ const OrderPage = () => {
                                     ПРОДОЛЖИТЬ ПОКУПКИ
                                 </Link>
 
-                                <button
-                                    className="btn-fs btn-fs-outline btn-fs-lg btn-fs-block"
-                                    onClick={handleReorder}
-                                >
-                                    ПОВТОРИТЬ ЗАКАЗ
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -294,15 +264,18 @@ const getStatusIcon = (status: string) => {
     switch (status?.toUpperCase()) {
         case 'NEW': return '🆕';
         case 'PROCESSING': return '🔄';
+        case 'SHIPPED': return '🚚'; // ДОБАВЛЯЕМ ДЛЯ SHIPPED
         case 'COMPLETED': return '✅';
         case 'CANCELLED': return '❌';
         default: return '📋';
     }
 };
+
 const getStatusText = (status: string): string => {
     switch (status?.toUpperCase()) {
         case 'NEW': return 'Новый';
         case 'PROCESSING': return 'В обработке';
+        case 'SHIPPED': return 'В доставке'; // ДОБАВЛЯЕМ РУССКИЙ ТЕКСТ
         case 'COMPLETED': return 'Завершен';
         case 'CANCELLED': return 'Отменен';
         default: return status || 'Неизвестно';
@@ -313,6 +286,7 @@ const getStatusDescription = (status: string): string => {
     switch (status?.toUpperCase()) {
         case 'NEW': return 'Заказ принят и ожидает обработки';
         case 'PROCESSING': return 'Заказ готовится к отправке';
+        case 'SHIPPED': return 'Заказ передан в службу доставки'; // ДОБАВЛЯЕМ ОПИСАНИЕ
         case 'COMPLETED': return 'Заказ доставлен и завершен';
         case 'CANCELLED': return 'Заказ был отменен';
         default: return 'Статус заказа не определен';

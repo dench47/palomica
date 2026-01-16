@@ -152,7 +152,7 @@ public class OrderController {
             // ОТПРАВЛЯЕМ ПИСЬМО С ПОДТВЕРЖДЕНИЕМ ЗАКАЗА
             try {
                 emailService.sendOrderConfirmation(savedOrder);
-                System.out.println("✅ Email отправлен для заказа #" + savedOrder.getId());
+                System.out.println("✅ Email отправлен для заказа #" + savedOrder.getOrderNumber());
             } catch (Exception e) {
                 // Логируем ошибку, но не прерываем выполнение
                 System.err.println("❌ Ошибка отправки email: " + e.getMessage());
@@ -162,15 +162,16 @@ public class OrderController {
             // ОТПРАВЛЯЕМ TELEGRAM УВЕДОМЛЕНИЕ АДМИНУ
             try {
                 telegramService.sendNewOrderNotification(savedOrder);
-                System.out.println("✅ Telegram уведомление отправлено для заказа #" + savedOrder.getId());
+                System.out.println("✅ Telegram уведомление отправлено для заказа #" + savedOrder.getOrderNumber());
             } catch (Exception e) {
                 System.err.println("❌ Ошибка отправки Telegram уведомления: " + e.getMessage());
                 e.printStackTrace();
             }
 
-            // Возвращаем ID и токен
+            // Возвращаем номер заказа и токен
             Map<String, Object> response = new HashMap<>();
             response.put("orderId", savedOrder.getId());
+            response.put("orderNumber", savedOrder.getOrderNumber()); // Возвращаем номер заказа
             response.put("accessToken", savedOrder.getAccessToken());
 
             return ResponseEntity.ok(response);

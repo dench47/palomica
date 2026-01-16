@@ -1176,3 +1176,72 @@ a:hover {
     font-size: 0.85rem;
   }
 }
+
+/* ========== КЛИКАБЕЛЬНЫЕ СТРОКИ ДЛЯ АДМИНКИ ЗАКАЗОВ ========== */
+
+/* Эффект для строк таблицы заказов */
+.clickable-row {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.clickable-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  background-color: rgba(138, 122, 99, 0.05);
+  transition: width 0.3s ease;
+  z-index: 0;
+}
+
+.clickable-row:hover {
+  background-color: rgba(138, 122, 99, 0.03);
+}
+
+.clickable-row:hover::before {
+  width: 4px;
+}
+
+.clickable-row:active {
+  background-color: rgba(138, 122, 99, 0.08);
+  transform: translateY(1px);
+}
+
+/* Эффект для ячеек внутри кликабельной строки */
+.clickable-row > td {
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.clickable-row:hover > td {
+  background-color: transparent !important;
+}
+
+/* Убираем стандартные hover эффекты Bootstrap */
+.table-hover tbody tr.clickable-row:hover {
+  --bs-table-accent-bg: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Индикатор кликабельности */
+.clickable-row::after {
+  content: '↗';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%) scale(0.8);
+  opacity: 0;
+  color: var(--accent-brown-light);
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.clickable-row:hover::after {
+  opacity: 0.5;
+  transform: translateY(-50%) scale(1);
+}
