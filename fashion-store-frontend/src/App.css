@@ -246,3 +246,143 @@ main {
   }
 }
 
+/* ========== СТИЛИ ДЛЯ ВИДЖЕТА ЯНДЕКС.ДОСТАВКИ ========== */
+
+/* Основные стили для контейнера виджета */
+#delivery-widget .ya-delivery-widget-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f8f5f0 !important; /* Кремовый фон как на сайте */
+}
+
+/* Стили для карты */
+#delivery-widget .ya-delivery-map {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+/* Стили для списка ПВЗ */
+#delivery-widget .ya-delivery-points-list {
+  background-color: #f8f5f0 !important;
+  border-top: 1px solid #e8e5e0 !important;
+}
+
+/* Стили для элементов ПВЗ */
+#delivery-widget .ya-delivery-point-item {
+  background-color: #ffffff !important;
+  border: 1px solid #e8e5e0 !important;
+  border-radius: 6px !important;
+  margin: 8px !important;
+  padding: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+#delivery-widget .ya-delivery-point-item:hover {
+  background-color: #f8f5f0 !important;
+  border-color: #d4cfc5 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+#delivery-widget .ya-delivery-point-item.selected {
+  background-color: #fffaf0 !important;
+  border-color: #e6c9a8 !important;
+  border-left: 4px solid #e6c9a8 !important;
+}
+
+/* Стили для кнопок */
+#delivery-widget .ya-delivery-button {
+  background-color: #8a7a63 !important; /* Основной акцентный цвет сайта */
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 16px !important;
+  letter-spacing: 0.5px !important;
+}
+
+#delivery-widget .ya-delivery-button:hover {
+  background-color: #7a6a53 !important;
+}
+
+#delivery-widget .ya-delivery-button:disabled {
+  background-color: #d4cfc5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Стили для фильтров */
+#delivery-widget .ya-delivery-filter {
+  background-color: #ffffff !important;
+  border: 1px solid #e8e5e0 !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+}
+
+/* Стили для заголовков */
+#delivery-widget .ya-delivery-title {
+  font-family: 'Playfair Display', serif !important;
+  color: #333333 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Стили для текста */
+#delivery-widget .ya-delivery-text {
+  color: #666666 !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+/* Стили для иконок */
+#delivery-widget .ya-delivery-icon {
+  color: #8a7a63 !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  #delivery-widget .ya-delivery-widget-container {
+    border-radius: 0 !important;
+  }
+
+  #delivery-widget .ya-delivery-point-item {
+    margin: 6px !important;
+    padding: 10px !important;
+  }
+}
+
+/* Анимация загрузки */
+.ya-delivery-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background-color: #f8f5f0;
+  border-radius: 8px;
+}
+
+.ya-delivery-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e8e5e0;
+  border-top-color: #8a7a63;
+  border-radius: 50%;
+  animation: ya-delivery-spin 1s linear infinite;
+}
+
+@keyframes ya-delivery-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Контейнер виджета */
+.delivery-widget-container {
+  min-height: 450px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+

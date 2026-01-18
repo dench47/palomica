@@ -97,6 +97,24 @@
             color: #282840;
             font-weight: bold;
         }
+        .yandex-delivery-info {
+            background: #f0f9ff;
+            border-left: 4px solid #fc0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .yandex-delivery-title {
+            color: #000;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .yandex-delivery-title:before {
+            content: "📦";
+        }
     </style>
 </head>
 <body>
@@ -113,8 +131,34 @@
             <div class="order-number">Заказ #<span th:text="${orderNumber}"></span></div>
             <div class="order-details">
                 <p><strong>Доставка:</strong> <span th:text="${deliveryMethod}"></span></p>
+
+                <!-- Яндекс.Доставка: специальный блок -->
+                <div th:if="${order.deliveryMethod == 'yandex' or order.deliveryMethod == 'yandex_delivery'}">
+                    <div class="yandex-delivery-info">
+                        <div class="yandex-delivery-title">Пункт выдачи Яндекс.Доставки</div>
+                        <p th:if="${order.yandexDeliveryAddress}">
+                            <strong>Адрес ПВЗ:</strong> <span th:text="${order.yandexDeliveryAddress}"></span>
+                        </p>
+                        <p th:if="${order.yandexDeliveryPointId}">
+                            <strong>ID пункта:</strong> <span th:text="${order.yandexDeliveryPointId}"></span>
+                        </p>
+                        <p th:if="${order.yandexDeliveryComment}">
+                            <strong>Дополнительно:</strong> <span th:text="${order.yandexDeliveryComment}"></span>
+                        </p>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                            ⓘ Забрать заказ можно после получения уведомления о прибытии
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Обычная доставка -->
+                <div th:unless="${order.deliveryMethod == 'yandex' or order.deliveryMethod == 'yandex_delivery'}">
+                    <p th:if="${order.deliveryAddress}">
+                        <strong>Адрес:</strong> <span th:text="${order.deliveryAddress}"></span>
+                    </p>
+                </div>
+
                 <p><strong>Оплата:</strong> <span th:text="${paymentMethod}"></span></p>
-                <p th:if="${order.deliveryAddress}"><strong>Адрес:</strong> <span th:text="${order.deliveryAddress}"></span></p>
                 <p><strong>Сумма заказа:</strong> <span th:text="${totalAmount}" class="highlight"></span></p>
             </div>
         </div>

@@ -24,7 +24,11 @@ export type Product = {
     subcategory?: string;    // Название подкатегории (строка)
     variants: ProductVariant[]; // Варианты товара
 
-    // Вычисляемые поля для обратной совместимости
+    // Для обратной совместимости (опциональные поля)
+    size?: string;                    // Устаревшее поле, теперь опциональное
+    availableQuantity?: number;       // Устаревшее поле, теперь опциональное
+
+    // Вычисляемые методы (опциональные)
     getSizes?: () => string[];
     getTotalAvailableQuantity?: () => number;
     getAvailableQuantityForSize?: (size: string) => number;
@@ -68,6 +72,14 @@ export interface OrderRequest {
     paymentMethod: string;
     comment?: string;
     items: OrderItemRequest[];
+
+    // Поля для Яндекс.Доставки (ПВЗ)
+    yandexDeliveryPointId?: string | null;
+    yandexDeliveryAddress?: string | null;
+    yandexDeliveryCity?: string | null;
+    yandexDeliveryStreet?: string | null;
+    yandexDeliveryHouse?: string | null;
+    yandexDeliveryComment?: string | null;
 }
 
 // ========== КОНФИГУРАЦИЯ API ==========
@@ -79,26 +91,26 @@ const API_BASE_URL = import.meta.env.DEV
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const processProduct = (product: any): Product => {
+const processProduct = (product: Record<string, unknown>): Product => {
+    const variants = product.variants as ProductVariant[] || [];
+
     const processedProduct: Product = {
-        ...product,
-        // Для обратной совместимости добавляем старые поля
-        size: product.variants?.map((v: ProductVariant) => v.size).join(',') || '',
-        availableQuantity: product.variants?.reduce((sum: number, v: ProductVariant) =>
-            sum + v.availableQuantity, 0) || 0,
+        ...product as Omit<Product, 'variants' | 'getSizes' | 'getTotalAvailableQuantity' | 'getAvailableQuantityForSize'>,
+        variants,
+        // Для обратной совместимости добавляем устаревшие поля как опциональные
+        size: variants.map(v => v.size).join(',') || '',
+        availableQuantity: variants.reduce((sum, v) => sum + v.availableQuantity, 0) || 0,
     };
 
     // Добавляем вычисляемые методы
     processedProduct.getSizes = () =>
-        product.variants?.map((v: ProductVariant) => v.size) || [];
+        variants.map(v => v.size) || [];
 
     processedProduct.getTotalAvailableQuantity = () =>
-        product.variants?.reduce((sum: number, v: ProductVariant) =>
-            sum + v.availableQuantity, 0) || 0;
+        variants.reduce((sum, v) => sum + v.availableQuantity, 0) || 0;
 
     processedProduct.getAvailableQuantityForSize = (size: string) => {
-        const variant = product.variants?.find((v: ProductVariant) => v.size === size);
+        const variant = variants.find(v => v.size === size);
         return variant ? variant.actuallyAvailable ||
             Math.max(0, variant.availableQuantity - variant.reservedQuantity) : 0;
     };
@@ -147,7 +159,7 @@ export const productService = {
                 console.error(`HTTP error! status: ${response.status}`);
                 return [];
             }
-            const products = await response.json();
+            const products = await response.json() as Record<string, unknown>[];
             // Обрабатываем каждый продукт, добавляя вычисляемые поля
             return products.map(processProduct);
         } catch (error) {
@@ -163,7 +175,7 @@ export const productService = {
                 console.error(`HTTP error! status: ${response.status}`);
                 return null;
             }
-            const product = await response.json();
+            const product = await response.json() as Record<string, unknown>;
             return processProduct(product);
         } catch (error) {
             console.error('Error fetching product:', error);
@@ -222,7 +234,7 @@ export const s3Service = {
                 }
             });
 
-            const data = await response.json();
+            const data = await response.json() as { success: boolean };
             return response.ok && data.success;
         } catch (error) {
             console.error('Error deleting file from S3:', error);
@@ -247,7 +259,7 @@ export const s3Service = {
                 body: JSON.stringify(fileUrls)
             });
 
-            const data = await response.json();
+            const data = await response.json() as { success: boolean };
             return response.ok && data.success;
         } catch (error) {
             console.error('Error deleting multiple files from S3:', error);
