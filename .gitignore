@@ -60,7 +60,7 @@ build/
 *.env
 !.env.example
 .secrets/
-config/
+
 
 # Временные файлы деплоя
 deploy.zip
