@@ -16,6 +16,14 @@ public class OrderRequest {
     private String comment;
     private List<OrderItemRequest> items;
 
+    // Поля для Яндекс.Доставки (ПВЗ)
+    private String yandexDeliveryPointId;      // ID выбранного ПВЗ
+    private String yandexDeliveryAddress;      // Полный адрес ПВЗ
+    private String yandexDeliveryCity;         // Город ПВЗ
+    private String yandexDeliveryStreet;       // Улица ПВЗ
+    private String yandexDeliveryHouse;        // Дом ПВЗ
+    private String yandexDeliveryComment;      // Комментарий к ПВЗ
+
     @Setter
     @Getter
     public static class OrderItemRequest {

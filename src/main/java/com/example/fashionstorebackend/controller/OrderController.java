@@ -34,7 +34,7 @@ public class OrderController {
     private EmailService emailService;
 
     @Autowired
-    private TelegramService telegramService; // ДОБАВИЛИ TELEGRAM SERVICE
+    private TelegramService telegramService;
 
     @PostMapping
     @Transactional
@@ -44,10 +44,40 @@ public class OrderController {
             order.setCustomerName(orderRequest.getCustomerName());
             order.setCustomerEmail(orderRequest.getCustomerEmail());
             order.setCustomerPhone(orderRequest.getCustomerPhone());
-            order.setDeliveryAddress(orderRequest.getDeliveryAddress());
             order.setDeliveryMethod(orderRequest.getDeliveryMethod());
             order.setPaymentMethod(orderRequest.getPaymentMethod());
             order.setComment(orderRequest.getComment());
+
+            // Обработка адреса доставки в зависимости от метода
+            if ("yandex".equalsIgnoreCase(orderRequest.getDeliveryMethod())) {
+                // Для Яндекс.Доставки используем адрес ПВЗ как основной
+                order.setDeliveryAddress("Яндекс.Доставка - ПВЗ");
+
+                // Сохраняем данные Яндекс.Доставки
+                order.setYandexDeliveryPointId(orderRequest.getYandexDeliveryPointId());
+                order.setYandexDeliveryAddress(orderRequest.getYandexDeliveryAddress());
+                order.setYandexDeliveryCity(orderRequest.getYandexDeliveryCity());
+                order.setYandexDeliveryStreet(orderRequest.getYandexDeliveryStreet());
+                order.setYandexDeliveryHouse(orderRequest.getYandexDeliveryHouse());
+                order.setYandexDeliveryComment(orderRequest.getYandexDeliveryComment());
+
+                // Формируем полный адрес для отображения
+                String yandexAddress = buildYandexDeliveryAddress(orderRequest);
+                if (yandexAddress != null && !yandexAddress.isEmpty()) {
+                    order.setDeliveryAddress("Яндекс.Доставка - " + yandexAddress);
+                }
+            } else {
+                // Для других способов доставки используем обычный адрес
+                order.setDeliveryAddress(orderRequest.getDeliveryAddress());
+
+                // Очищаем поля Яндекс.Доставки, если они пришли
+                order.setYandexDeliveryPointId(null);
+                order.setYandexDeliveryAddress(null);
+                order.setYandexDeliveryCity(null);
+                order.setYandexDeliveryStreet(null);
+                order.setYandexDeliveryHouse(null);
+                order.setYandexDeliveryComment(null);
+            }
 
             double totalAmount = 0;
 
@@ -171,7 +201,7 @@ public class OrderController {
             // Возвращаем номер заказа и токен
             Map<String, Object> response = new HashMap<>();
             response.put("orderId", savedOrder.getId());
-            response.put("orderNumber", savedOrder.getOrderNumber()); // Возвращаем номер заказа
+            response.put("orderNumber", savedOrder.getOrderNumber());
             response.put("accessToken", savedOrder.getAccessToken());
 
             return ResponseEntity.ok(response);
@@ -179,5 +209,26 @@ public class OrderController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Ошибка при создании заказа: " + e.getMessage());
         }
+    }
+
+    // Вспомогательный метод для формирования адреса Яндекс.Доставки
+    private String buildYandexDeliveryAddress(OrderRequest orderRequest) {
+        StringBuilder address = new StringBuilder();
+
+        if (orderRequest.getYandexDeliveryCity() != null && !orderRequest.getYandexDeliveryCity().isEmpty()) {
+            address.append(orderRequest.getYandexDeliveryCity());
+        }
+
+        if (orderRequest.getYandexDeliveryStreet() != null && !orderRequest.getYandexDeliveryStreet().isEmpty()) {
+            if (address.length() > 0) address.append(", ");
+            address.append("ул. ").append(orderRequest.getYandexDeliveryStreet());
+        }
+
+        if (orderRequest.getYandexDeliveryHouse() != null && !orderRequest.getYandexDeliveryHouse().isEmpty()) {
+            if (address.length() > 0) address.append(", ");
+            address.append("д. ").append(orderRequest.getYandexDeliveryHouse());
+        }
+
+        return address.toString();
     }
 }

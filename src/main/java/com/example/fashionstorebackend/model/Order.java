@@ -53,6 +53,25 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Поля для Яндекс.Доставки (ПВЗ)
+    @Column(name = "yandex_delivery_point_id")
+    private String yandexDeliveryPointId;      // ID выбранного ПВЗ
+
+    @Column(name = "yandex_delivery_address", length = 500)
+    private String yandexDeliveryAddress;      // Полный адрес ПВЗ
+
+    @Column(name = "yandex_delivery_city")
+    private String yandexDeliveryCity;         // Город ПВЗ
+
+    @Column(name = "yandex_delivery_street")
+    private String yandexDeliveryStreet;       // Улица ПВЗ
+
+    @Column(name = "yandex_delivery_house")
+    private String yandexDeliveryHouse;        // Дом ПВЗ
+
+    @Column(name = "yandex_delivery_comment", length = 1000)
+    private String yandexDeliveryComment;      // Комментарий к ПВЗ
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
@@ -72,6 +91,31 @@ public class Order {
         this.paymentMethod = paymentMethod;
         this.comment = comment;
         this.totalAmount = totalAmount;
+        generateAccessToken();
+        generateOrderNumber();
+    }
+
+    // Обновленный конструктор с Яндекс.Доставкой
+    public Order(String customerName, String customerEmail, String customerPhone,
+                 String deliveryAddress, String deliveryMethod, String paymentMethod,
+                 String comment, Double totalAmount,
+                 String yandexDeliveryPointId, String yandexDeliveryAddress,
+                 String yandexDeliveryCity, String yandexDeliveryStreet,
+                 String yandexDeliveryHouse, String yandexDeliveryComment) {
+        this.customerName = customerName;
+        this.customerEmail = customerEmail;
+        this.customerPhone = customerPhone;
+        this.deliveryAddress = deliveryAddress;
+        this.deliveryMethod = deliveryMethod;
+        this.paymentMethod = paymentMethod;
+        this.comment = comment;
+        this.totalAmount = totalAmount;
+        this.yandexDeliveryPointId = yandexDeliveryPointId;
+        this.yandexDeliveryAddress = yandexDeliveryAddress;
+        this.yandexDeliveryCity = yandexDeliveryCity;
+        this.yandexDeliveryStreet = yandexDeliveryStreet;
+        this.yandexDeliveryHouse = yandexDeliveryHouse;
+        this.yandexDeliveryComment = yandexDeliveryComment;
         generateAccessToken();
         generateOrderNumber();
     }
@@ -112,5 +156,13 @@ public class Order {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
+    }
+
+    // Метод для получения полного адреса доставки в зависимости от метода
+    public String getFullDeliveryAddress() {
+        if ("yandex".equalsIgnoreCase(this.deliveryMethod) && this.yandexDeliveryAddress != null) {
+            return "ПВЗ Яндекс.Доставки: " + this.yandexDeliveryAddress;
+        }
+        return this.deliveryAddress;
     }
 }

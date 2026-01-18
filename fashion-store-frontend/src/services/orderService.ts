@@ -7,6 +7,16 @@ const API_BASE_URL = import.meta.env.DEV
     ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
     : '';  // В продакшене: пустая строка (относительный путь)
 
+// Интерфейс для данных Яндекс.Доставки (используется в CheckoutPage)
+export interface YandexDeliveryData {
+    pointId: string;
+    address: string;
+    city: string;
+    street: string;
+    house: string;
+    comment: string;
+}
+
 export interface OrderData {
     customerName: string;
     customerEmail: string;
@@ -17,19 +27,28 @@ export interface OrderData {
     comment?: string;
     items: CartItem[];
     total: number;
+
+    // Данные Яндекс.Доставки (опционально)
+    yandexDeliveryPointId?: string | null;
+    yandexDeliveryAddress?: string | null;
+    yandexDeliveryCity?: string | null;
+    yandexDeliveryStreet?: string | null;
+    yandexDeliveryHouse?: string | null;
+    yandexDeliveryComment?: string | null;
 }
 
 export interface OrderResponse {
     success: boolean;
     orderId?: number;
-    orderNumber?: string; // ДОБАВИТЬ ЭТО!
+    orderNumber?: string;
     accessToken?: string;
     error?: string;
 }
 
+// Интерфейс для данных заказа с бэкенда
 export interface OrderDetails {
     id: number;
-    orderNumber: string; // ДОБАВИТЬ ЭТО!
+    orderNumber: string;
     customerName: string;
     customerEmail: string;
     customerPhone: string;
@@ -42,6 +61,41 @@ export interface OrderDetails {
     accessToken: string;
     createdAt: string;
     items: OrderItemDetails[];
+
+    // Поля Яндекс.Доставки для отображения в админке
+    yandexDeliveryPointId?: string;
+    yandexDeliveryAddress?: string;
+    yandexDeliveryCity?: string;
+    yandexDeliveryStreet?: string;
+    yandexDeliveryHouse?: string;
+    yandexDeliveryComment?: string;
+}
+
+// Интерфейс для сырых данных заказа с бэкенда
+interface RawOrderDetails extends Omit<OrderDetails, 'items'> {
+    items: RawOrderItem[];
+}
+
+// Интерфейс для сырых данных элемента заказа
+interface RawOrderItem {
+    id: number;
+    quantity: number;
+    price: number;
+    size?: string;
+    color?: string;
+    product: {
+        id: number;
+        name: string;
+        imageUrl: string;
+        price: number;
+        description?: string;
+        category?: string;
+        color?: string;
+        material?: string;
+        careInstructions?: string;
+        additionalImages?: string[];
+        variants?: ProductVariant[];
+    };
 }
 
 // Обновляем интерфейс OrderItemDetails чтобы Product был полным
@@ -65,13 +119,21 @@ export const orderService = {
                 deliveryAddress: orderData.deliveryAddress,
                 deliveryMethod: orderData.deliveryMethod,
                 paymentMethod: orderData.paymentMethod,
-                comment: orderData.comment,
+                comment: orderData.comment || '',
                 items: orderData.items.map(item => ({
                     productId: item.product.id,
                     quantity: item.quantity,
                     size: item.selectedVariant?.size,
                     color: item.selectedVariant?.color
-                }))
+                })),
+
+                // Данные Яндекс.Доставки
+                yandexDeliveryPointId: orderData.yandexDeliveryPointId || null,
+                yandexDeliveryAddress: orderData.yandexDeliveryAddress || null,
+                yandexDeliveryCity: orderData.yandexDeliveryCity || null,
+                yandexDeliveryStreet: orderData.yandexDeliveryStreet || null,
+                yandexDeliveryHouse: orderData.yandexDeliveryHouse || null,
+                yandexDeliveryComment: orderData.yandexDeliveryComment || null
             };
 
             console.log('Отправка заказа:', orderRequest);
@@ -93,11 +155,11 @@ export const orderService = {
                 };
             }
 
-            const result = await response.json();
+            const result = await response.json() as { orderId: number; orderNumber: string; accessToken: string };
             return {
                 success: true,
                 orderId: result.orderId,
-                orderNumber: result.orderNumber, // ДОБАВИТЬ ЭТО!
+                orderNumber: result.orderNumber,
                 accessToken: result.accessToken
             };
 
@@ -127,32 +189,10 @@ export const orderService = {
                 throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
             }
 
-            const orderData = await response.json();
-
-            // Интерфейс для сырых данных из API
-            interface RawOrderItem {
-                id: number;
-                quantity: number;
-                price: number;
-                size?: string;
-                color?: string;
-                product: {
-                    id: number;
-                    name: string;
-                    imageUrl: string;
-                    price: number;
-                    description?: string;
-                    category?: string;
-                    color?: string;
-                    material?: string;
-                    careInstructions?: string;
-                    additionalImages?: string[];
-                    variants?: ProductVariant[];
-                };
-            }
+            const rawOrderData = await response.json() as RawOrderDetails;
 
             // Обрабатываем продукт в каждом элементе заказа
-            const processedItems = (orderData.items as RawOrderItem[]).map((item: RawOrderItem) => ({
+            const processedItems = rawOrderData.items.map((item: RawOrderItem) => ({
                 id: item.id,
                 quantity: item.quantity,
                 price: item.price,
@@ -184,20 +224,27 @@ export const orderService = {
             }));
 
             return {
-                id: orderData.id,
-                orderNumber: orderData.orderNumber || `ORD-${orderData.id}`, // ДОБАВИТЬ ЭТО!
-                customerName: orderData.customerName,
-                customerEmail: orderData.customerEmail,
-                customerPhone: orderData.customerPhone,
-                deliveryAddress: orderData.deliveryAddress,
-                deliveryMethod: orderData.deliveryMethod,
-                paymentMethod: orderData.paymentMethod,
-                comment: orderData.comment,
-                totalAmount: orderData.totalAmount,
-                status: orderData.status,
-                accessToken: orderData.accessToken,
-                createdAt: orderData.createdAt,
-                items: processedItems
+                id: rawOrderData.id,
+                orderNumber: rawOrderData.orderNumber || `ORD-${rawOrderData.id}`,
+                customerName: rawOrderData.customerName,
+                customerEmail: rawOrderData.customerEmail,
+                customerPhone: rawOrderData.customerPhone,
+                deliveryAddress: rawOrderData.deliveryAddress,
+                deliveryMethod: rawOrderData.deliveryMethod,
+                paymentMethod: rawOrderData.paymentMethod,
+                comment: rawOrderData.comment,
+                totalAmount: rawOrderData.totalAmount,
+                status: rawOrderData.status,
+                accessToken: rawOrderData.accessToken,
+                createdAt: rawOrderData.createdAt,
+                items: processedItems,
+                // Поля Яндекс.Доставки (если есть)
+                yandexDeliveryPointId: rawOrderData.yandexDeliveryPointId,
+                yandexDeliveryAddress: rawOrderData.yandexDeliveryAddress,
+                yandexDeliveryCity: rawOrderData.yandexDeliveryCity,
+                yandexDeliveryStreet: rawOrderData.yandexDeliveryStreet,
+                yandexDeliveryHouse: rawOrderData.yandexDeliveryHouse,
+                yandexDeliveryComment: rawOrderData.yandexDeliveryComment
             };
 
         } catch (error) {

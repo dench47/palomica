@@ -7,7 +7,8 @@ import {
     Truck,
     Filter,
     RefreshCw,
-    Search
+    Search,
+    MapPin
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -40,6 +41,14 @@ interface Order {
     items: OrderItem[];
     comment?: string;
     accessToken?: string;
+
+    // Поля для Яндекс.Доставки
+    yandexDeliveryPointId?: string;
+    yandexDeliveryAddress?: string;
+    yandexDeliveryCity?: string;
+    yandexDeliveryStreet?: string;
+    yandexDeliveryHouse?: string;
+    yandexDeliveryComment?: string;
 }
 
 const AdminOrdersPage = () => {
@@ -87,7 +96,7 @@ const AdminOrdersPage = () => {
                 throw new Error(`Ошибка загрузки: ${response.status}`);
             }
 
-            const data = await response.json();
+            const data = await response.json() as Order[];
             setOrders(data);
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -116,7 +125,7 @@ const AdminOrdersPage = () => {
                 throw new Error(`Ошибка поиска: ${response.status}`);
             }
 
-            const data = await response.json();
+            const data = await response.json() as Order[];
             setOrders(data);
             setStatusFilter('ALL');
         } catch (error) {
@@ -159,13 +168,13 @@ const AdminOrdersPage = () => {
             });
 
             if (response.ok) {
-                const updatedOrder = await response.json();
+                const updatedOrder = await response.json() as Order;
                 setOrders(orders.map(order =>
                     order.id === orderId ? updatedOrder : order
                 ));
                 return true;
             } else {
-                const errorData = await response.json();
+                const errorData = await response.json() as { message?: string };
                 showErrorAlert(`Ошибка обновления статуса: ${errorData.message || 'Неизвестная ошибка'}`);
                 return false;
             }
@@ -302,6 +311,7 @@ const AdminOrdersPage = () => {
         if (methodLower.includes('pickup') || methodLower.includes('самовывоз')) return 'Самовывоз';
         if (methodLower.includes('delivery') || methodLower.includes('курьер')) return 'Доставка курьером';
         if (methodLower.includes('post') || methodLower.includes('почта')) return 'Почта России';
+        if (methodLower.includes('yandex')) return 'Яндекс.Доставка (ПВЗ)';
         return method;
     };
 
@@ -312,6 +322,23 @@ const AdminOrdersPage = () => {
         if (methodLower.includes('card') && methodLower.includes('receiving')) return 'Картой при получении';
         if (methodLower.includes('card')) return 'Картой';
         return method;
+    };
+
+    // Проверка, является ли заказ с Яндекс.Доставкой
+    const isYandexDelivery = (order: Order) => {
+        return order.deliveryMethod.toLowerCase().includes('yandex') ||
+            !!(order.yandexDeliveryPointId && order.yandexDeliveryAddress);
+    };
+
+    // Получение адреса для Яндекс.Доставки
+    const getYandexDeliveryAddress = (order: Order) => {
+        if (order.yandexDeliveryAddress) {
+            return order.yandexDeliveryAddress;
+        }
+        if (order.yandexDeliveryCity && order.yandexDeliveryStreet && order.yandexDeliveryHouse) {
+            return `${order.yandexDeliveryCity}, ул. ${order.yandexDeliveryStreet}, д. ${order.yandexDeliveryHouse}`;
+        }
+        return 'Адрес ПВЗ не указан';
     };
 
     if (loading && orders.length === 0) {
@@ -408,7 +435,6 @@ const AdminOrdersPage = () => {
             </div>
 
             {/* Таблица заказов */}
-            {/* Таблица заказов */}
             <div className="card rounded-0 border-1">
                 <div className="table-responsive">
                     <table className="table table-hover mb-0">
@@ -434,6 +460,12 @@ const AdminOrdersPage = () => {
                                 <td>
                                     <div className="fw-medium">{order.customerName}</div>
                                     <div className="small text-muted">{order.customerPhone}</div>
+                                    {isYandexDelivery(order) && (
+                                        <div className="small text-warning d-flex align-items-center gap-1 mt-1">
+                                            <MapPin size={12} />
+                                            Яндекс.Доставка
+                                        </div>
+                                    )}
                                 </td>
                                 <td className="small">{formatDate(order.createdAt)}</td>
                                 <td className="fw-medium">{formatPrice(order.totalAmount)}</td>
@@ -476,6 +508,8 @@ const AdminOrdersPage = () => {
                     onCancelOrder={showCancelConfirm}
                     translateDeliveryMethod={translateDeliveryMethod}
                     translatePaymentMethod={translatePaymentMethod}
+                    isYandexDelivery={isYandexDelivery(selectedOrder)}
+                    getYandexDeliveryAddress={getYandexDeliveryAddress}
                 />
             )}
         </div>
@@ -490,6 +524,8 @@ interface OrderDetailModalProps {
     onCancelOrder: (orderId: number) => Promise<void>;
     translateDeliveryMethod: (method: string) => string;
     translatePaymentMethod: (method: string) => string;
+    isYandexDelivery: boolean;
+    getYandexDeliveryAddress: (order: Order) => string;
 }
 
 const OrderDetailModal = ({
@@ -498,7 +534,9 @@ const OrderDetailModal = ({
                               onStatusChange,
                               onCancelOrder,
                               translateDeliveryMethod,
-                              translatePaymentMethod
+                              translatePaymentMethod,
+                              isYandexDelivery,
+                              getYandexDeliveryAddress
                           }: OrderDetailModalProps) => {
     const [updating, setUpdating] = useState<string | null>(null);
 
@@ -537,6 +575,7 @@ const OrderDetailModal = ({
             default: return status;
         }
     };
+
     return (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
             <div className="modal-dialog modal-lg modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
@@ -566,11 +605,39 @@ const OrderDetailModal = ({
                             <div className="col-md-6">
                                 <h6 className="small text-muted mb-3">Доставка и оплата</h6>
                                 <div className="mb-2">
-                                    <strong>Адрес доставки:</strong> {order.deliveryAddress}
-                                </div>
-                                <div className="mb-2">
                                     <strong>Способ доставки:</strong> {translateDeliveryMethod(order.deliveryMethod)}
                                 </div>
+
+                                {/* Блок для Яндекс.Доставки */}
+                                {isYandexDelivery && (
+                                    <div className="mb-3 p-3 bg-warning bg-opacity-10 border-start border-warning border-4">
+                                        <div className="d-flex align-items-center mb-1">
+                                            <MapPin size={16} className="me-2 text-warning" />
+                                            <strong className="text-warning">Яндекс.Доставка</strong>
+                                        </div>
+                                        <div className="mb-1">
+                                            <strong>Адрес ПВЗ:</strong> {getYandexDeliveryAddress(order)}
+                                        </div>
+                                        {order.yandexDeliveryPointId && (
+                                            <div className="mb-1">
+                                                <strong>ID пункта:</strong> <code>{order.yandexDeliveryPointId}</code>
+                                            </div>
+                                        )}
+                                        {order.yandexDeliveryComment && (
+                                            <div className="mb-1">
+                                                <strong>Комментарий:</strong> {order.yandexDeliveryComment}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Блок для обычной доставки */}
+                                {!isYandexDelivery && order.deliveryAddress && (
+                                    <div className="mb-2">
+                                        <strong>Адрес доставки:</strong> {order.deliveryAddress}
+                                    </div>
+                                )}
+
                                 <div className="mb-2">
                                     <strong>Способ оплаты:</strong> {translatePaymentMethod(order.paymentMethod)}
                                 </div>
