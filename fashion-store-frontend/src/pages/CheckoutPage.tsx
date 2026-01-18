@@ -49,6 +49,34 @@ interface YaDeliveryConfig {
     };
 }
 
+// Интерфейс для данных геокодера Яндекс
+interface YandexGeocoderResponse {
+    response: {
+        GeoObjectCollection: {
+            featureMember: Array<{
+                GeoObject: {
+                    metaDataProperty: {
+                        GeocoderMetaData: {
+                            Address: {
+                                Components: Array<{
+                                    kind: string;
+                                    name: string;
+                                }>;
+                            };
+                        };
+                    };
+                };
+            }>;
+        };
+    };
+}
+
+// Интерфейс для компонента адреса
+interface AddressComponent {
+    kind: string;
+    name: string;
+}
+
 // Объявление глобального интерфейса для Яндекс.Доставки
 declare global {
     interface Window {
@@ -62,8 +90,15 @@ type WidgetInstance = unknown;
 const CheckoutPage = () => {
     const { items, totalPrice, clearCart } = useCart();
     const navigate = useNavigate();
+
+    // Ref для контейнера виджета - создаем новый при каждом рендере Яндекс.Доставки
     const widgetContainerRef = useRef<HTMLDivElement>(null);
     const widgetInstanceRef = useRef<WidgetInstance>(null);
+
+    // Флаги для управления состоянием
+    const isScriptLoadedRef = useRef(false);
+    const cleanupRef = useRef<(() => void) | null>(null);
+    const isCityDetectedRef = useRef(false); // Флаг для предотвращения повторного определения города
 
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,7 +118,9 @@ const CheckoutPage = () => {
     // Состояние для Яндекс.Доставки
     const [yandexDeliveryData, setYandexDeliveryData] = useState<YandexDeliveryPoint | null>(null);
     const [widgetError, setWidgetError] = useState<string | null>(null);
-
+    const [userCity, setUserCity] = useState<string>('Москва');
+    const [isGeolocationLoading, setIsGeolocationLoading] = useState(false);
+    const [widgetKey, setWidgetKey] = useState(0); // Ключ для принудительного ререндера виджета
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -96,136 +133,221 @@ const CheckoutPage = () => {
         }));
     }, []);
 
+    // Функция для определения города пользователя по геолокации
+    const detectUserCity = useCallback(async () => {
+        // Если город уже определен, не делаем повторно
+        if (isCityDetectedRef.current || isGeolocationLoading) return;
+
+        setIsGeolocationLoading(true);
+
+        try {
+            if (!navigator.geolocation) {
+                console.log('Геолокация не поддерживается браузером');
+                isCityDetectedRef.current = true;
+                return;
+            }
+
+            // Используем modern API геолокации
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 600000
+                });
+            });
+
+            const { latitude, longitude } = position.coords;
+
+            // Используем Yandex Geocoder API
+            const apiKey = '7bc98a3f-0b9a-4170-b4de-8d09ba13d252';
+            const response = await fetch(
+                `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&format=json&geocode=${longitude},${latitude}`
+            );
+
+            if (response.ok) {
+                const data: YandexGeocoderResponse = await response.json();
+                const featureMember = data?.response?.GeoObjectCollection?.featureMember?.[0];
+                const addressComponents = featureMember?.GeoObject?.metaDataProperty?.GeocoderMetaData?.Address?.Components;
+
+                if (addressComponents) {
+                    const cityComponent = addressComponents.find(
+                        (component: AddressComponent) => component.kind === 'locality'
+                    );
+
+                    if (cityComponent?.name && cityComponent.name !== userCity) {
+                        setUserCity(cityComponent.name);
+                        console.log('Определен город пользователя:', cityComponent.name);
+                    }
+                }
+            }
+        } catch (error) {
+            const geolocationError = error as GeolocationPositionError | Error;
+            console.log('Пользователь не разрешил геолокацию или произошла ошибка:', geolocationError.message);
+            // Оставляем Москву по умолчанию
+        } finally {
+            setIsGeolocationLoading(false);
+            isCityDetectedRef.current = true;
+        }
+    }, [isGeolocationLoading, userCity]);
+
     // Функция для обработки выбора ПВЗ
-    useCallback((event: Event) => {
+    const handlePointSelected = useCallback((event: Event) => {
         const customEvent = event as CustomEvent<YandexDeliveryPoint>;
         const pointData = customEvent.detail;
         setYandexDeliveryData(pointData);
         console.log('Выбран ПВЗ:', pointData);
     }, []);
-// Функция инициализации виджета
-    const startWidget = useCallback(() => {
-        if (window.YaDelivery && widgetContainerRef.current) {
-            try {
-                // Проверяем, что элемент все еще существует
-                if (!document.getElementById('delivery-widget')) {
-                    console.error('Контейнер виджета не найден');
-                    setWidgetError('Контейнер карты не найден. Пожалуйста, обновите страницу.');
-                    return;
-                }
 
-                // Очищаем предыдущий виджет
-                if (widgetContainerRef.current) {
-                    widgetContainerRef.current.innerHTML = '';
-                }
+    // Функция очистки виджета
+    const cleanupWidget = useCallback(() => {
+        console.log('Очистка виджета');
 
-                widgetInstanceRef.current = window.YaDelivery.createWidget({
-                    containerId: 'delivery-widget',
-                    params: {
-                        city: "Москва",
-                        size: {
-                            "height": "450px",
-                            "width": "100%"
-                        },
-                        source_platform_station: "05e809bb-4521-42d9-a936-0fb0744c0fb3",
-                        physical_dims_weight_gross: 10000,
-                        delivery_price: (price: number) => price + " руб",
-                        delivery_term: 3,
-                        show_select_button: true,
-                        filter: {
-                            type: [
-                                "pickup_point",
-                                "terminal"
-                            ],
-                            is_yandex_branded: false,
-                            payment_methods: [
-                                "already_paid",
-                                "card_on_receipt"
-                            ],
-                            payment_methods_filter: "or"
-                        }
-                    },
-                });
-                setWidgetError(null);
-                console.log('Виджет Яндекс.Доставки инициализирован');
-            } catch (error) {
-                console.error('Ошибка инициализации виджета Яндекс.Доставки:', error);
-                setWidgetError('Не удалось загрузить карту пунктов выдачи. Пожалуйста, попробуйте позже.');
-            }
-        } else {
-            setWidgetError('Библиотека Яндекс.Доставки не загружена. Пожалуйста, обновите страницу.');
-        }
-    }, []);
+        // Отписываемся от события
+        document.removeEventListener('YaNddWidgetPointSelected', handlePointSelected);
 
-// Функция уничтожения виджета
-    const destroyWidget = useCallback(() => {
-        // Не пытаемся вызывать destroyWidget, так как он может не существовать
-        // Просто очищаем контейнер
+        // Очищаем контейнер
         if (widgetContainerRef.current) {
             widgetContainerRef.current.innerHTML = '';
         }
+
         widgetInstanceRef.current = null;
-    }, []);
+        isScriptLoadedRef.current = false;
+    }, [handlePointSelected]);
 
-    // Инициализация виджета Яндекс.Доставки
-    useEffect(() => {
-        if (deliveryMethod === 'yandex') {
-            console.log('Активация Яндекс.Доставки');
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setWidgetError(null); // Очищаем ошибки при активации
+    // Инициализация виджета (вызывается только при изменении deliveryMethod или userCity)
+    const initWidget = useCallback(async () => {
+        if (deliveryMethod !== 'yandex' || !widgetContainerRef.current) {
+            return;
+        }
 
-            // Загружаем скрипт только если он еще не загружен
-            if (!document.querySelector('script[src*="ndd-widget.landpro.site"]')) {
-                const script = document.createElement('script');
-                script.src = 'https://ndd-widget.landpro.site/widget.js';
-                script.async = true;
+        console.log('Начало инициализации виджета для города:', userCity);
 
-                script.onload = () => {
-                    console.log('Скрипт Яндекс.Доставки загружен');
-                    // Даем время на инициализацию
-                    setTimeout(() => {
-                        if (deliveryMethod === 'yandex' && widgetContainerRef.current) {
-                            startWidget();
-                        }
-                    }, 500);
-                };
+        // Сначала очищаем предыдущий виджет
+        if (cleanupRef.current) {
+            cleanupRef.current();
+        }
 
-                script.onerror = () => {
-                    console.error('Не удалось загрузить скрипт Яндекс.Доставки');
-                };
+        // Сохраняем функцию очистки
+        cleanupRef.current = cleanupWidget;
 
-                document.head.appendChild(script);
-            } else if (window.YaDelivery) {
-                // Скрипт уже загружен, инициализируем виджет
-                setTimeout(() => {
-                    if (deliveryMethod === 'yandex' && widgetContainerRef.current) {
-                        startWidget();
-                    }
-                }, 100);
+        try {
+            // Загружаем скрипт, если еще не загружен
+            if (!isScriptLoadedRef.current) {
+                if (!document.querySelector('script[src*="ndd-widget.landpro.site"]')) {
+                    await new Promise<void>((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://ndd-widget.landpro.site/widget.js';
+                        script.async = true;
+
+                        script.onload = () => {
+                            console.log('Скрипт Яндекс.Доставки загружен');
+                            isScriptLoadedRef.current = true;
+                            setTimeout(resolve, 500); // Даем время на инициализацию
+                        };
+
+                        script.onerror = () => {
+                            console.error('Ошибка загрузки скрипта Яндекс.Доставки');
+                            reject(new Error('Не удалось загрузить скрипт Яндекс.Доставки'));
+                        };
+
+                        document.head.appendChild(script);
+                    });
+                } else {
+                    isScriptLoadedRef.current = true;
+                    // Даем время на инициализацию уже загруженного скрипта
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
             }
 
-            // Подписка на событие выбора ПВЗ
-            const handlePointSelected = (event: Event) => {
-                const customEvent = event as CustomEvent<YandexDeliveryPoint>;
-                const pointData = customEvent.detail;
-                setYandexDeliveryData(pointData);
-                console.log('Выбран ПВЗ:', pointData);
-            };
+            if (!window.YaDelivery) {
+                throw new Error('Библиотека Яндекс.Доставки не загрузилась');
+            }
 
+            // Подписываемся на событие выбора ПВЗ
             document.addEventListener('YaNddWidgetPointSelected', handlePointSelected);
 
+            // Очищаем контейнер
+            if (widgetContainerRef.current) {
+                widgetContainerRef.current.innerHTML = '';
+            }
+
+            console.log('Создание виджета для города:', userCity);
+
+            // Создаем виджет
+            widgetInstanceRef.current = window.YaDelivery.createWidget({
+                containerId: 'delivery-widget',
+                params: {
+                    city: userCity,
+                    size: {
+                        "height": "450px",
+                        "width": "100%"
+                    },
+                    source_platform_station: "05e809bb-4521-42d9-a936-0fb0744c0fb3",
+                    physical_dims_weight_gross: 10000,
+                    delivery_price: (price: number) => price + " руб",
+                    delivery_term: 3,
+                    show_select_button: true,
+                    filter: {
+                        type: [
+                            "pickup_point",
+                            "terminal"
+                        ],
+                        is_yandex_branded: false,
+                        payment_methods: [
+                            "already_paid",
+                            "card_on_receipt"
+                        ],
+                        payment_methods_filter: "or"
+                    }
+                },
+            });
+
+            console.log('Виджет Яндекс.Доставки создан для города', userCity);
+            setWidgetError(null);
+
+        } catch (error) {
+            console.error('Ошибка инициализации виджета:', error);
+            setWidgetError('Не удалось загрузить карту пунктов выдачи. Пожалуйста, попробуйте позже.');
+        }
+    }, [userCity, deliveryMethod, cleanupWidget, handlePointSelected]);
+
+    // Определяем город один раз при загрузке компонента
+    useEffect(() => {
+        detectUserCity();
+    }, []); // Пустой массив зависимостей - выполняется только один раз
+
+    // Управление виджетом при изменении метода доставки или города
+    useEffect(() => {
+        console.log('Изменение deliveryMethod или userCity:', { deliveryMethod, userCity });
+
+        if (deliveryMethod === 'yandex') {
+            // Используем setTimeout чтобы дать время на рендер контейнера
+            const timer = setTimeout(() => {
+                initWidget();
+            }, 100);
+
             return () => {
-                document.removeEventListener('YaNddWidgetPointSelected', handlePointSelected);
-                destroyWidget();
+                clearTimeout(timer);
+                if (cleanupRef.current) {
+                    cleanupRef.current();
+                }
             };
         } else {
-            // Если не Яндекс.Доставка, очищаем виджет и данные
-            destroyWidget();
+            // Если не Яндекс.Доставка, очищаем
+            if (cleanupRef.current) {
+                cleanupRef.current();
+            }
             setYandexDeliveryData(null);
-            setWidgetError(null); // Очищаем ошибки
-
+            setWidgetError(null);
         }
-    }, [deliveryMethod, startWidget, destroyWidget]);
+    }, [deliveryMethod, userCity, initWidget]);
+
+    // Обновляем ключ виджета при изменении города для принудительного ререндера
+    useEffect(() => {
+        if (deliveryMethod === 'yandex') {
+            setWidgetKey(prev => prev + 1);
+        }
+    }, [userCity, deliveryMethod]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -556,7 +678,25 @@ const CheckoutPage = () => {
                                             Выберите пункт выдачи
                                         </h4>
 
-                                        {/* ДОБАВЬ ЭТОТ БЛОК ДЛЯ ОШИБОК */}
+                                        {/* Информация о городе */}
+                                        <div className="alert alert-info mb-3" style={{ borderRadius: '8px' }}>
+                                            <div className="d-flex align-items-center">
+                                                <span className="me-2">📍</span>
+                                                <div>
+                                                    <strong>Поиск пунктов выдачи в:</strong> {userCity}
+                                                    <br />
+                                                    <small className="text-muted">
+                                                        {isGeolocationLoading
+                                                            ? 'Определение вашего местоположения...'
+                                                            : userCity === 'Москва'
+                                                                ? 'Используется город по умолчанию.'
+                                                                : 'Город определен автоматически по вашей геолокации.'}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Блок ошибок */}
                                         {widgetError && (
                                             <div className="alert alert-danger mb-3" style={{ borderRadius: '8px' }}>
                                                 <div className="d-flex align-items-center">
@@ -569,7 +709,8 @@ const CheckoutPage = () => {
                                             </div>
                                         )}
 
-                                        {yandexDeliveryData && (
+                                        {/* Выбранный ПВЗ */}
+                                        {yandexDeliveryData && !widgetError && (
                                             <div className="alert alert-warning mb-3" style={{ borderRadius: '8px' }}>
                                                 <div className="d-flex align-items-center">
                                                     <MapPin size={20} className="me-2" />
@@ -581,15 +722,27 @@ const CheckoutPage = () => {
                                             </div>
                                         )}
 
+                                        {/* Контейнер виджета */}
                                         <div
                                             id="delivery-widget"
                                             ref={widgetContainerRef}
+                                            key={`widget-${widgetKey}`}
                                             className="delivery-widget-container"
                                             style={{
                                                 minHeight: '450px',
                                                 backgroundColor: '#f8f9fa'
                                             }}
-                                        />
+                                        >
+                                            {/* Показываем индикатор загрузки пока виджет не загружен и нет ошибок */}
+                                            {!widgetError && (
+                                                <div className="text-center py-5">
+                                                    <div className="spinner-border text-warning" role="status">
+                                                        <span className="visually-hidden">Загрузка карты...</span>
+                                                    </div>
+                                                    <p className="mt-3 text-muted small">Загрузка карты пунктов выдачи...</p>
+                                                </div>
+                                            )}
+                                        </div>
 
                                         <small className="text-muted mt-2 d-block">
                                             ⓘ Выберите пункт выдачи на карте и нажмите "Продолжить" в виджете
@@ -737,7 +890,6 @@ const CheckoutPage = () => {
                                             onClick={() => setPaymentMethod('cash')}
                                         >
                                             <div className="payment-icon">
-                                                {/* ЗНАК РУБЛЯ ВМЕСТО ДОЛЛАРА */}
                                                 <span style={{ fontSize: '24px', fontWeight: 'bold' }}>₽</span>
                                             </div>
                                             <div className="payment-content">
@@ -783,7 +935,6 @@ const CheckoutPage = () => {
                                 </div>
 
                                 <div className="mt-5 pt-3 border-top">
-                                    {/* НАША НОВАЯ ГАЛОЧКА - ВАРИАНТ 2 */}
                                     <div className="custom-agreement mb-4">
                                         <div className="custom-agreement-checkbox">
                                             <input type="checkbox" id="agree" required />
@@ -830,7 +981,6 @@ const CheckoutPage = () => {
                             Ваш заказ
                         </h3>
 
-                        {/* ВСЕ ТОВАРЫ СРАЗУ БЕЗ ОГРАНИЧЕНИЙ */}
                         <div className="mb-4" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                             {items.map(item => (
                                 <div key={item.variantId} className="d-flex mb-3 pb-3 border-bottom">
