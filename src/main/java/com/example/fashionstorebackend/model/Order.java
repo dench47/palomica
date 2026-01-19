@@ -72,6 +72,19 @@ public class Order {
     @Column(name = "yandex_delivery_comment", length = 1000)
     private String yandexDeliveryComment;      // Комментарий к ПВЗ
 
+    // Поля для СДЭК (ПВЗ)
+    @Column(name = "cdek_delivery_point_code")
+    private String cdekDeliveryPointCode;
+
+    @Column(name = "cdek_delivery_point_address", length = 500)
+    private String cdekDeliveryPointAddress;
+
+    @Column(name = "cdek_delivery_point_city")
+    private String cdekDeliveryPointCity;
+
+    @Column(name = "cdek_delivery_point_name")
+    private String cdekDeliveryPointName;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 

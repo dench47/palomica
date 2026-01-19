@@ -105,6 +105,38 @@ const Footer = () => {
                     <p className="small opacity-50 mt-0" style={{ fontSize: '0.65rem' }}>
                         Мы используем cookie, чтобы улучшить работу сайта
                     </p>
+
+                    {/* ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ ССЫЛКИ НА УСЛОВИЯ ИСПОЛЬЗОВАНИЯ */}
+                    <div className="mt-1">
+                        <a
+                            href="https://yandex.ru/legal/maps_api/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-white text-decoration-none opacity-75 hover-opacity-100"
+                            style={{ fontSize: '0.65rem' }}
+                        >
+                            Условия использования Яндекс Карт
+                        </a>
+                    </div>
+
+                    {/* Также можно добавить ссылку на политику конфиденциальности, если еще нет */}
+                    <div className="mt-1">
+                        <a
+                            href="/privacy-policy"
+                            className="text-white text-decoration-none opacity-75 hover-opacity-100"
+                            style={{ fontSize: '0.65rem' }}
+                        >
+                            Политика конфиденциальности
+                        </a>
+                        <span className="mx-2 opacity-50">|</span>
+                        <a
+                            href="/terms-of-service"
+                            className="text-white text-decoration-none opacity-75 hover-opacity-100"
+                            style={{ fontSize: '0.65rem' }}
+                        >
+                            Пользовательское соглашение
+                        </a>
+                    </div>
                 </div>
             </div>
         </footer>

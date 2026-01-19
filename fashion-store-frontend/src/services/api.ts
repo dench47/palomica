@@ -80,6 +80,12 @@ export interface OrderRequest {
     yandexDeliveryStreet?: string | null;
     yandexDeliveryHouse?: string | null;
     yandexDeliveryComment?: string | null;
+
+    // Поля для СДЭК (ПВЗ) - ДОБАВЛЯЕМ!
+    cdekDeliveryPointCode?: string | null;
+    cdekDeliveryPointAddress?: string | null;
+    cdekDeliveryPointCity?: string | null;
+    cdekDeliveryPointName?: string | null;
 }
 
 // ========== КОНФИГУРАЦИЯ API ==========
@@ -88,6 +94,39 @@ export interface OrderRequest {
 const API_BASE_URL = import.meta.env.DEV
     ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
     : '';  // В продакшене: пустая строка (относительный путь)
+
+// ========== СЕРВИС КОНФИГУРАЦИИ ==========
+
+export const configService = {
+    // Получить конфигурацию Яндекс API
+    async getYandexConfig(): Promise<{ geocoderApiKey: string }> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/public/config/yandex`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch Yandex config: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching Yandex config:', error);
+            throw error;
+        }
+    },
+
+    // Получить все публичные конфигурации
+    async getAllPublicConfigs(): Promise<Record<string, unknown>> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/public/config/all`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch public configs: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching public configs:', error);
+            throw error;
+        }
+    }
+};
+
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 

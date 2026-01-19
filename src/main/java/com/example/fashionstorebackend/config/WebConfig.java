@@ -12,7 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:5173",  // Для разработки
                         "https://palomika.ru",    // Продакшен
-                        "https://www.palomika.ru" // Продакшен с www
+                        "https://www.palomika.ru", // Продакшен с www
+                        "https://cdn.jsdelivr.net"  // Добавляем CDN СДЭК
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

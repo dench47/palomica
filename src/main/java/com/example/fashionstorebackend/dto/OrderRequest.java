@@ -24,6 +24,12 @@ public class OrderRequest {
     private String yandexDeliveryHouse;        // Дом ПВЗ
     private String yandexDeliveryComment;      // Комментарий к ПВЗ
 
+    // Поля для СДЭК (ПВЗ) - ДОБАВЛЯЕМ ЭТО!
+    private String cdekDeliveryPointCode;      // Код пункта выдачи СДЭК
+    private String cdekDeliveryPointAddress;   // Адрес пункта выдачи СДЭК
+    private String cdekDeliveryPointCity;      // Город пункта выдачи СДЭК
+    private String cdekDeliveryPointName;      // Название пункта выдачи СДЭК
+
     @Setter
     @Getter
     public static class OrderItemRequest {

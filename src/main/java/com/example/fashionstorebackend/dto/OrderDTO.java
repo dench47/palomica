@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class OrderDTO {
     private Long id;
-    private String orderNumber; // Добавляем номер заказа
+    private String orderNumber;
     private String customerName;
     private String customerEmail;
     private String customerPhone;
@@ -20,4 +20,18 @@ public class OrderDTO {
     private String accessToken;
     private LocalDateTime createdAt;
     private List<OrderItemDTO> items;
+
+    // Поля для Яндекс.Доставки (ПВЗ) - ДОБАВЛЯЕМ
+    private String yandexDeliveryPointId;
+    private String yandexDeliveryAddress;
+    private String yandexDeliveryCity;
+    private String yandexDeliveryStreet;
+    private String yandexDeliveryHouse;
+    private String yandexDeliveryComment;
+
+    // Поля для СДЭК (ПВЗ) - ДОБАВЛЯЕМ
+    private String cdekDeliveryPointCode;
+    private String cdekDeliveryPointAddress;
+    private String cdekDeliveryPointCity;
+    private String cdekDeliveryPointName;
 }

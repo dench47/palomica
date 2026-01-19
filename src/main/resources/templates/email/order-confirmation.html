@@ -115,6 +115,25 @@
         .yandex-delivery-title:before {
             content: "📦";
         }
+        /* СТИЛИ ДЛЯ СДЭК */
+        .cdek-delivery-info {
+            background: #e8f4ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .cdek-delivery-title {
+            color: #0066cc;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cdek-delivery-title:before {
+            content: "🚚";
+        }
     </style>
 </head>
 <body>
@@ -151,8 +170,27 @@
                     </div>
                 </div>
 
+                <!-- СДЭК: специальный блок -->
+                <div th:if="${order.deliveryMethod == 'cdek'}">
+                    <div class="cdek-delivery-info">
+                        <div class="cdek-delivery-title">Пункт выдачи СДЭК</div>
+                        <p th:if="${order.cdekDeliveryPointAddress}">
+                            <strong>Адрес ПВЗ:</strong> <span th:text="${order.cdekDeliveryPointAddress}"></span>
+                        </p>
+                        <p th:if="${order.cdekDeliveryPointName}">
+                            <strong>Название пункта:</strong> <span th:text="${order.cdekDeliveryPointName}"></span>
+                        </p>
+                        <p th:if="${order.cdekDeliveryPointCode}">
+                            <strong>Код пункта:</strong> <span th:text="${order.cdekDeliveryPointCode}"></span>
+                        </p>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                            ⓘ Забрать заказ можно после получения уведомления о прибытии
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Обычная доставка -->
-                <div th:unless="${order.deliveryMethod == 'yandex' or order.deliveryMethod == 'yandex_delivery'}">
+                <div th:unless="${order.deliveryMethod == 'yandex' or order.deliveryMethod == 'yandex_delivery' or order.deliveryMethod == 'cdek'}">
                     <p th:if="${order.deliveryAddress}">
                         <strong>Адрес:</strong> <span th:text="${order.deliveryAddress}"></span>
                     </p>

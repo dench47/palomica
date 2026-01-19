@@ -649,6 +649,7 @@ public class AdminController {
     }
 
     // Метод для преобразования Order в OrderDTO
+    // Метод для преобразования Order в OrderDTO
     private OrderDTO convertToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
@@ -664,6 +665,20 @@ public class AdminController {
         dto.setStatus(order.getStatus());
         dto.setAccessToken(order.getAccessToken());
         dto.setCreatedAt(order.getCreatedAt());
+
+        // Поля Яндекс.Доставки - ДОБАВЛЯЕМ!
+        dto.setYandexDeliveryPointId(order.getYandexDeliveryPointId());
+        dto.setYandexDeliveryAddress(order.getYandexDeliveryAddress());
+        dto.setYandexDeliveryCity(order.getYandexDeliveryCity());
+        dto.setYandexDeliveryStreet(order.getYandexDeliveryStreet());
+        dto.setYandexDeliveryHouse(order.getYandexDeliveryHouse());
+        dto.setYandexDeliveryComment(order.getYandexDeliveryComment());
+
+        // Поля СДЭК - ДОБАВЛЯЕМ!
+        dto.setCdekDeliveryPointCode(order.getCdekDeliveryPointCode());
+        dto.setCdekDeliveryPointAddress(order.getCdekDeliveryPointAddress());
+        dto.setCdekDeliveryPointCity(order.getCdekDeliveryPointCity());
+        dto.setCdekDeliveryPointName(order.getCdekDeliveryPointName());
 
         // Преобразуем OrderItems в OrderItemDTO
         List<OrderItemDTO> itemDTOs = order.getItems().stream()

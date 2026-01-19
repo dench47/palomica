@@ -61,10 +61,38 @@ public class OrderController {
                 order.setYandexDeliveryHouse(orderRequest.getYandexDeliveryHouse());
                 order.setYandexDeliveryComment(orderRequest.getYandexDeliveryComment());
 
+                // Очищаем поля СДЭК, если они пришли
+                order.setCdekDeliveryPointCode(null);
+                order.setCdekDeliveryPointAddress(null);
+                order.setCdekDeliveryPointCity(null);
+                order.setCdekDeliveryPointName(null);
+
                 // Формируем полный адрес для отображения
                 String yandexAddress = buildYandexDeliveryAddress(orderRequest);
                 if (yandexAddress != null && !yandexAddress.isEmpty()) {
                     order.setDeliveryAddress("Яндекс.Доставка - " + yandexAddress);
+                }
+            } else if ("cdek".equalsIgnoreCase(orderRequest.getDeliveryMethod())) {
+                // Для СДЭК используем адрес ПВЗ как основной
+                order.setDeliveryAddress("СДЭК - ПВЗ");
+
+                // Сохраняем данные СДЭК
+                order.setCdekDeliveryPointCode(orderRequest.getCdekDeliveryPointCode());
+                order.setCdekDeliveryPointAddress(orderRequest.getCdekDeliveryPointAddress());
+                order.setCdekDeliveryPointCity(orderRequest.getCdekDeliveryPointCity());
+                order.setCdekDeliveryPointName(orderRequest.getCdekDeliveryPointName());
+
+                // Очищаем поля Яндекс.Доставки, если они пришли
+                order.setYandexDeliveryPointId(null);
+                order.setYandexDeliveryAddress(null);
+                order.setYandexDeliveryCity(null);
+                order.setYandexDeliveryStreet(null);
+                order.setYandexDeliveryHouse(null);
+                order.setYandexDeliveryComment(null);
+
+                // Формируем полный адрес для отображения
+                if (orderRequest.getCdekDeliveryPointAddress() != null && !orderRequest.getCdekDeliveryPointAddress().isEmpty()) {
+                    order.setDeliveryAddress("СДЭК: " + orderRequest.getCdekDeliveryPointAddress());
                 }
             } else {
                 // Для других способов доставки используем обычный адрес
@@ -77,6 +105,12 @@ public class OrderController {
                 order.setYandexDeliveryStreet(null);
                 order.setYandexDeliveryHouse(null);
                 order.setYandexDeliveryComment(null);
+
+                // Очищаем поля СДЭК, если они пришли
+                order.setCdekDeliveryPointCode(null);
+                order.setCdekDeliveryPointAddress(null);
+                order.setCdekDeliveryPointCity(null);
+                order.setCdekDeliveryPointName(null);
             }
 
             double totalAmount = 0;

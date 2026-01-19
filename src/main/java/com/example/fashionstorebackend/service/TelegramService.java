@@ -67,7 +67,7 @@ public class TelegramService {
     private String formatNewOrderMessage(Order order) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("🆕 *НОВЫЙ ЗАКАЗ #").append(order.getOrderNumber()).append("*\n"); // ИЗМЕНИТЬ!
+        sb.append("🆕 *НОВЫЙ ЗАКАЗ #").append(order.getOrderNumber()).append("*\n");
         sb.append("══════════════\n");
         sb.append("👤 *").append(escapeMarkdown(order.getCustomerName())).append("*\n");
         sb.append("📞 ").append(order.getCustomerPhone()).append("\n");
@@ -171,9 +171,9 @@ public class TelegramService {
     private String getDeliveryText(String method) {
         if (method == null) return "";
         switch (method.toLowerCase()) {
-            case "courier": return "Курьерская доставка";
-            case "post": return "Почта России";
+            case "yandex": return "Яндекс.Доставка (ПВЗ)";
             case "pickup": return "Самовывоз";
+            case "marketplace": return "Маркетплейсы";
             default: return method;
         }
     }

@@ -89,9 +89,9 @@ public class EmailService {
     private String getDeliveryMethodText(String method) {
         if (method == null) return "";
         switch (method.toLowerCase()) {
-            case "courier": return "Курьерская доставка";
-            case "post": return "Почта России";
+            case "yandex": return "Яндекс.Доставка (ПВЗ)";
             case "pickup": return "Самовывоз";
+            case "marketplace": return "Маркетплейсы (Wildberries, OZON, Яндекс.Маркет)";
             default: return method;
         }
     }

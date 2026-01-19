@@ -1,6 +1,6 @@
 // services/orderService.ts
 import type { CartItem } from '../context/CartContext';
-import type { OrderRequest, Product, ProductVariant } from './api';
+import type { OrderRequest as ApiOrderRequest, Product, ProductVariant } from './api';
 
 // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
 const API_BASE_URL = import.meta.env.DEV
@@ -17,6 +17,7 @@ export interface YandexDeliveryData {
     comment: string;
 }
 
+// Интерфейс для отправки заказа (должен совпадать с OrderRequest.java)
 export interface OrderData {
     customerName: string;
     customerEmail: string;
@@ -35,6 +36,12 @@ export interface OrderData {
     yandexDeliveryStreet?: string | null;
     yandexDeliveryHouse?: string | null;
     yandexDeliveryComment?: string | null;
+
+    // Данные СДЭК (опционально)
+    cdekDeliveryPointCode?: string | null;
+    cdekDeliveryPointAddress?: string | null;
+    cdekDeliveryPointCity?: string | null;
+    cdekDeliveryPointName?: string | null;
 }
 
 export interface OrderResponse {
@@ -69,6 +76,12 @@ export interface OrderDetails {
     yandexDeliveryStreet?: string;
     yandexDeliveryHouse?: string;
     yandexDeliveryComment?: string;
+
+    // Поля СДЭК для отображения в админке
+    cdekDeliveryPointCode?: string;
+    cdekDeliveryPointAddress?: string;
+    cdekDeliveryPointCity?: string;
+    cdekDeliveryPointName?: string;
 }
 
 // Интерфейс для сырых данных заказа с бэкенда
@@ -112,7 +125,7 @@ export const orderService = {
     async createOrder(orderData: OrderData): Promise<OrderResponse> {
         try {
             // Преобразуем данные корзины в формат для бэкенда
-            const orderRequest: OrderRequest = {
+            const orderRequest: ApiOrderRequest = {
                 customerName: orderData.customerName,
                 customerEmail: orderData.customerEmail,
                 customerPhone: orderData.customerPhone,
@@ -133,7 +146,13 @@ export const orderService = {
                 yandexDeliveryCity: orderData.yandexDeliveryCity || null,
                 yandexDeliveryStreet: orderData.yandexDeliveryStreet || null,
                 yandexDeliveryHouse: orderData.yandexDeliveryHouse || null,
-                yandexDeliveryComment: orderData.yandexDeliveryComment || null
+                yandexDeliveryComment: orderData.yandexDeliveryComment || null,
+
+                // Данные СДЭК - ДОБАВЛЯЕМ!
+                cdekDeliveryPointCode: orderData.cdekDeliveryPointCode || null,
+                cdekDeliveryPointAddress: orderData.cdekDeliveryPointAddress || null,
+                cdekDeliveryPointCity: orderData.cdekDeliveryPointCity || null,
+                cdekDeliveryPointName: orderData.cdekDeliveryPointName || null
             };
 
             console.log('Отправка заказа:', orderRequest);
@@ -244,7 +263,12 @@ export const orderService = {
                 yandexDeliveryCity: rawOrderData.yandexDeliveryCity,
                 yandexDeliveryStreet: rawOrderData.yandexDeliveryStreet,
                 yandexDeliveryHouse: rawOrderData.yandexDeliveryHouse,
-                yandexDeliveryComment: rawOrderData.yandexDeliveryComment
+                yandexDeliveryComment: rawOrderData.yandexDeliveryComment,
+                // Поля СДЭК (если есть)
+                cdekDeliveryPointCode: rawOrderData.cdekDeliveryPointCode,
+                cdekDeliveryPointAddress: rawOrderData.cdekDeliveryPointAddress,
+                cdekDeliveryPointCity: rawOrderData.cdekDeliveryPointCity,
+                cdekDeliveryPointName: rawOrderData.cdekDeliveryPointName
             };
 
         } catch (error) {
