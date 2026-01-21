@@ -139,11 +139,11 @@ const YandexWidgetContent = ({ city, onPointSelected, selectedPoint }: YandexWid
                             height: "450px",
                             width: "100%"
                         },
-                        source_platform_station: "05e809bb-4521-42d9-a936-0fb0744c0fb3",
-                        physical_dims_weight_gross: 10000,
-                        delivery_price: (price: number) => price + " руб",
-                        delivery_term: 3,
-                        show_select_button: true,
+                        source_platform_station: "0195cb56b087745f8d44a0777ba031f4",
+                        physical_dims_weight_gross: 500,
+                        delivery_price: (price: number) => Math.floor(price) + " руб",
+                        delivery_term: 1,
+                        show_select_button: false,
                         filter: {
                             type: ["pickup_point", "terminal"],
                             is_yandex_branded: false,

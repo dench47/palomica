@@ -1,0 +1,734 @@
+{
+  "points": [
+    {
+      "id": "40aff504-9d98-47ad-aabb-d63e59266820",
+      "operator_station_id": "10019000939",
+      "operator_id": "market_l4g",
+      "name": "Пункт выдачи заказов Яндекс Маркета",
+      "type": "pickup_point",
+      "position": {
+        "latitude": 60.706016540527344,
+        "longitude": 28.751035690307617
+      },
+      "address": {
+        "geoId": 969,
+        "country": "Россия",
+        "region": "Ленинградская область",
+        "subRegion": "",
+        "locality": "Выборг",
+        "street": "Крепостная улица",
+        "house": "49",
+        "housing": "",
+        "apartment": "",
+        "building": "",
+        "comment": "Бывший магазин Элефант. Ориентир - вывеска Яндекс Маркет",
+        "full_address": "Выборг Крепостная улица 49",
+        "postal_code": "188800"
+      },
+      "instruction": "Бывший магазин Элефант. Ориентир - вывеска Яндекс Маркет",
+      "payment_methods": [
+        "already_paid",
+        "card_on_receipt",
+        "bound_card"
+      ],
+      "contact": {
+        "phone": "+74951570020"
+      },
+      "schedule": {
+        "time_zone": 3,
+        "restrictions": [
+          {
+            "days": [
+              1
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              2
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              3
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              4
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              5
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              6
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              7
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          }
+        ]
+      },
+      "is_yandex_branded": true,
+      "is_market_partner": true,
+      "is_dark_store": false,
+      "is_post_office": false,
+      "dayoffs": [],
+      "deactivation_date": null,
+      "deactivation_date_predicted_debt": null,
+      "available_for_dropoff": true,
+      "available_for_c2c_dropoff": true,
+      "pickup_services": {
+        "is_fitting_allowed": true,
+        "is_partial_refuse_allowed": true,
+        "is_paperless_pickup_allowed": false,
+        "is_unboxing_allowed": true
+      }
+    },
+    {
+      "id": "0195cb56b087745f8d44a0777ba031f4",
+      "operator_station_id": "10033472677",
+      "operator_id": "market_l4g",
+      "name": "Пункт выдачи заказов Яндекс Маркета",
+      "type": "pickup_point",
+      "position": {
+        "latitude": 60.691611,
+        "longitude": 28.768421
+      },
+      "address": {
+        "geoId": 969,
+        "country": "Россия",
+        "region": "Ленинградская область",
+        "subRegion": "",
+        "locality": "Выборг",
+        "street": "улица Гагарина",
+        "house": "39",
+        "housing": "",
+        "apartment": "",
+        "building": "",
+        "comment": "По улице Гагарина вдоль дороги в сторону поликлиники, на правой стороне напротив кафе. Ориентир – вывеска Яндекс Маркет.",
+        "full_address": "Выборг улица Гагарина 39",
+        "postal_code": "188801"
+      },
+      "instruction": "По улице Гагарина вдоль дороги в сторону поликлиники, на правой стороне напротив кафе. Ориентир – вывеска Яндекс Маркет.",
+      "payment_methods": [
+        "already_paid",
+        "card_on_receipt",
+        "bound_card"
+      ],
+      "contact": {
+        "phone": "+74951570020"
+      },
+      "schedule": {
+        "time_zone": 3,
+        "restrictions": [
+          {
+            "days": [
+              1
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              2
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              3
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              4
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              5
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              6
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              7
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          }
+        ]
+      },
+      "is_yandex_branded": true,
+      "is_market_partner": true,
+      "is_dark_store": false,
+      "is_post_office": false,
+      "dayoffs": [],
+      "deactivation_date": null,
+      "deactivation_date_predicted_debt": null,
+      "available_for_dropoff": true,
+      "available_for_c2c_dropoff": true,
+      "pickup_services": {
+        "is_fitting_allowed": true,
+        "is_partial_refuse_allowed": true,
+        "is_paperless_pickup_allowed": false,
+        "is_unboxing_allowed": true
+      }
+    },
+    {
+      "id": "0194d6921d0972a5974d949ecd775e2a",
+      "operator_station_id": "10032682858",
+      "operator_id": "market_l4g",
+      "name": "Пункт выдачи заказов Яндекс Маркета",
+      "type": "pickup_point",
+      "position": {
+        "latitude": 60.707925,
+        "longitude": 28.753975
+      },
+      "address": {
+        "geoId": 969,
+        "country": "Россия",
+        "region": "Ленинградская область",
+        "subRegion": "",
+        "locality": "Выборг",
+        "street": "проспект Ленина",
+        "house": "34",
+        "housing": "",
+        "apartment": "",
+        "building": "",
+        "comment": "здание с помещением находится на пр Ленина, д 34, вход в будущий ПВЗ со стороны бульвара  Кутузова, центр города , рядом расположен ТЦ, \"Пятерочка\", \"Стоматология\", \"парк \", кафе \"Солнечный свет\", магазины одежды, школа. Активный пешеходный и автомобильный трафик. Ориентир - вывеска Яндекс Маркет\n",
+        "full_address": "Выборг проспект Ленина 34",
+        "postal_code": "188800"
+      },
+      "instruction": "здание с помещением находится на пр Ленина, д 34, вход в будущий ПВЗ со стороны бульвара  Кутузова, центр города , рядом расположен ТЦ, \"Пятерочка\", \"Стоматология\", \"парк \", кафе \"Солнечный свет\", магазины одежды, школа. Активный пешеходный и автомобильный трафик. Ориентир - вывеска Яндекс Маркет\n",
+      "payment_methods": [
+        "already_paid",
+        "card_on_receipt",
+        "bound_card"
+      ],
+      "contact": {
+        "phone": "+74951570020"
+      },
+      "schedule": {
+        "time_zone": 3,
+        "restrictions": [
+          {
+            "days": [
+              1
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              2
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              3
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              4
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              5
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              6
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              7
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          }
+        ]
+      },
+      "is_yandex_branded": true,
+      "is_market_partner": true,
+      "is_dark_store": false,
+      "is_post_office": false,
+      "dayoffs": [],
+      "deactivation_date": null,
+      "deactivation_date_predicted_debt": null,
+      "available_for_dropoff": true,
+      "available_for_c2c_dropoff": true,
+      "pickup_services": {
+        "is_fitting_allowed": true,
+        "is_partial_refuse_allowed": true,
+        "is_paperless_pickup_allowed": false,
+        "is_unboxing_allowed": true
+      }
+    },
+    {
+      "id": "01961a4bfdfd77a9a75f38558e2e131c",
+      "operator_station_id": "10033583538",
+      "operator_id": "market_l4g",
+      "name": "Пункт выдачи заказов Яндекс Маркета",
+      "type": "pickup_point",
+      "position": {
+        "latitude": 60.709474,
+        "longitude": 28.753329
+      },
+      "address": {
+        "geoId": 969,
+        "country": "Россия",
+        "region": "Ленинградская область",
+        "subRegion": "",
+        "locality": "Выборг",
+        "street": "улица Мира",
+        "house": "8А",
+        "housing": "",
+        "apartment": "",
+        "building": "",
+        "comment": "-с центрального входа ТЦ Атриум (Московский проспект) - после входа повернуть направо, пройти до конца коридора и еще раз направо. Ориентир - вывеска Яндекс Маркет\n-с запасного выхода с улицы Мира - подняться на первый этаж - напротив входной двери. Ориентир - вывеска Яндекс Маркет",
+        "full_address": "Выборг улица Мира 8А",
+        "postal_code": "188800"
+      },
+      "instruction": "-с центрального входа ТЦ Атриум (Московский проспект) - после входа повернуть направо, пройти до конца коридора и еще раз направо. Ориентир - вывеска Яндекс Маркет\n-с запасного выхода с улицы Мира - подняться на первый этаж - напротив входной двери. Ориентир - вывеска Яндекс Маркет",
+      "payment_methods": [
+        "already_paid",
+        "card_on_receipt",
+        "bound_card"
+      ],
+      "contact": {
+        "phone": "+74951570020"
+      },
+      "schedule": {
+        "time_zone": 3,
+        "restrictions": [
+          {
+            "days": [
+              1
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              2
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              3
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              4
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              5
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              6
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              7
+            ],
+            "time_from": {
+              "hours": 10,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 20,
+              "minutes": 0
+            }
+          }
+        ]
+      },
+      "is_yandex_branded": true,
+      "is_market_partner": true,
+      "is_dark_store": false,
+      "is_post_office": false,
+      "dayoffs": [],
+      "deactivation_date": null,
+      "deactivation_date_predicted_debt": null,
+      "available_for_dropoff": true,
+      "available_for_c2c_dropoff": true,
+      "pickup_services": {
+        "is_fitting_allowed": true,
+        "is_partial_refuse_allowed": true,
+        "is_paperless_pickup_allowed": false,
+        "is_unboxing_allowed": true
+      }
+    },
+    {
+      "id": "019aa53c8f6375fc9ca50a5905cdc7e1",
+      "operator_station_id": "10036904042",
+      "operator_id": "market_l4g",
+      "name": "Пункт выдачи заказов Яндекс Маркета",
+      "type": "pickup_point",
+      "position": {
+        "latitude": 60.70365,
+        "longitude": 28.769688
+      },
+      "address": {
+        "geoId": 969,
+        "country": "Россия",
+        "region": "Санкт-Петербург и Ленинградская область",
+        "subRegion": "",
+        "locality": "Выборг",
+        "street": "улица Сухова",
+        "house": "4А",
+        "housing": "",
+        "apartment": "",
+        "building": "",
+        "comment": "ПВЗ находится в отдельном здании на 2 этаже на первой линии по улице Сухова 4а, в данном здании располагается на первом этаже магазин Магнит. Ориентир вывеска Яндекс Маркет, при входе в здание лестница с правой стороны.",
+        "full_address": "Выборг улица Сухова 4А",
+        "postal_code": "188810"
+      },
+      "instruction": "ПВЗ находится в отдельном здании на 2 этаже на первой линии по улице Сухова 4а, в данном здании располагается на первом этаже магазин Магнит. Ориентир вывеска Яндекс Маркет, при входе в здание лестница с правой стороны.",
+      "payment_methods": [
+        "already_paid",
+        "card_on_receipt",
+        "bound_card"
+      ],
+      "contact": {
+        "phone": "+74951570020"
+      },
+      "schedule": {
+        "time_zone": 3,
+        "restrictions": [
+          {
+            "days": [
+              1
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              2
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              3
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              4
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              5
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              6
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          },
+          {
+            "days": [
+              7
+            ],
+            "time_from": {
+              "hours": 9,
+              "minutes": 0
+            },
+            "time_to": {
+              "hours": 21,
+              "minutes": 0
+            }
+          }
+        ]
+      },
+      "is_yandex_branded": true,
+      "is_market_partner": true,
+      "is_dark_store": false,
+      "is_post_office": false,
+      "dayoffs": [],
+      "deactivation_date": null,
+      "deactivation_date_predicted_debt": null,
+      "available_for_dropoff": true,
+      "available_for_c2c_dropoff": true,
+      "pickup_services": {
+        "is_fitting_allowed": true,
+        "is_partial_refuse_allowed": true,
+        "is_paperless_pickup_allowed": false,
+        "is_unboxing_allowed": true
+      }
+    }
+  ]
+}
