@@ -70,8 +70,8 @@ public class TelegramService {
         sb.append("🆕 *НОВЫЙ ЗАКАЗ #").append(order.getOrderNumber()).append("*\n");
         sb.append("══════════════\n");
         sb.append("👤 *").append(escapeMarkdown(order.getCustomerName())).append("*\n");
-        sb.append("📞 ").append(order.getCustomerPhone()).append("\n");
-        sb.append("📧 ").append(order.getCustomerEmail()).append("\n");
+        sb.append("📞 ").append(escapeMarkdown(order.getCustomerPhone())).append("\n"); // Экранируем
+        sb.append("📧 ").append(escapeMarkdown(order.getCustomerEmail())).append("\n"); // Экранируем
         sb.append("══════════════\n");
 
         // Доставка и оплата
