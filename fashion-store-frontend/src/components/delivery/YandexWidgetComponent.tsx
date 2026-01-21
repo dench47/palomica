@@ -21,6 +21,7 @@ interface YandexWidgetComponentProps {
     city: string;
     onPointSelected: (point: YandexDeliveryPoint) => void;
     selectedPoint: YandexDeliveryPoint | null;
+    stationId: string; // Добавляем проп для stationId
 }
 
 // Интерфейс для глобального объекта YaDelivery
@@ -67,7 +68,12 @@ const YandexWidgetErrorFallback = ({ error, resetErrorBoundary }: FallbackProps)
 };
 
 // Основной компонент виджета
-const YandexWidgetContent = ({ city, onPointSelected, selectedPoint }: YandexWidgetComponentProps) => {
+const YandexWidgetContent = ({
+                                 city,
+                                 onPointSelected,
+                                 selectedPoint,
+                                 stationId
+                             }: YandexWidgetComponentProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [widgetError, setWidgetError] = useState<string | null>(null);
@@ -85,7 +91,16 @@ const YandexWidgetContent = ({ city, onPointSelected, selectedPoint }: YandexWid
         const initWidget = async () => {
             if (!mounted || !containerRef.current) return;
 
+            // Проверяем, что stationId передан
+            if (!stationId) {
+                console.error('Station ID не указан');
+                setWidgetError('Ошибка конфигурации: не указан идентификатор станции');
+                setIsLoading(false);
+                return;
+            }
+
             console.log('Инициализация виджета Яндекс для города:', city);
+            console.log('Используемый stationId:', stationId);
             setIsLoading(true);
             setWidgetError(null);
 
@@ -130,7 +145,7 @@ const YandexWidgetContent = ({ city, onPointSelected, selectedPoint }: YandexWid
                 externalContainerRef.current = externalContainer;
                 containerRef.current.appendChild(externalContainer);
 
-                // Создаем виджет
+                // Создаем виджет с использованием переданного stationId
                 window.YaDelivery.createWidget({
                     containerId: externalContainer.id,
                     params: {
@@ -139,7 +154,7 @@ const YandexWidgetContent = ({ city, onPointSelected, selectedPoint }: YandexWid
                             height: "450px",
                             width: "100%"
                         },
-                        source_platform_station: "0195cb56b087745f8d44a0777ba031f4",
+                        source_platform_station: stationId, // Используем переданный stationId
                         physical_dims_weight_gross: 500,
                         delivery_price: (price: number) => Math.floor(price) + " руб",
                         delivery_term: 1,
@@ -189,7 +204,7 @@ const YandexWidgetContent = ({ city, onPointSelected, selectedPoint }: YandexWid
 
             setInitialized(false);
         };
-    }, [city, handlePointSelected]);
+    }, [city, handlePointSelected, stationId]); // Добавляем stationId в зависимости
 
     return (
         <div>

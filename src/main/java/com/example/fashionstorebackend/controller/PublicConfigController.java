@@ -25,6 +25,7 @@ public class PublicConfigController {
         String apiKey = yandexConfig.getGeocoderApiKey(); // получаем один ключ
         config.put("geocoderApiKey", apiKey); // для геокодера
         config.put("mapsApiKey", apiKey);     // тот же ключ для карт (СДЭК)
+        config.put("widgetStationId", yandexConfig.getWidgetStationId()); // добавляем станцию ID
         return ResponseEntity.ok(config);
     }
 
@@ -37,6 +38,7 @@ public class PublicConfigController {
         String apiKey = yandexConfig.getGeocoderApiKey();
         yandexConfigs.put("geocoderApiKey", apiKey);
         yandexConfigs.put("mapsApiKey", apiKey); // добавляем для карт
+        yandexConfigs.put("widgetStationId", yandexConfig.getWidgetStationId()); // станция ID
 
         configs.put("yandex", yandexConfigs);
         configs.put("deliveryMethods", new String[]{"yandex", "pickup", "marketplace"});

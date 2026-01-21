@@ -77,6 +77,7 @@ const CheckoutPageContent = () => {
 
     // API ключи
     const [yandexApiKey, setYandexApiKey] = useState<string>('');
+    const [yandexStationId, setYandexStationId] = useState<string>('');
     const [userCity, setUserCity] = useState<string>('Москва');
 
     // Утилиты
@@ -91,14 +92,18 @@ const CheckoutPageContent = () => {
         }));
     }, []);
 
-    // Загрузка конфигурации
+    // Загрузка конфигурации Яндекс
     const loadYandexConfig = useCallback(async () => {
         try {
             const response = await fetch('/api/public/config/yandex');
             if (!response.ok) throw new Error(`Failed to fetch Yandex config: ${response.status}`);
             const config = await response.json();
             setYandexApiKey(config.geocoderApiKey || config.mapsApiKey);
-            console.log('Yandex API ключи загружены с бэкенда');
+            setYandexStationId(config.widgetStationId || '');
+            console.log('Yandex конфигурация загружена:', {
+                apiKey: config.geocoderApiKey ? 'да' : 'нет',
+                stationId: config.widgetStationId ? 'да' : 'нет'
+            });
         } catch (error) {
             console.error('Ошибка загрузки конфигурации Яндекс:', error);
         }
@@ -358,12 +363,19 @@ const CheckoutPageContent = () => {
                                             Выберите пункт выдачи Яндекс.Доставки
                                         </h4>
 
-
-                                        <YandexWidgetComponent
-                                            city={userCity}
-                                            onPointSelected={setYandexDeliveryData}
-                                            selectedPoint={yandexDeliveryData}
-                                        />
+                                        {yandexStationId ? (
+                                            <YandexWidgetComponent
+                                                city={userCity}
+                                                onPointSelected={setYandexDeliveryData}
+                                                selectedPoint={yandexDeliveryData}
+                                                stationId={yandexStationId}
+                                            />
+                                        ) : (
+                                            <div className="alert alert-warning">
+                                                <p className="mb-0">Конфигурация Яндекс.Доставки не загружена.</p>
+                                                <p className="small mb-0 mt-1">Пожалуйста, обновите страницу или свяжитесь с администратором.</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

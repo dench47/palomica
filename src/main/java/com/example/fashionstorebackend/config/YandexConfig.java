@@ -10,4 +10,7 @@ public class YandexConfig {
 
     @Value("${yandex.geocoder.api-key}")
     private String geocoderApiKey;
+
+    @Value("${yandex.delivery.widget.station-id}")
+    private String widgetStationId;
 }
