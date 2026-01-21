@@ -61,93 +61,110 @@ const Header = () => {
     };
 
     return (
-        <header className="py-3" style={{ backgroundColor: '#282840' }}>
-            <div className="container">
-                <div className="d-flex justify-content-between align-items-center">
-                    {/* Логотип */}
-                    <div className="ms-5">
-                        <Link to="/" className="text-decoration-none">
-                            <img
-                                src={logo}
-                                alt="FashionStore"
-                                style={{
-                                    height: '77px',
-                                    width: 'auto'
-                                }}
-                            />
-                        </Link>
-                    </div>
+        <>
+            {/* Баннер разработки - sticky (остается при скролле) */}
+            <div
+                className="text-center py-2 sticky-top"
+                style={{
+                    backgroundColor: '#ff6b6b',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    zIndex: 1030, // Высокий z-index чтобы быть поверх других элементов
+                    top: 0 // Прилипает к верху
+                }}
+            >
+                Сайт на стадии разработки! Все товары тестовые! При совершении покупок имитация платежной транзакции! Все вопросы/пожелания отправлять на dench47@gmail.com или через форму "Комментарий к заказу" при тестовом запросе.
+            </div>
 
-                    {/* Навигация */}
-                    <nav className="d-none d-md-flex">
-                        <Link to="/catalog" className="text-white text-decoration-none mx-3 fw-light">КАТАЛОГ</Link>
-                        <a href="#gallery" className="text-white text-decoration-none mx-3 fw-light">ФОТОГАЛЕРЕЯ</a>
-                        <a href="#souvenirs" className="text-white text-decoration-none mx-3 fw-light">СУВЕНИРЫ</a>
-                    </nav>
-
-                    {/* Иконки с профессиональными иконками */}
-                    <div className="d-flex align-items-center gap-1">
-                        {/* Поиск */}
-                        <div className="me-1" ref={searchRef}>
-                            {showSearch ? (
-                                <form onSubmit={handleSearch} className="d-flex align-items-center">
-                                    <input
-                                        ref={inputRef}
-                                        type="text"
-                                        className="form-control form-control-sm"
-                                        placeholder="Поиск..."
-                                        value={searchQuery}
-                                        onChange={handleInputChange}
-                                        onKeyDown={handleKeyDown}
-                                        style={{ width: '160px' }}
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="btn btn-link text-white btn-sm ms-1"
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <FiSearch size={18} />
-                                    </button>
-                                </form>
-                            ) : (
-                                <IconButton
-                                    icon={FiSearch}
-                                    onClick={() => setShowSearch(true)}
-                                    size={20}
-                                    className="text-white"
+            <header className="py-3" style={{ backgroundColor: '#282840' }}>
+                <div className="container">
+                    <div className="d-flex justify-content-between align-items-center">
+                        {/* Логотип */}
+                        <div className="ms-5">
+                            <Link to="/" className="text-decoration-none">
+                                <img
+                                    src={logo}
+                                    alt="FashionStore"
+                                    style={{
+                                        height: '77px',
+                                        width: 'auto'
+                                    }}
                                 />
-                            )}
+                            </Link>
                         </div>
 
-                        {/*/!* Избранное *!/*/}
-                        {/*<IconButton*/}
-                        {/*    icon={Heart}*/}
-                        {/*    onClick={() => navigate('/wishlist')}*/}
-                        {/*    size={20}*/}
-                        {/*    className="text-white"*/}
-                        {/*/>*/}
+                        {/* Навигация */}
+                        <nav className="d-none d-md-flex">
+                            <Link to="/catalog" className="text-white text-decoration-none mx-3 fw-light">КАТАЛОГ</Link>
+                            <a href="#gallery" className="text-white text-decoration-none mx-3 fw-light">ФОТОГАЛЕРЕЯ</a>
+                            <a href="#souvenirs" className="text-white text-decoration-none mx-3 fw-light">СУВЕНИРЫ</a>
+                        </nav>
 
-                        {/* Корзина с бейджем */}
-                        <IconButton
-                            icon={ShoppingCart}
-                            onClick={() => navigate('/cart')}
-                            size={20}
-                            className="text-white"
-                            badge={totalItems}
-                        />
+                        {/* Иконки с профессиональными иконками */}
+                        <div className="d-flex align-items-center gap-1">
+                            {/* Поиск */}
+                            <div className="me-1" ref={searchRef}>
+                                {showSearch ? (
+                                    <form onSubmit={handleSearch} className="d-flex align-items-center">
+                                        <input
+                                            ref={inputRef}
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            placeholder="Поиск..."
+                                            value={searchQuery}
+                                            onChange={handleInputChange}
+                                            onKeyDown={handleKeyDown}
+                                            style={{ width: '160px' }}
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="btn btn-link text-white btn-sm ms-1"
+                                            style={{ textDecoration: 'none' }}
+                                        >
+                                            <FiSearch size={18} />
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <IconButton
+                                        icon={FiSearch}
+                                        onClick={() => setShowSearch(true)}
+                                        size={20}
+                                        className="text-white"
+                                    />
+                                )}
+                            </div>
+
+                            {/*/!* Избранное *!/*/}
+                            {/*<IconButton*/}
+                            {/*    icon={Heart}*/}
+                            {/*    onClick={() => navigate('/wishlist')}*/}
+                            {/*    size={20}*/}
+                            {/*    className="text-white"*/}
+                            {/*/>*/}
+
+                            {/* Корзина с бейджем */}
+                            <IconButton
+                                icon={ShoppingCart}
+                                onClick={() => navigate('/cart')}
+                                size={20}
+                                className="text-white"
+                                badge={totalItems}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Мобильное меню */}
+                    <div className="d-md-none mt-3">
+                        <div className="d-flex justify-content-around">
+                            <Link to="/catalog" className="text-white text-decoration-none mx-3 small fw-light">КАТАЛОГ</Link>
+                            <a href="#gallery" className="text-white text-decoration-none small fw-light">ФОТОГАЛЕРЕЯ</a>
+                            <a href="#souvenirs" className="text-white text-decoration-none small fw-light">СУВЕНИРЫ</a>
+                        </div>
                     </div>
                 </div>
-
-                {/* Мобильное меню */}
-                <div className="d-md-none mt-3">
-                    <div className="d-flex justify-content-around">
-                        <Link to="/catalog" className="text-white text-decoration-none mx-3 small fw-light">КАТАЛОГ</Link>
-                        <a href="#gallery" className="text-white text-decoration-none small fw-light">ФОТОГАЛЕРЕЯ</a>
-                        <a href="#souvenirs" className="text-white text-decoration-none small fw-light">СУВЕНИРЫ</a>
-                    </div>
-                </div>
-            </div>
-        </header>
+            </header>
+        </>
     );
 };
 
