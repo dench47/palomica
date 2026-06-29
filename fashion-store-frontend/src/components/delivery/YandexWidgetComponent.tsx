@@ -157,7 +157,7 @@ const YandexWidgetContent = ({
                         source_platform_station: stationId, // Используем переданный stationId
                         physical_dims_weight_gross: 500,
                         delivery_price: (price: number) => Math.floor(price) + " руб",
-                        delivery_term: 1,
+                        delivery_term: 8,
                         show_select_button: false,
                         filter: {
                             type: ["pickup_point", "terminal"],

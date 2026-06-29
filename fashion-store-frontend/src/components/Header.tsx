@@ -135,13 +135,6 @@ const Header = () => {
                                 )}
                             </div>
 
-                            {/*/!* Избранное *!/*/}
-                            {/*<IconButton*/}
-                            {/*    icon={Heart}*/}
-                            {/*    onClick={() => navigate('/wishlist')}*/}
-                            {/*    size={20}*/}
-                            {/*    className="text-white"*/}
-                            {/*/>*/}
 
                             {/* Корзина с бейджем */}
                             <IconButton

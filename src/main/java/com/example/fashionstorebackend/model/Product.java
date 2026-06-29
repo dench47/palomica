@@ -53,8 +53,9 @@ public class Product {
     private List<String> additionalImages = new ArrayList<>();
 
     // НОВОЕ: Варианты товара (размеры с количеством)
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER) // Изменили LAZY на EAGER
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ProductVariant> variants = new ArrayList<>();
+
     // Конструкторы
     public Product() {}
 
