@@ -8,7 +8,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     // УБРАЛ <React.StrictMode> - это вызывает двойной рендеринг в dev
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
         <CartProvider>
             <App />
         </CartProvider>
