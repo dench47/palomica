@@ -1,11 +1,6 @@
 // services/orderService.ts
 import type { CartItem } from '../context/CartContext';
-import type { OrderRequest as ApiOrderRequest, Product, ProductVariant } from './api';
-
-// АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПУТИ
-const API_BASE_URL = import.meta.env.DEV
-    ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
-    : '';  // В продакшене: пустая строка (относительный путь)
+import { apiFetch, type OrderRequest as ApiOrderRequest, type Product, type ProductVariant } from './api';
 
 // Интерфейс для данных Яндекс.Доставки (используется в CheckoutPage)
 export interface YandexDeliveryData {
@@ -157,7 +152,7 @@ export const orderService = {
 
             console.log('Отправка заказа:', orderRequest);
 
-            const response = await fetch(`${API_BASE_URL}/api/orders`, {
+            const response = await apiFetch('/api/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -194,8 +189,7 @@ export const orderService = {
     // Получить информацию о заказе
     async getOrder(orderId: number, accessToken: string): Promise<OrderDetails> {
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/public/orders/${orderId}?token=${accessToken}`
+            const response = await apiFetch(`/api/public/orders/${orderId}?token=${accessToken}`
             );
 
             if (!response.ok) {
@@ -280,8 +274,7 @@ export const orderService = {
     // Получить товары для повторного заказа
     async getReorderItems(orderId: number, accessToken: string): Promise<unknown> {
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/public/orders/${orderId}/reorder?token=${accessToken}`
+            const response = await apiFetch(`/api/public/orders/${orderId}/reorder?token=${accessToken}`
             );
 
             if (!response.ok) {

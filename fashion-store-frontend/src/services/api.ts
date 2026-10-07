@@ -95,13 +95,25 @@ const API_BASE_URL = import.meta.env.DEV
     ? 'http://localhost:8085'  // В разработке: полный URL бэкенда
     : '';  // В продакшене: пустая строка (относительный путь)
 
+// Демо-режим (VITE_DEMO=1): все /api-запросы обслуживает локальный
+// обработчик без сервера, витрина живёт на статике.
+export const DEMO_MODE = import.meta.env.VITE_DEMO === '1';
+
+export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+    if (DEMO_MODE) {
+        const { demoFetch } = await import('./demoBackend');
+        return demoFetch(path, init);
+    }
+    return fetch(`${API_BASE_URL}${path}`, init);
+}
+
 // ========== СЕРВИС КОНФИГУРАЦИИ ==========
 
 export const configService = {
     // Получить конфигурацию Яндекс API
     async getYandexConfig(): Promise<{ geocoderApiKey: string }> {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/public/config/yandex`);
+            const response = await apiFetch('/api/public/config/yandex');
             if (!response.ok) {
                 throw new Error(`Failed to fetch Yandex config: ${response.status}`);
             }
@@ -115,7 +127,7 @@ export const configService = {
     // Получить все публичные конфигурации
     async getAllPublicConfigs(): Promise<Record<string, unknown>> {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/public/config/all`);
+            const response = await apiFetch('/api/public/config/all');
             if (!response.ok) {
                 throw new Error(`Failed to fetch public configs: ${response.status}`);
             }
@@ -164,7 +176,7 @@ export const categoryService = {
     // Получить все активные категории с подкатегориями
     getAllCategories: async (): Promise<Category[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/categories`);
+            const response = await apiFetch('/api/categories');
             if (!response.ok) {
                 throw new Error(`Failed to fetch categories: ${response.status}`);
             }
@@ -177,7 +189,7 @@ export const categoryService = {
 
     getSubcategoriesByCategoryId: async (categoryId: number): Promise<Subcategory[]> => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/categories/${categoryId}/subcategories`);
+            const response = await apiFetch(`/api/categories/${categoryId}/subcategories`);
             if (!response.ok) {
                 throw new Error(`Failed to fetch subcategories: ${response.status}`);
             }
@@ -193,7 +205,7 @@ export const categoryService = {
 export const productService = {
     async getAllProducts(): Promise<Product[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/products`);
+            const response = await apiFetch('/api/products');
             if (!response.ok) {
                 console.error(`HTTP error! status: ${response.status}`);
                 return [];
@@ -209,7 +221,7 @@ export const productService = {
 
     async getProductById(id: number): Promise<Product | null> {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
+            const response = await apiFetch(`/api/products/${id}`);
             if (!response.ok) {
                 console.error(`HTTP error! status: ${response.status}`);
                 return null;
@@ -225,7 +237,7 @@ export const productService = {
     // Получить доступные размеры товара
     async getProductSizes(id: number): Promise<string[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/products/${id}/sizes`);
+            const response = await apiFetch(`/api/products/${id}/sizes`);
             if (!response.ok) {
                 console.error(`HTTP error! status: ${response.status}`);
                 return [];
