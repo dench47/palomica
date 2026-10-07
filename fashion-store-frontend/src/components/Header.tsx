@@ -12,7 +12,7 @@ const Header = () => {
     const searchRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
-    const logo = "/images/dark-logo.jpeg";
+    const logo = `${import.meta.env.BASE_URL}images/dark-logo.jpeg`;
 
     // Автозакрытие при клике вне поля поиска
     useEffect(() => {

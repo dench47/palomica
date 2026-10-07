@@ -33,7 +33,7 @@ const variant = (size: string): DemoVariant => ({
     actuallyAvailable: 3,
 });
 
-const IMG = (p: string) => `/images/products/${p}`;
+const IMG = (p: string) => `${import.meta.env.BASE_URL}images/products/${p}`;
 
 export const DEMO_CATEGORIES = [
     { id: 1, name: 'одежда', description: 'Одежда для женщин и мужчин', displayOrder: 1, isActive: true },

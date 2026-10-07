@@ -43,7 +43,7 @@ const HomePage = () => {
                 title="ВЕЧЕРНИЙ СТИЛЬ"
                 subtitle="Коллекция 2025. Элегантные платья и костюмы для особых случаев."
                 buttonText="СМОТРЕТЬ КОЛЛЕКЦИЮ"
-                image="/images/banners/ban1.jpeg"
+                image={`${import.meta.env.BASE_URL}images/banners/ban1.jpeg`}
                 link="/catalog?category=одежда"
             />
 
@@ -52,7 +52,7 @@ const HomePage = () => {
                 title="ПОВСЕДНЕВНАЯ КЛАССИКА"
                 subtitle="Новая коллекция. Удобная и стильная одежда на каждый день."
                 buttonText="ИССЛЕДОВАТЬ"
-                image="/images/banners/ban2.jpeg"
+                image={`${import.meta.env.BASE_URL}images/banners/ban2.jpeg`}
                 link="/catalog?category=одежда"
             />
 
