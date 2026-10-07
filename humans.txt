@@ -1,0 +1,12 @@
+/* TEAM */
+  Developer: Dench
+  Site: https://palomika.ru
+  Contact: [скрыто]
+
+/* THANKS */
+  Thanks to all contributors
+
+/* SITE */
+  Last update: 2025-12-28
+  Language: Russian
+  Doctype: HTML5
